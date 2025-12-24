@@ -1,0 +1,125 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme static {
+  --font-sans: 'Manrope', sans-serif;
+
+  --color-mokshya-dark: #09423c;
+  --color-mokshya-green: #0fbd49;
+  --color-mokshya-text: #0d1b12;
+  --color-mokshya-gray: #4b5563;
+  --color-mokshya-light: #f8fcf9;
+  --color-mokshya-bg-alt: #f3f4f6;
+  
+  --color-green-50: #EFFDF5;
+  --color-green-100: #D9FBE8;
+  --color-green-200: #B3F5D1;
+  --color-green-300: #75EDAE;
+  --color-green-400: #00DC82;
+  --color-green-500: #00C16A;
+  --color-green-600: #00A155;
+  --color-green-700: #007F45;
+  --color-green-800: #016538;
+  --color-green-900: #0A5331;
+  --color-green-950: #052E16;
+
+  --animate-fade-in-up: fadeInUp 0.8s ease-out forwards;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-float-delayed: float 6s ease-in-out 3s infinite;
+  --animate-progress: progress 1.5s ease-out forwards;
+  --animate-spin-slow: spin 20s linear infinite;
+  --animate-spin-reverse-slow: spin-reverse 25s linear infinite;
+  --animate-pulse-glow: pulseGlow 2s ease-in-out infinite;
+  --animate-orbit-slow: orbit 30s linear infinite;
+  --animate-orbit-counter: orbit-counter 30s linear infinite;
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes progress {
+    from {
+      width: 0%;
+    }
+  }
+
+  @keyframes spin {
+    from {
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
+    to {
+      transform: translate(-50%, -50%) rotate(360deg);
+    }
+  }
+
+  @keyframes spin-reverse {
+    from {
+      transform: translate(-50%, -50%) rotate(360deg);
+    }
+    to {
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
+  }
+
+  @keyframes pulseGlow {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(15, 189, 73, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 10px rgba(15, 189, 73, 0);
+    }
+  }
+
+  @keyframes orbit {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes orbit-counter {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(-360deg);
+    }
+  }
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-mokshya-text);
+  background-color: #ffffff;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.animate-orbit-slow {
+  animation: orbit 30s linear infinite;
+}
+
+.animate-orbit-counter {
+  animation: orbit-counter 30s linear infinite;
+  transform-origin: center center;
+}
