@@ -26,5 +26,20 @@ export default defineNuxtConfig({
         braceStyle: '1tbs'
       }
     }
+  },
+
+  // SSR configuration to handle reka-ui compatibility
+  ssr: true,
+
+  vite: {
+    ssr: {
+      // Include reka-ui in SSR bundle to handle it properly
+      noExternal: ['reka-ui', '@nuxt/ui']
+    }
+  },
+
+  // Build configuration for SSR compatibility
+  build: {
+    transpile: ['reka-ui']
   }
 })
