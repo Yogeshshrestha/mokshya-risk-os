@@ -8,7 +8,20 @@ useHead({
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
   ],
   link: [
-    { rel: 'icon', href: '/favicon.ico' }
+    { rel: 'icon', href: '/favicon.ico' },
+    {
+      rel: 'preconnect',
+      href: 'https://fonts.googleapis.com'
+    },
+    {
+      rel: 'preconnect',
+      href: 'https://fonts.gstatic.com',
+      crossorigin: 'anonymous'
+    },
+    {
+      rel: 'stylesheet',
+      href: 'https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap'
+    }
   ],
   htmlAttrs: {
     lang: 'en'
@@ -51,21 +64,21 @@ const handleLoginSuccess = () => {
 
         <!-- Center: Navigation links -->
         <nav class="hidden lg:flex items-center gap-8 text-sm font-medium text-mokshya-text absolute left-1/2 transform -translate-x-1/2">
-          <a href="#home" class="hover:text-mokshya-dark transition-colors">
+          <NuxtLink to="home" class="hover:text-mokshya-dark transition-colors">
             Home
-          </a>
-          <a href="#pricing" class="hover:text-mokshya-dark transition-colors">
+          </NuxtLink>
+          <NuxtLink to="pricing" class="hover:text-mokshya-dark transition-colors">
             Pricing
-          </a>
-          <a href="#why-us" class="hover:text-mokshya-dark transition-colors">
+          </NuxtLink>
+          <NuxtLink to="why-us" class="hover:text-mokshya-dark transition-colors">
             Why Us
-          </a>
-          <a href="#how-it-works" class="hover:text-mokshya-dark transition-colors">
+          </NuxtLink>
+          <NuxtLink to="how-it-works" class="hover:text-mokshya-dark transition-colors">
             How it works
-          </a>
-          <a href="#about-us" class="hover:text-mokshya-dark transition-colors">
+          </NuxtLink>
+          <NuxtLink to="about-us" class="hover:text-mokshya-dark transition-colors">
             About Us
-          </a>
+          </NuxtLink>
         </nav>
 
         <!-- Right: Login button or user info -->

@@ -14,7 +14,7 @@ defineProps<Props>()
   <div class="bg-mokshya-light border border-green-100/50 rounded-3xl p-8 relative overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full flex flex-col">
     <!-- Badge at top right - positioned exactly as in Figma -->
     <div class="absolute top-8 right-8 z-10">
-      <span class="inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest bg-mokshya-light border border-green-100/50 text-mokshya-dark whitespace-nowrap">
+      <span class="inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest border border-green-100/50 text-mokshya-dark whitespace-nowrap bg-[#0FBD491A]">
         {{ badge }}
       </span>
     </div>

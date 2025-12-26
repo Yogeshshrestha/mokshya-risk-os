@@ -12,7 +12,7 @@
         Clear risk signals. Confident insurance decisions. Start your journey today.
       </p>
       <div class="flex flex-wrap justify-center gap-4">
-        <Button variant="primary" class="bg-white !text-mokshya-dark hover:bg-gray-100">
+        <Button variant="secondaryReverse" >
           Request a Demo
         </Button>
         <Button variant="outline">

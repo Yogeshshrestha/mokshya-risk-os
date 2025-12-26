@@ -1,6 +1,6 @@
 <script setup lang="ts">
 interface Props {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost'
+  variant?: 'primary' | 'secondary' | 'secondaryReverse' | 'outline' | 'ghost'
   size?: 'sm' | 'md' | 'lg'
   fullWidth?: boolean
 }
@@ -17,6 +17,7 @@ const buttonClasses = computed(() => {
   const variants = {
     primary: 'bg-mokshya-dark text-white hover:bg-opacity-90 hover:shadow-xl hover:-translate-y-0.5',
     secondary: 'bg-white border border-mokshya-dark text-mokshya-dark hover:bg-gray-50',
+    secondaryReverse: 'bg-white border border-mokshya-dark text-mokshya-dark hover:bg-gray-50 hover:shadow-xl hover:-translate-y-0.5',
     outline: 'bg-transparent border border-white/20 text-white hover:bg-white/10',
     ghost: 'bg-transparent hover:bg-gray-50'
   }

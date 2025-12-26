@@ -7,12 +7,16 @@
 import assessRiskIcon from '~/assets/images/landing/assess.png'
 import analyzeRiskIcon from '~/assets/images/landing/analyze.png'
 import decideActIcon from '~/assets/images/landing/decide.png'
+import dashboardPreview from '~/assets/images/landing/dashboard.svg'
+import logoIcon from '~/assets/images/logo.png'
 
 export const IMAGES = {
   // Local feature card images
+  logoIcon,
   assessRiskIcon,
   analyzeRiskIcon,
   decideActIcon,
+  dashboardPreview,
   // User avatars for social proof
   avatar1: 'https://www.figma.com/api/mcp/asset/1070b3e4-c788-4120-85dd-f93e5bdbaea0',
   avatar2: 'https://www.figma.com/api/mcp/asset/7a1d0f88-39c0-44c0-bdc7-586dcc21967e',
@@ -45,7 +49,7 @@ export const IMAGES = {
 
   // Other assets
   orbitalVector: 'https://www.figma.com/api/mcp/asset/c0957895-6585-44ab-9878-c5041f9a7004',
-  logoIcon: 'https://www.figma.com/api/mcp/asset/01d10d8c-c9d1-4331-b324-d7a0bf8c65ca',
+   
   plusIcon: 'https://www.figma.com/api/mcp/asset/aec0ea96-7183-4207-9561-d75d5bec7e42'
 } as const
 

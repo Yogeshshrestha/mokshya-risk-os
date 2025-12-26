@@ -44,7 +44,7 @@ import { IMAGES } from '~/constants/images'
           <div class="bg-mokshya-dark/5 rounded-full absolute inset-[7.45px]" />
           <div class="relative z-10 flex flex-col items-center gap-1.5">
             
-          <NuxtImg :src="IMAGES.logoIcon" class="w-12 h-12" alt="Orbital paths" />
+          <img :src="IMAGES.logoIcon" class="w-12 h-12" alt="Orbital paths" />
 
             <span class="font-bold text-[16.555px] tracking-[-0.4139px] leading-[23.177px]">Mokshya OS</span>
           </div>
