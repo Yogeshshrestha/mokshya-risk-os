@@ -122,4 +122,8 @@ body {
 .animate-orbit-counter {
   animation: orbit-counter 30s linear infinite;
   transform-origin: center center;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

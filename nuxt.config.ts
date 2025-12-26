@@ -41,5 +41,13 @@ export default defineNuxtConfig({
   // Build configuration for SSR compatibility
   build: {
     transpile: ['reka-ui']
-  }
+  },
+
+  // Component auto-import configuration
+  components: [
+    {
+      path: '~/components',
+      pathPrefix: false
+    }
+  ]
 })
