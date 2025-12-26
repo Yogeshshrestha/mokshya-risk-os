@@ -2,7 +2,7 @@
  * Static data constants
  */
 
-import type { FAQItem, FeatureCard, Step, TargetAudience } from '~/types'
+import type { FAQItem, FeatureCard, Step, TargetAudience, PricingPlan } from '~/types'
 
 export const FAQ_ITEMS: FAQItem[] = [
   {
@@ -73,4 +73,64 @@ export const TARGET_AUDIENCE: TargetAudience[] = [
   { title: 'Board Members', icon: 'i-lucide-building-2', position: { x: 0, y: 379 } },
   { title: 'Under writers', icon: 'i-lucide-file-text', position: { x: 241.13, y: 521.98 } }
 ]
+
+export const PRICING_PLANS: PricingPlan[] = [
+  {
+    name: 'Essential Risk',
+    description: '',
+    price: '$499',
+    period: 'month',
+    billingNote: 'Billed annually',
+    features: [
+      '10-minute guided risk assessment',
+      'A-E risk tier classification',
+      'Financial exposure range',
+      'Board-ready 1-page summary',
+      'Basic control maturity overview',
+      'Secure dashboard access'
+    ],
+    ctaText: 'Start Assessment',
+    badge: 'FOR FIRST-TIME ASSESSMENTS',
+    buttonVariant: 'light'
+  },
+  {
+    name: 'Risk Intelligence',
+    description: '',
+    price: '$999',
+    period: 'month',
+    billingNote: 'Billed annually',
+    features: [
+      'Full CRO dashboard',
+      'Top risk register with RAG status',
+      'Insurance eligibility & gap analysis',
+      'Mitigation roadmap with ROI',
+      'Exportable CRO & Board reports (PDF)',
+      'Renewal tracking & alerts',
+      'Persona-based views (CRO, Board, CFO)'
+    ],
+    ctaText: 'Start Full Assessment',
+    popular: true,
+    badge: 'Most chosen by CROs',
+    includesLabel: 'EVERYTHING IN ESSENTIAL, PLUS:',
+    buttonVariant: 'primary'
+  },
+  {
+    name: 'Enterprise Custom',
+    description: 'Tailored to your organization',
+    price: 'Custom',
+    period: '',
+    billingNote: '',
+    features: [
+      'Broker & underwriter views',
+      'Submission-ready insurer packs',
+      'Custom scoring & benchmarks',
+      'API & data exports',
+      'Dedicated support & onboarding'
+    ],
+    ctaText: 'Book a Risk Consultation',
+    badge: 'ADVANCED & INSURANCE-READY',
+    includesLabel: 'EVERYTHING IN RISK INTELLIGENCE, PLUS:',
+    buttonVariant: 'outline'
+  }
+] as const
 

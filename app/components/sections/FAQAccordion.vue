@@ -20,7 +20,7 @@ const emit = defineEmits<{
     :class="{ 'ring-2 ring-mokshya-green/20': isActive }"
   >
     <button
-      class="w-full flex items-center justify-between p-6 text-left font-bold text-xl text-mokshya-text hover:bg-gray-50 transition-colors"
+      class="w-full flex items-center justify-between p-6 text-left font-bold text-xl text-mokshya-text hover:bg-gray-50 transition-colors cursor-pointer"
       @click="emit('toggle')"
     >
       <span>{{ question }}</span>

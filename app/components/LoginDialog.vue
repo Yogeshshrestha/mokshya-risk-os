@@ -33,12 +33,12 @@ const submit = (event: Event) => {
       <!-- Close button -->
       <button
         type="button"
-        class="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100"
+        class="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 cursor-pointer"
         @click="close"
         aria-label="Close login dialog"
       >
         <span class="sr-only">Close</span>
-        <img :src="imgPlus" class="w-6 h-6 transform transition-transform duration-300 rotate-45"  />
+        <img :src="imgPlus" class="w-6 h-6 transform transition-transform duration-300 rotate-45" alt="plus"  />
 
       </button>
 
@@ -114,7 +114,7 @@ const submit = (event: Event) => {
 
             <button
               type="button"
-              class="font-semibold text-[#09433e] hover:underline"
+              class="font-semibold text-[#09433e] hover:underline cursor-pointer"
             >
               Forgot password?
             </button>
@@ -123,7 +123,7 @@ const submit = (event: Event) => {
           <!-- Submit -->
           <button
             type="submit"
-            class="mt-4 h-12 w-full rounded-lg bg-[#09433e] text-white text-base font-bold shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)] hover:bg-[#07332f] transition-colors"
+            class="mt-4 h-12 w-full rounded-lg bg-[#09433e] text-white text-base font-bold shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)] hover:bg-[#07332f] transition-colors cursor-pointer"
           >
             Log In
           </button>
@@ -143,7 +143,7 @@ const submit = (event: Event) => {
           <!-- Google button -->
           <button
             type="button"
-            class="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white text-sm font-semibold text-[#0e1b1a] shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:bg-gray-50 transition-colors"
+            class="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white text-sm font-semibold text-[#0e1b1a] shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:bg-gray-50 transition-colors cursor-pointer"
           >
             <span
               class="h-5 w-5 rounded-full bg-white border border-gray-200"
@@ -159,7 +159,7 @@ const submit = (event: Event) => {
           </span>
           <button
             type="button"
-            class="ml-1 font-bold text-[#09433e] hover:underline"
+            class="ml-1 font-bold text-[#09433e] hover:underline cursor-pointer"
           >
             Request access
           </button>

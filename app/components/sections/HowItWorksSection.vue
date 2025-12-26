@@ -3,7 +3,7 @@ import { STEPS } from '~/constants/data'
 </script>
 
 <template>
-  <section class="py-24 bg-mokshya-light">
+  <section id="how-it-works" class="py-24 bg-mokshya-light scroll-mt-20">
     <UContainer>
       <div class="text-center mb-20">
         <h2 class="text-4xl font-bold text-mokshya-text mb-4">

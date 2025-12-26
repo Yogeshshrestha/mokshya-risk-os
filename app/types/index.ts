@@ -36,3 +36,17 @@ export interface SocialProof {
   text: string
 }
 
+export interface PricingPlan {
+  name: string
+  description: string
+  price: string
+  period?: string
+  billingNote?: string
+  features: string[]
+  ctaText: string
+  popular?: boolean
+  badge?: string
+  includesLabel?: string
+  buttonVariant?: 'primary' | 'light' | 'outline'
+}
+

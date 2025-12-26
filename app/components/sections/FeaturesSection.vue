@@ -16,7 +16,7 @@ const getImage = (imageKey: string) => {
 </script>
 
 <template>
-  <section class="py-24 bg-white">
+  <section id="why-us" class="py-24 bg-white scroll-mt-20">
     <UContainer>
       <div class="text-center max-w-2xl mx-auto mb-16">
         <h2 class="text-4xl font-bold text-mokshya-text mb-4">

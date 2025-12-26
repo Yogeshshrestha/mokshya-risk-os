@@ -1,7 +1,20 @@
-<script setup>
+<script setup lang="ts">
+const route = useRoute()
 const isAuthenticated = ref(false)
 const showLogin = ref(false)
 
+// Determine header background color based on route
+const headerBgClass = computed(() => {
+  const path = route.path
+  
+  if (path === '/pricing') {
+    return 'bg-[#F6F8F8]'
+  } else if (path === '/' || path === '/home') {
+    return 'bg-[#F8FCF9CC]'
+  } else {
+    return 'bg-white'
+  }
+})
 
 useHead({
   meta: [
@@ -44,6 +57,55 @@ useSeoMeta({
 const handleLoginSuccess = () => {
   isAuthenticated.value = true
 }
+
+// Handle navigation with smooth scrolling
+const handleNavigation = (e: Event, target: string) => {
+  e.preventDefault()
+  const router = useRouter()
+  const currentPath = route.path
+
+  // If target is pricing, navigate to pricing page
+  if (target === 'pricing') {
+    router.push('/pricing')
+    return
+  }
+
+  // If target is home, navigate to home
+  if (target === 'home') {
+    router.push('/')
+    return
+  }
+
+  // For section links (why-us, how-it-works, about-us)
+  const scrollToSection = () => {
+    nextTick(() => {
+      setTimeout(() => {
+        const element = document.getElementById(target)
+        if (element) {
+          const headerOffset = 80 // Account for sticky header
+          const elementPosition = element.getBoundingClientRect().top
+          const offsetPosition = elementPosition + window.pageYOffset - headerOffset
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          })
+        }
+      }, 100)
+    })
+  }
+
+  // Check if we're on home page
+  if (currentPath === '/' || currentPath === '/home') {
+    // Already on home page, just scroll to section
+    scrollToSection()
+  } else {
+    // Not on home page, navigate to home first then scroll
+    router.push('/').then(() => {
+      scrollToSection()
+    })
+  }
+}
 </script>
 
 <template>
@@ -51,12 +113,12 @@ const handleLoginSuccess = () => {
     <!-- Top teal strip --> 
     
     <!-- Custom header matching Figma design -->
-    <header class="sticky top-0 z-50 bg-white border-b border-gray-100">
+    <header :class="['sticky top-0 z-50 border-b border-gray-100 transition-colors duration-300', headerBgClass]">
       <UContainer class="flex items-center justify-between h-16">
         <!-- Left: Logo and text -->
         <div class="flex items-center">
-          <NuxtLink to="/" class="flex items-center gap-2"> 
-            <span class="text-base font-semibold text-mokshya-text">
+          <NuxtLink to="/" class="flex items-center gap-2 cursor-pointer"> 
+            <span class="text-base font-semibold  text-mokshya-dark">
               Mokshya OS
             </span>
           </NuxtLink>
@@ -64,28 +126,28 @@ const handleLoginSuccess = () => {
 
         <!-- Center: Navigation links -->
         <nav class="hidden lg:flex items-center gap-8 text-sm font-medium text-mokshya-text absolute left-1/2 transform -translate-x-1/2">
-          <NuxtLink to="home" class="hover:text-mokshya-dark transition-colors">
+          <a href="/" @click.prevent="handleNavigation($event, 'home')" class="text-mokshya-dark transition-colors hover:text-mokshya-green cursor-pointer">
             Home
-          </NuxtLink>
-          <NuxtLink to="pricing" class="hover:text-mokshya-dark transition-colors">
+          </a>
+          <a href="/pricing" @click.prevent="handleNavigation($event, 'pricing')" class="text-mokshya-dark transition-colors hover:text-mokshya-green cursor-pointer">
             Pricing
-          </NuxtLink>
-          <NuxtLink to="why-us" class="hover:text-mokshya-dark transition-colors">
+          </a>
+          <a href="#why-us" @click.prevent="handleNavigation($event, 'why-us')" class="text-mokshya-dark transition-colors hover:text-mokshya-green cursor-pointer">
             Why Us
-          </NuxtLink>
-          <NuxtLink to="how-it-works" class="hover:text-mokshya-dark transition-colors">
+          </a>
+          <a href="#how-it-works" @click.prevent="handleNavigation($event, 'how-it-works')" class="text-mokshya-dark transition-colors hover:text-mokshya-green cursor-pointer">
             How it works
-          </NuxtLink>
-          <NuxtLink to="about-us" class="hover:text-mokshya-dark transition-colors">
+          </a>
+          <a href="#about-us" @click.prevent="handleNavigation($event, 'about-us')" class="text-mokshya-dark transition-colors hover:text-mokshya-green cursor-pointer">
             About Us
-          </NuxtLink>
+          </a>
         </nav>
 
         <!-- Right: Login button or user info -->
         <div class="flex items-center gap-4">
           <template v-if="!isAuthenticated">
             <button
-              class="rounded-lg px-6 py-2.5 font-semibold text-white bg-[#09423C] hover:bg-[#07332e] transition-colors"
+              class="rounded-lg px-6 py-2.5 font-semibold text-white bg-[#09423C] hover:bg-[#07332e] transition-colors cursor-pointer"
               @click="showLogin = true"
             >
               Log in

@@ -6,7 +6,7 @@ const { activeIndex, toggle, isActive } = useAccordion(0)
 </script>
 
 <template>
-  <section class="py-24 bg-mokshya-light">
+  <section id="about-us" class="py-24 bg-mokshya-light scroll-mt-20">
     <UContainer>
       <div class="lg:grid lg:grid-cols-12 gap-16">
         <div class="lg:col-span-5 text-center lg:text-left">

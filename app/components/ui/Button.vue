@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const buttonClasses = computed(() => {
-  const base = 'font-bold rounded-lg transition-all duration-300 inline-flex items-center justify-center'
+  const base = 'font-bold rounded-lg transition-all duration-300 inline-flex items-center justify-center cursor-pointer'
   
   const variants = {
     primary: 'bg-mokshya-dark text-white hover:bg-opacity-90 hover:shadow-xl hover:-translate-y-0.5',
