@@ -24,7 +24,7 @@ const emit = defineEmits<{
       @click="emit('toggle')"
     >
       <span>{{ question }}</span>
-      <NuxtImg
+      <img
         :src="IMAGES.plusIcon"
         class="w-6 h-6 transform transition-transform duration-300"
         :class="{ 'rotate-45': isActive }"

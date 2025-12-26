@@ -9,6 +9,15 @@ import analyzeRiskIcon from '~/assets/images/landing/analyze.png'
 import decideActIcon from '~/assets/images/landing/decide.png'
 import dashboardPreview from '~/assets/images/landing/dashboard.svg'
 import logoIcon from '~/assets/images/logo.png'
+import avatar1 from '~/assets/images/landing/avatar1.jpg' 
+import avatar2 from '~/assets/images/landing/avatar2.jpg' 
+import avatar3 from '~/assets/images/landing/avatar3.jpg'
+import plusIcon from '~/assets/images/landing/iconPlus.png'
+import connectIcon from '~/assets/images/landing/iconConnect.png'
+import analyzeIcon from '~/assets/images/landing/iconAnalyze.png'
+import decideIcon from '~/assets/images/landing/iconDecide.png'
+ 
+  plusIcon
 
 export const IMAGES = {
   // Local feature card images
@@ -18,9 +27,9 @@ export const IMAGES = {
   decideActIcon,
   dashboardPreview,
   // User avatars for social proof
-  avatar1: 'https://www.figma.com/api/mcp/asset/1070b3e4-c788-4120-85dd-f93e5bdbaea0',
-  avatar2: 'https://www.figma.com/api/mcp/asset/7a1d0f88-39c0-44c0-bdc7-586dcc21967e',
-  avatar3: 'https://www.figma.com/api/mcp/asset/1abb31bd-18c9-4037-a706-1e1c3dd6c1d2',
+  avatar1 ,
+  avatar2 ,
+  avatar3 ,
 
   // Feature illustrations
   // assessRisk: 'https://www.figma.com/api/mcp/asset/2deefa85-2da3-479f-9183-5be1c68b6ab2',
@@ -35,9 +44,9 @@ export const IMAGES = {
   complianceIcon: 'https://www.figma.com/api/mcp/asset/3a8b4425-1fbe-44ab-880f-59d8fdc955a2',
 
   // How it works icons
-  connectIcon: 'https://www.figma.com/api/mcp/asset/d1197255-8a67-4f95-989b-464730b986cc',
-  analyzeIcon: 'https://www.figma.com/api/mcp/asset/5b0b5e4b-3c52-421a-9098-8a17637ce8aa',
-  decideIcon: 'https://www.figma.com/api/mcp/asset/620aa9d8-1c82-471b-8f48-d1766d71685d',
+  connectIcon ,
+  analyzeIcon ,
+  decideIcon ,
 
   // Target audience icons
   riskMgrs: 'https://www.figma.com/api/mcp/asset/24855bba-e504-473d-bab3-02746a7dff42',
@@ -50,7 +59,7 @@ export const IMAGES = {
   // Other assets
   orbitalVector: 'https://www.figma.com/api/mcp/asset/c0957895-6585-44ab-9878-c5041f9a7004',
    
-  plusIcon: 'https://www.figma.com/api/mcp/asset/aec0ea96-7183-4207-9561-d75d5bec7e42'
+  plusIcon 
 } as const
 
 
