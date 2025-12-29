@@ -2,5 +2,10 @@
 import withNuxt from './.nuxt/eslint.config.mjs'
 
 export default withNuxt(
-  // Your custom configs here
+  {
+    rules: {
+      'style/comma-dangle': ['error', 'never'],
+      'style/brace-style': ['error', '1tbs']
+    }
+  }
 )

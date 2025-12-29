@@ -19,15 +19,6 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2025-01-15',
 
-  eslint: {
-    config: {
-      stylistic: {
-        commaDangle: 'never',
-        braceStyle: '1tbs'
-      }
-    }
-  },
-
   // SSR configuration to handle reka-ui compatibility
   ssr: true,
 

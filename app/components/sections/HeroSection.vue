@@ -64,7 +64,7 @@ const socialProof = {
                 :key="index"
                 class="w-10 h-10 rounded-full border-2 border-white overflow-hidden relative bg-gray-200 hover:z-10 transition-transform hover:scale-110"
               >
-                <NuxtImg :src="avatar" class="object-cover w-full h-full" :alt="`User ${index + 1}`" />
+                <img :src="avatar" class="object-cover w-full h-full" :alt="`User ${index + 1}`" loading="lazy" />
               </div>
             </div>
             <div class="flex flex-col">
