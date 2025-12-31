@@ -53,3 +53,6 @@ export interface PricingPlan {
 // Re-export auth types
 export * from './auth'
 
+// Re-export organization types
+export * from './organization'
+
