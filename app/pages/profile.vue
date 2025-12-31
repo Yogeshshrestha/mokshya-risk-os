@@ -119,13 +119,23 @@ useSeoMeta({
               class="flex h-20 w-20 items-center justify-center rounded-full bg-[#09423C] text-2xl font-bold text-white"
             >
               <span v-if="!auth.user.value.avatar_url">
-                {{ auth.user.value.full_name
-                  ? auth.user.value.full_name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
-                  : auth.user.value.email?.[0].toUpperCase()
+                {{
+                  auth.user.value.full_name
+                    ? (() => {
+                        const parts = auth.user.value.full_name.split(' ')
+                        const initials = parts.map(n => n && n.length > 0 ? n[0] : '').filter(Boolean).join('')
+                        return initials.toUpperCase().substring(0, 2)
+                      })()
+                    : (() => {
+                        const email = auth.user.value.email
+                        return email && email.length > 0 && email[0]
+                          ? email[0].toUpperCase()
+                          : 'U'
+                      })()
                 }}
               </span>
               <img
-                v-else
+                v-else-if="auth.user.value.avatar_url"
                 :src="auth.user.value.avatar_url"
                 :alt="auth.user.value.full_name"
                 class="h-20 w-20 rounded-full object-cover"
