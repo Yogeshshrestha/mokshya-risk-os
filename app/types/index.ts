@@ -56,3 +56,6 @@ export * from './auth'
 // Re-export organization types
 export * from './organization'
 
+// Re-export global questionnaire types
+export * from './global-questionnaire'
+
