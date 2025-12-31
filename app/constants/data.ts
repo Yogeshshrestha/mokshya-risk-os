@@ -134,3 +134,35 @@ export const PRICING_PLANS: PricingPlan[] = [
   }
 ] as const
 
+// Assessment form options
+export const INDUSTRIES = [
+  { value: 'technology', label: 'Technology' },
+  { value: 'finance', label: 'Finance' },
+  { value: 'healthcare', label: 'Healthcare' },
+  { value: 'manufacturing', label: 'Manufacturing' },
+  { value: 'retail', label: 'Retail' },
+  { value: 'consulting', label: 'Consulting' },
+  { value: 'energy', label: 'Energy' },
+  { value: 'education', label: 'Education' },
+  { value: 'telecommunications', label: 'Telecommunications' },
+  { value: 'other', label: 'Other' }
+] as const
+
+export const COMPANY_SIZES = [
+  { value: '1-10', label: '1-10 employees' },
+  { value: '11-50', label: '11-50 employees' },
+  { value: '51-200', label: '51-200 employees' },
+  { value: '201-500', label: '201-500 employees' },
+  { value: '501-1000', label: '501-1000 employees' },
+  { value: '1000+', label: '1000+ employees' }
+] as const
+
+export const OPERATING_REGIONS = [
+  { value: 'north-america', label: 'North America' },
+  { value: 'south-america', label: 'South America' },
+  { value: 'europe', label: 'Europe' },
+  { value: 'asia-pacific', label: 'Asia Pacific' },
+  { value: 'middle-east', label: 'Middle East' },
+  { value: 'africa', label: 'Africa' }
+] as const
+
