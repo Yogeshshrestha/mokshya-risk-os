@@ -11,10 +11,15 @@ export default defineNuxtConfig({
     enabled: true
   },
 
+  devServer: {
+    port: 8080
+  },
+
   css: ['~/assets/css/main.css'],
 
   routeRules: {
-    '/': { prerender: true }
+    '/': { prerender: true },
+    '/google/callback': { ssr: false }
   },
 
   compatibilityDate: '2025-01-15',

@@ -50,3 +50,6 @@ export interface PricingPlan {
   buttonVariant?: 'primary' | 'light' | 'outline'
 }
 
+// Re-export auth types
+export * from './auth'
+
