@@ -300,6 +300,32 @@ useSeoMeta({
               </div>
             </div>
 
+            <!-- Category Performance -->
+            <div v-if="score && score.category_scores && Object.keys(score.category_scores).length > 0" class="mb-6">
+              <h3 class="text-sm font-semibold text-gray-900 mb-3">Performance by Category</h3>
+              <div class="space-y-3">
+                <div
+                  v-for="[categoryName, categoryScore] in Object.entries(score.category_scores)"
+                  :key="categoryName"
+                  class="flex flex-col gap-2"
+                >
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-medium text-gray-700 truncate">{{ categoryName }}</span>
+                    <span class="text-xs font-bold" :class="getComplianceColor(categoryScore.compliance)">
+                      {{ Math.round(categoryScore.compliance) }}%
+                    </span>
+                  </div>
+                  <div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      class="h-full rounded-full transition-all duration-500"
+                      :class="getComplianceBarColor(categoryScore.compliance)"
+                      :style="{ width: `${categoryScore.compliance}%` }"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <nav class="space-y-1">
               <!-- All Questions Option -->
               <button
@@ -413,7 +439,7 @@ useSeoMeta({
                     <span class="text-lg font-bold" :class="getRiskGradeColor(score.risk_grade)">
                       {{ score.risk_grade }}
                     </span>
-                    <span class="text-xs text-gray-400">{{ Math.round(score.risk_percentage) }}% Risk</span>
+                    <span class="text-xs text-gray-400">{{ Math.round(100 - score.compliance_percentage) }}% Risk</span>
                   </div>
                   <div class="flex flex-col items-end">
                     <span class="text-xs font-semibold text-gray-500 uppercase">Compliance</span>
@@ -470,38 +496,6 @@ useSeoMeta({
                     </svg>
                     List
                   </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Category Scores Breakdown -->
-          <div v-if="score && score.category_scores && Object.keys(score.category_scores).length > 0" class="mb-8">
-            <div class="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 class="text-lg font-semibold text-gray-900 mb-4">Category Performance</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div
-                  v-for="[categoryName, categoryScore] in Object.entries(score.category_scores)"
-                  :key="categoryName"
-                  class="flex flex-col gap-2"
-                >
-                  <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-700">{{ categoryName }}</span>
-                    <span class="text-sm font-bold" :class="getComplianceColor(categoryScore.compliance)">
-                      {{ Math.round(categoryScore.compliance) }}%
-                    </span>
-                  </div>
-                  <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      class="h-full rounded-full transition-all duration-500"
-                      :class="getComplianceBarColor(categoryScore.compliance)"
-                      :style="{ width: `${categoryScore.compliance}%` }"
-                    ></div>
-                  </div>
-                  <div class="flex justify-between text-xs text-gray-500">
-                    <span>{{ categoryScore.score.toFixed(2) }}/{{ categoryScore.max.toFixed(2) }}</span>
-                    <span>{{ categoryScore.count }} questions</span>
-                  </div>
                 </div>
               </div>
             </div>
