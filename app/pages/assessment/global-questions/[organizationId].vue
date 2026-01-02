@@ -84,6 +84,12 @@ const getAnswerForQuestion = (questionId: string) => {
   return answers.value.find(a => a.question_id === questionId)
 }
 
+// Get category performance data
+const getCategoryPerformance = (categoryName: string) => {
+  if (!score.value?.category_scores) return null
+  return score.value.category_scores[categoryName]
+}
+
 // Get risk score color based on percentage (lower is better)
 const getRiskScoreColor = (percentage: number) => {
   if (percentage <= 25) return 'text-green-600' // Low risk
@@ -300,32 +306,6 @@ useSeoMeta({
               </div>
             </div>
 
-            <!-- Category Performance -->
-            <div v-if="score && score.category_scores && Object.keys(score.category_scores).length > 0" class="mb-6">
-              <h3 class="text-sm font-semibold text-gray-900 mb-3">Performance by Category</h3>
-              <div class="space-y-3">
-                <div
-                  v-for="[categoryName, categoryScore] in Object.entries(score.category_scores)"
-                  :key="categoryName"
-                  class="flex flex-col gap-2"
-                >
-                  <div class="flex items-center justify-between">
-                    <span class="text-xs font-medium text-gray-700 truncate">{{ categoryName }}</span>
-                    <span class="text-xs font-bold" :class="getComplianceColor(categoryScore.compliance)">
-                      {{ Math.round(categoryScore.compliance) }}%
-                    </span>
-                  </div>
-                  <div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      class="h-full rounded-full transition-all duration-500"
-                      :class="getComplianceBarColor(categoryScore.compliance)"
-                      :style="{ width: `${categoryScore.compliance}%` }"
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <nav class="space-y-1">
               <!-- All Questions Option -->
               <button
@@ -386,11 +366,32 @@ useSeoMeta({
                   <div v-else-if="selectedCategory === category.name" class="w-2 h-2 rounded-full bg-[#09423C]"></div>
                 </div>
                 
-                <div class="flex-1">
-                  <span class="block">{{ category.name }}</span>
-                  <span class="text-xs text-gray-400 font-normal">
-                    {{ category.answered }}/{{ category.total }} Questions
-                  </span>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="block text-sm font-medium truncate">{{ category.name }}</span>
+                    <span
+                      v-if="getCategoryPerformance(category.name)"
+                      class="text-xs font-bold flex-shrink-0 ml-2"
+                      :class="getComplianceColor(getCategoryPerformance(category.name).compliance)"
+                    >
+                      {{ Math.round(getCategoryPerformance(category.name).compliance) }}%
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <div
+                      v-if="getCategoryPerformance(category.name)"
+                      class="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden"
+                    >
+                      <div
+                        class="h-full rounded-full transition-all duration-300"
+                        :class="getComplianceBarColor(getCategoryPerformance(category.name).compliance)"
+                        :style="{ width: `${getCategoryPerformance(category.name).compliance}%` }"
+                      ></div>
+                    </div>
+                    <span class="text-xs text-gray-400 font-normal flex-shrink-0">
+                      {{ category.answered }}/{{ category.total }}
+                    </span>
+                  </div>
                 </div>
               </button>
             </nav>
