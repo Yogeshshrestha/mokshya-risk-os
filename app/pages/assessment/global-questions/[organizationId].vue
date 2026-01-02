@@ -92,6 +92,42 @@ const getRiskScoreColor = (percentage: number) => {
   return 'text-red-600' // Very high risk
 }
 
+// Get risk grade color based on grade letter
+const getRiskGradeColor = (grade: string) => {
+  switch (grade?.toUpperCase()) {
+    case 'A':
+      return 'text-green-600' // Excellent
+    case 'B':
+      return 'text-green-500' // Good
+    case 'C':
+      return 'text-yellow-600' // Fair
+    case 'D':
+      return 'text-orange-600' // Poor
+    case 'F':
+      return 'text-red-600' // Fail
+    default:
+      return 'text-gray-600' // Unknown
+  }
+}
+
+// Get compliance color based on percentage (higher is better)
+const getComplianceColor = (percentage: number) => {
+  if (percentage >= 90) return 'text-green-600' // Excellent
+  if (percentage >= 80) return 'text-green-500' // Good
+  if (percentage >= 70) return 'text-yellow-600' // Fair
+  if (percentage >= 60) return 'text-orange-600' // Poor
+  return 'text-red-600' // Fail
+}
+
+// Get compliance bar color based on percentage
+const getComplianceBarColor = (percentage: number) => {
+  if (percentage >= 90) return 'bg-green-600' // Excellent
+  if (percentage >= 80) return 'bg-green-500' // Good
+  if (percentage >= 70) return 'bg-yellow-600' // Fair
+  if (percentage >= 60) return 'bg-orange-600' // Poor
+  return 'bg-red-600' // Fail
+}
+
 // Filter and sort questions by selected category
 const filteredQuestions = computed(() => {
   let filtered = questions.value
@@ -373,11 +409,18 @@ useSeoMeta({
                 <!-- Score & Red Flags -->
                 <div v-if="score" class="hidden md:flex items-center gap-6 border-r border-gray-200 pr-6">
                   <div class="flex flex-col items-end">
-                    <span class="text-xs font-semibold text-gray-500 uppercase">Risk Score</span>
-                    <span class="text-lg font-bold" :class="getRiskScoreColor(Math.round((score.total_score / score.max_possible_score) * 100))">
-                      {{ Math.round((score.total_score / score.max_possible_score) * 100) }}%
+                    <span class="text-xs font-semibold text-gray-500 uppercase">Risk Grade</span>
+                    <span class="text-lg font-bold" :class="getRiskGradeColor(score.risk_grade)">
+                      {{ score.risk_grade }}
                     </span>
-                    <span class="text-xs text-gray-400">Lower is better</span>
+                    <span class="text-xs text-gray-400">{{ Math.round(score.risk_percentage) }}% Risk</span>
+                  </div>
+                  <div class="flex flex-col items-end">
+                    <span class="text-xs font-semibold text-gray-500 uppercase">Compliance</span>
+                    <span class="text-lg font-bold text-green-600">
+                      {{ Math.round(score.compliance_percentage) }}%
+                    </span>
+                    <span class="text-xs text-gray-400">Higher is better</span>
                   </div>
                   <div class="flex flex-col items-end">
                     <span class="text-xs font-semibold text-gray-500 uppercase">Red Flags</span>
@@ -427,6 +470,38 @@ useSeoMeta({
                     </svg>
                     List
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category Scores Breakdown -->
+          <div v-if="score && score.category_scores && Object.keys(score.category_scores).length > 0" class="mb-8">
+            <div class="bg-white rounded-xl border border-gray-200 p-6">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4">Category Performance</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div
+                  v-for="[categoryName, categoryScore] in Object.entries(score.category_scores)"
+                  :key="categoryName"
+                  class="flex flex-col gap-2"
+                >
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium text-gray-700">{{ categoryName }}</span>
+                    <span class="text-sm font-bold" :class="getComplianceColor(categoryScore.compliance)">
+                      {{ Math.round(categoryScore.compliance) }}%
+                    </span>
+                  </div>
+                  <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      class="h-full rounded-full transition-all duration-500"
+                      :class="getComplianceBarColor(categoryScore.compliance)"
+                      :style="{ width: `${categoryScore.compliance}%` }"
+                    ></div>
+                  </div>
+                  <div class="flex justify-between text-xs text-gray-500">
+                    <span>{{ categoryScore.score.toFixed(2) }}/{{ categoryScore.max.toFixed(2) }}</span>
+                    <span>{{ categoryScore.count }} questions</span>
+                  </div>
                 </div>
               </div>
             </div>

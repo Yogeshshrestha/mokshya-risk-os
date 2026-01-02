@@ -46,6 +46,13 @@ export interface GlobalQuestionAnswerResponse {
   updated_at: string
 }
 
+export interface CategoryScore {
+  max: number
+  count: number
+  score: number
+  compliance: number
+}
+
 export interface GlobalQuestionnaireScoreResponse {
   id: string
   organization_id: string
@@ -53,10 +60,13 @@ export interface GlobalQuestionnaireScoreResponse {
   answered_questions: number
   total_score: number
   max_possible_score: number
+  risk_percentage: number
+  risk_grade: string
   compliance_percentage: number
-  category_scores?: Record<string, any>
+  category_scores?: Record<string, CategoryScore>
+  domain_scores?: Record<string, CategoryScore> | null
   red_flags_count: number
-  red_flags: string[]
+  red_flags?: string[] | null
   last_calculated_at: string
   created_at: string
   updated_at: string
