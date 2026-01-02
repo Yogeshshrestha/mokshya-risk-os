@@ -90,48 +90,48 @@ const getCategoryPerformance = (categoryName: string) => {
   return score.value.category_scores[categoryName]
 }
 
-// Get risk score color based on percentage (lower is better)
-const getRiskScoreColor = (percentage: number) => {
-  if (percentage <= 25) return 'text-green-600' // Low risk
-  if (percentage <= 50) return 'text-yellow-600' // Medium risk
-  if (percentage <= 75) return 'text-orange-600' // High risk
-  return 'text-red-600' // Very high risk
-}
-
 // Get risk grade color based on grade letter
 const getRiskGradeColor = (grade: string) => {
   switch (grade?.toUpperCase()) {
-    case 'A':
-      return 'text-green-600' // Excellent
-    case 'B':
-      return 'text-green-500' // Good
-    case 'C':
-      return 'text-yellow-600' // Fair
-    case 'D':
-      return 'text-orange-600' // Poor
-    case 'F':
-      return 'text-red-600' // Fail
-    default:
-      return 'text-gray-600' // Unknown
+    case 'A': return 'text-emerald-600'
+    case 'B': return 'text-emerald-500'
+    case 'C': return 'text-amber-500'
+    case 'D': return 'text-orange-500'
+    case 'F': return 'text-rose-600'
+    default: return 'text-slate-600'
+  }
+}
+
+// Get risk grade background color for badge
+const getRiskGradeBgColor = (grade: string) => {
+  switch (grade?.toUpperCase()) {
+    case 'A': return 'bg-emerald-100 text-emerald-700 border-emerald-200'
+    case 'B': return 'bg-emerald-50 text-emerald-600 border-emerald-200'
+    case 'C': return 'bg-amber-50 text-amber-600 border-amber-200'
+    case 'D': return 'bg-orange-50 text-orange-600 border-orange-200'
+    case 'F': return 'bg-rose-50 text-rose-600 border-rose-200'
+    default: return 'bg-slate-50 text-slate-600 border-slate-200'
   }
 }
 
 // Get compliance color based on percentage (higher is better)
+// Colors match risk grade colors for consistency: A/B=emerald, C=amber, D=orange, F=rose
 const getComplianceColor = (percentage: number) => {
-  if (percentage >= 90) return 'text-green-600' // Excellent
-  if (percentage >= 80) return 'text-green-500' // Good
-  if (percentage >= 70) return 'text-yellow-600' // Fair
-  if (percentage >= 60) return 'text-orange-600' // Poor
-  return 'text-red-600' // Fail
+  if (percentage >= 90) return 'text-emerald-600' // Matches A grade
+  if (percentage >= 75) return 'text-emerald-500' // Matches B grade
+  if (percentage >= 50) return 'text-amber-500'    // Matches C grade
+  if (percentage >= 25) return 'text-orange-500'   // Matches D grade
+  return 'text-rose-600'                           // Matches F grade
 }
 
 // Get compliance bar color based on percentage
+// Colors match risk grade colors for consistency
 const getComplianceBarColor = (percentage: number) => {
-  if (percentage >= 90) return 'bg-green-600' // Excellent
-  if (percentage >= 80) return 'bg-green-500' // Good
-  if (percentage >= 70) return 'bg-yellow-600' // Fair
-  if (percentage >= 60) return 'bg-orange-600' // Poor
-  return 'bg-red-600' // Fail
+  if (percentage >= 90) return 'bg-emerald-500'   // Matches A grade
+  if (percentage >= 80) return 'bg-emerald-400'    // Matches B grade
+  if (percentage >= 70) return 'bg-amber-500'      // Matches C grade
+  if (percentage >= 60) return 'bg-orange-500'     // Matches D grade
+  return 'bg-rose-500'                             // Matches F grade
 }
 
 // Filter and sort questions by selected category
@@ -244,15 +244,6 @@ const handleAnswerSubmit = async (
   }
 }
 
-// Handle recalculate score
-const handleRecalculateScore = async () => {
-  try {
-    score.value = await questionnaire.recalculateScore(organizationId)
-  } catch (error) {
-    console.error('Failed to recalculate score:', error)
-  }
-}
-
 // Initialize
 onMounted(async () => {
   if (!auth.isAuthenticated.value) {
@@ -267,7 +258,6 @@ onMounted(async () => {
   
   // Set initial selected category to "all"
   selectedCategory.value = 'all'
-  
   isLoading.value = false
 })
 
@@ -278,117 +268,135 @@ useSeoMeta({
 </script>
 
 <template>
-  <div class="min-h-screen bg-white">
-    <UContainer class="max-w-[1600px] px-4 py-8">
-      <!-- Loading State -->
-      <div v-if="isLoading" class="flex items-center justify-center py-20">
-        <div class="flex flex-col items-center gap-4">
-          <div class="w-12 h-12 border-4 border-[#09423C] border-t-transparent rounded-full animate-spin"></div>
-          <p class="text-mokshya-text">Loading assessment...</p>
+  <div class="min-h-screen bg-slate-50">
+    <UContainer class="max-w-[1600px] px-4 lg:px-6 py-8">
+      
+      <div v-if="isLoading" class="flex items-center justify-center min-h-[60vh]">
+        <div class="flex flex-col items-center gap-6">
+          <div class="relative">
+            <div class="w-16 h-16 border-4 border-slate-100 border-t-[#09423C] rounded-full animate-spin"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div class="w-2 h-2 bg-[#09423C] rounded-full"></div>
+            </div>
+          </div>
+          <p class="text-slate-500 font-medium animate-pulse">Initializing Security Assessment...</p>
         </div>
       </div>
 
-      <div v-else-if="currentOrg" class="flex flex-col lg:flex-row gap-8">
-        <!-- Left Sidebar - Categories -->
-        <aside class="w-full lg:w-72 flex-shrink-0">
-          <div class="sticky top-8">
-            <div class="mb-6">
-              <h2 class="text-lg font-bold text-gray-900 mb-2">Categories</h2>
-              <div class="flex items-center justify-between text-sm mb-2">
-                <span class="text-gray-500">{{ completedCategoriesCount }} of {{ categoriesWithProgress.length }} Completed</span>
-                <span class="font-semibold text-mokshya-dark">{{ Math.round((completedCategoriesCount / categoriesWithProgress.length) * 100) }}%</span>
-              </div>
-              <div class="w-full h-1 bg-gray-200 rounded-full overflow-hidden">
-                <div 
-                  class="h-full bg-[#09423C] transition-all duration-500 rounded-full"
-                  :style="{ width: `${(completedCategoriesCount / categoriesWithProgress.length) * 100}%` }"
-                ></div>
+      <div v-else-if="currentOrg" class="flex flex-col lg:flex-row gap-8 items-start">
+        
+        <aside class="w-full lg:w-80 flex-shrink-0 lg:sticky lg:top-8 transition-all duration-300">
+          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-5 border-b border-slate-100 bg-slate-50/50">
+              <h2 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#09423C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                Assessment Categories
+              </h2>
+              
+              <div class="space-y-2">
+                <div class="flex items-center justify-between text-xs font-medium">
+                  <span class="text-slate-500">Progress</span>
+                  <span class="text-[#09423C]">{{ Math.round((completedCategoriesCount / categoriesWithProgress.length) * 100) }}% Complete</span>
+                </div>
+                <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div 
+                    class="h-full bg-[#09423C] transition-all duration-700 ease-out rounded-full shadow-[0_0_10px_rgba(9,66,60,0.3)]"
+                    :style="{ width: `${(completedCategoriesCount / categoriesWithProgress.length) * 100}%` }"
+                  ></div>
+                </div>
+                <div class="text-[10px] text-slate-400 text-right">
+                  {{ completedCategoriesCount }} of {{ categoriesWithProgress.length }} categories done
+                </div>
               </div>
             </div>
 
-            <nav class="space-y-1">
-              <!-- All Questions Option -->
+            <nav class="max-h-[calc(100vh-250px)] overflow-y-auto p-3 space-y-1 custom-scrollbar">
               <button
                 @click="selectedCategory = 'all'; focusedQuestionIndex = 0"
                 :class="[
-                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all text-left group',
+                  'w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all text-left group border',
                   selectedCategory === 'all'
-                    ? 'bg-[#E3F5EB] text-[#09423C]'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-[#E3F5EB] border-[#09423C]/10 shadow-sm'
+                    : 'bg-transparent border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 ]"
               >
-                <!-- Status Icon -->
                 <div 
-                  class="w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors"
-                  :class="[
-                    selectedCategory === 'all'
-                      ? 'border-[#09423C] border-2 bg-transparent'
-                      : 'border-gray-300 bg-transparent'
-                  ]"
+                  class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+                  :class="selectedCategory === 'all' ? 'bg-[#09423C] text-white' : 'bg-slate-100 text-slate-400 group-hover:text-slate-600'"
                 >
-                  <div v-if="selectedCategory === 'all'" class="w-2 h-2 rounded-full bg-[#09423C]"></div>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
                 </div>
                 
                 <div class="flex-1">
-                  <span class="block font-semibold">All Questions</span>
-                  <span class="text-xs text-gray-400 font-normal">
-                    {{ answers.length }}/{{ questions.length }} Answered
+                  <span class="block font-semibold" :class="selectedCategory === 'all' ? 'text-[#09423C]' : 'text-slate-700'">All Questions</span>
+                  <span class="text-xs font-medium" :class="selectedCategory === 'all' ? 'text-[#09423C]/70' : 'text-slate-400'">
+                    {{ answers.length }} / {{ questions.length }} Answered
                   </span>
                 </div>
               </button>
 
-              <!-- Category Options -->
+              <div class="my-2 border-t border-slate-100 mx-2"></div>
+
               <button
                 v-for="category in categoriesWithProgress"
                 :key="category.name"
                 @click="selectedCategory = category.name; focusedQuestionIndex = 0"
                 :class="[
-                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all text-left group',
+                  'w-full flex items-start gap-3 px-3 py-2.5 rounded-xl text-sm transition-all text-left group border',
                   selectedCategory === category.name
-                    ? 'bg-[#E3F5EB] text-[#09423C]'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-white border-[#09423C] ring-1 ring-[#09423C]/10 shadow-md transform scale-[1.02]'
+                    : 'bg-transparent border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 ]"
               >
-                <!-- Status Icon -->
-                <div 
-                  class="w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-colors"
-                  :class="[
-                    category.isCompleted
-                      ? 'bg-[#09423C] border-[#09423C] text-white'
-                      : selectedCategory === category.name
-                      ? 'border-[#09423C] border-2 bg-transparent'
-                      : 'border-gray-300 bg-transparent'
-                  ]"
-                >
-                  <svg v-if="category.isCompleted" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <div v-else-if="selectedCategory === category.name" class="w-2 h-2 rounded-full bg-[#09423C]"></div>
+                <div class="relative pt-0.5">
+                  <div 
+                    class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-all border"
+                    :class="[
+                      category.isCompleted
+                        ? 'bg-emerald-500 border-emerald-500 text-white'
+                        : selectedCategory === category.name
+                        ? 'border-[#09423C] bg-white'
+                        : 'border-slate-300 bg-white group-hover:border-slate-400'
+                    ]"
+                  >
+                    <svg v-if="category.isCompleted" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <div v-else-if="selectedCategory === category.name" class="w-2 h-2 rounded-full bg-[#09423C]"></div>
+                  </div>
+                  <div v-if="false" class="absolute top-6 left-1/2 w-px h-6 bg-slate-200 -ml-[0.5px]"></div>
                 </div>
                 
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center justify-between mb-1">
-                    <span class="block text-sm font-medium truncate">{{ category.name }}</span>
+                    <span 
+                      class="block text-sm font-medium truncate"
+                      :class="selectedCategory === category.name ? 'text-[#09423C]' : 'text-slate-700'"
+                    >
+                      {{ category.name }}
+                    </span>
                     <span
                       v-if="getCategoryPerformance(category.name)"
-                      class="text-xs font-bold flex-shrink-0 ml-2"
-                      :class="getComplianceColor(getCategoryPerformance(category.name).compliance)"
+                      class="text-[10px] font-bold px-1.5 py-0.5 rounded ml-2"
+                      :class="[
+                        getComplianceColor(getCategoryPerformance(category.name).compliance),
+                        'bg-opacity-10 bg-slate-100'
+                      ]"
                     >
                       {{ Math.round(getCategoryPerformance(category.name).compliance) }}%
                     </span>
                   </div>
+                  
                   <div class="flex items-center gap-2">
-                    <div
-                      v-if="getCategoryPerformance(category.name)"
-                      class="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden"
-                    >
+                    <div class="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden">
                       <div
-                        class="h-full rounded-full transition-all duration-300"
+                        v-if="getCategoryPerformance(category.name)"
+                        class="h-full rounded-full transition-all duration-500"
                         :class="getComplianceBarColor(getCategoryPerformance(category.name).compliance)"
                         :style="{ width: `${getCategoryPerformance(category.name).compliance}%` }"
                       ></div>
                     </div>
-                    <span class="text-xs text-gray-400 font-normal flex-shrink-0">
+                    <span class="text-[10px] text-slate-400 font-medium flex-shrink-0">
                       {{ category.answered }}/{{ category.total }}
                     </span>
                   </div>
@@ -398,131 +406,132 @@ useSeoMeta({
           </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="flex-1 min-w-0">
-          <!-- Header -->
-          <div class="mb-8">
-            <!-- Breadcrumbs -->
-            <nav class="mb-4">
-              <ol class="flex items-center gap-2 text-sm text-gray-500">
-                <li>Assessment</li>
-                <li class="text-gray-300">/</li>
-                <li>
-                  <NuxtLink
-                    :to="`/organizations/${organizationId}`"
-                    class="hover:text-[#09423C] transition-colors"
-                  >
-                    Organization Profile
-                  </NuxtLink>
-                </li>
-                <li class="text-gray-300">/</li>
-                <li class="font-medium text-[#09423C]">Control Assessment</li>
-              </ol>
-            </nav>
+          
+          <div class="mb-6 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <nav class="flex items-center gap-2 text-sm text-slate-500">
+                <NuxtLink to="/organizations" class="hover:text-slate-800 transition-colors">Organizations</NuxtLink>
+                <span class="text-slate-300">/</span>
+                <NuxtLink :to="`/organizations/${organizationId}`" class="hover:text-slate-800 transition-colors">Profile</NuxtLink>
+                <span class="text-slate-300">/</span>
+                <span class="font-medium text-[#09423C] bg-[#E3F5EB] px-2 py-0.5 rounded-md">Control Assessment</span>
+              </nav>
+            </div>
 
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col xl:flex-row gap-6 justify-between items-start xl:items-center">
               <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                <h1 class="text-2xl font-bold text-slate-900">
                   Control Assessment
                 </h1>
-                <div class="flex items-center gap-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
-                  <div class="w-2 h-2 rounded-full bg-[#09423C]"></div>
-                  Mokshya OS Intelligence Engine Active
-                </div>
+                <p class="text-slate-500 text-sm mt-1">
+                  Complete the questionnaire to evaluate {{ currentOrg.name }}'s security posture.
+                </p>
               </div>
 
-              <!-- Top Controls -->
-              <div class="flex items-center gap-6">
-                <!-- Score & Red Flags -->
-                <div v-if="score" class="hidden md:flex items-center gap-6 border-r border-gray-200 pr-6">
-                  <div class="flex flex-col items-end">
-                    <span class="text-xs font-semibold text-gray-500 uppercase">Risk Grade</span>
-                    <span class="text-lg font-bold" :class="getRiskGradeColor(score.risk_grade)">
-                      {{ score.risk_grade }}
-                    </span>
-                    <span class="text-xs text-gray-400">{{ Math.round(100 - score.compliance_percentage) }}% Risk</span>
-                  </div>
-                  <div class="flex flex-col items-end">
-                    <span class="text-xs font-semibold text-gray-500 uppercase">Compliance</span>
-                    <span class="text-lg font-bold text-green-600">
-                      {{ Math.round(score.compliance_percentage) }}%
-                    </span>
-                    <span class="text-xs text-gray-400">Higher is better</span>
-                  </div>
-                  <div class="flex flex-col items-end">
-                    <span class="text-xs font-semibold text-gray-500 uppercase">Red Flags</span>
-                    <span class="text-lg font-bold" :class="score.red_flags_count > 0 ? 'text-red-600' : 'text-gray-900'">{{ score.red_flags_count }}</span>
-                  </div>
-                </div>
-
-                <!-- Total Progress -->
-                <div class="flex items-center gap-4">
-                  <div class="text-right">
-                    <div class="text-xs font-semibold text-gray-900">Total Progress</div>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <div class="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        class="h-full bg-[#09423C] rounded-full"
-                        :style="{ width: `${overallProgress}%` }"
-                      ></div>
+              <div v-if="score" class="flex flex-wrap items-center gap-4 lg:gap-8 w-full xl:w-auto p-4 bg-slate-50 rounded-xl border border-slate-100">
+                
+                <div class="flex items-center gap-3">
+                  <div class="flex flex-col">
+                    <span class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Risk Grade</span>
+                    <div class="flex items-baseline gap-1">
+                      <span class="text-2xl font-bold font-mono" :class="getRiskGradeColor(score.risk_grade)">
+                        {{ score.risk_grade }}
+                      </span>
                     </div>
-                    <span class="text-xs font-bold text-gray-900">{{ overallProgress }}%</span>
                   </div>
                 </div>
+                
+                <div class="w-px h-8 bg-slate-200"></div>
 
-                <!-- View Toggle -->
-                <div class="flex bg-white rounded-lg border border-gray-200 p-1">
-                  <button
-                    @click="viewMode = 'focus'"
-                    :class="[
-                      'px-3 py-1.5 text-sm font-medium rounded-md flex items-center gap-2 transition-colors',
-                      viewMode === 'focus' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:text-gray-700'
-                    ]"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                    </svg>
-                    Focus
-                  </button>
-                  <button
-                    @click="viewMode = 'list'"
-                    :class="[
-                      'px-3 py-1.5 text-sm font-medium rounded-md flex items-center gap-2 transition-colors',
-                      viewMode === 'list' ? 'bg-[#09423C] text-white' : 'text-gray-500 hover:text-gray-700'
-                    ]"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                    List
-                  </button>
+                <div class="flex flex-col">
+                  <span class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Compliance</span>
+                  <span class="text-xl font-bold" :class="getComplianceColor(score.compliance_percentage)">
+                    {{ Math.round(score.compliance_percentage) }}%
+                  </span>
+                </div>
+
+                <div class="w-px h-8 bg-slate-200"></div>
+
+                <div class="flex flex-col">
+                  <span class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Red Flags</span>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xl font-bold" :class="score.red_flags_count > 0 ? 'text-rose-600' : 'text-slate-700'">
+                      {{ score.red_flags_count }}
+                    </span>
+                    <svg v-if="score.red_flags_count > 0" class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Question List / Focus View -->
+          <div class="sticky top-4 z-20 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/80 backdrop-blur-md p-3 rounded-xl border border-slate-200/60 shadow-sm">
+            
+            <div class="flex items-center gap-3 px-3">
+              <span class="text-xs font-semibold text-slate-600">Total Progress</span>
+              <div class="w-32 h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-100">
+                <div 
+                  class="h-full bg-gradient-to-r from-[#09423C] to-emerald-600 rounded-full"
+                  :style="{ width: `${overallProgress}%` }"
+                ></div>
+              </div>
+              <span class="text-xs font-bold text-slate-900">{{ overallProgress }}%</span>
+            </div>
+
+            <div class="flex bg-slate-100 rounded-lg p-1 border border-slate-200">
+              <button
+                @click="viewMode = 'focus'"
+                :class="[
+                  'px-3 py-1.5 text-xs font-semibold rounded-md flex items-center gap-2 transition-all duration-200',
+                  viewMode === 'focus' 
+                    ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' 
+                    : 'text-slate-500 hover:text-slate-700'
+                ]"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+                Focus Mode
+              </button>
+              <button
+                @click="viewMode = 'list'"
+                :class="[
+                  'px-3 py-1.5 text-xs font-semibold rounded-md flex items-center gap-2 transition-all duration-200',
+                  viewMode === 'list' 
+                    ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' 
+                    : 'text-slate-500 hover:text-slate-700'
+                ]"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                List View
+              </button>
+            </div>
+          </div>
+
           <div v-if="viewMode === 'focus'">
-            <!-- Focus Mode: Show one question at a time -->
-            <div v-if="currentQuestion" class="space-y-4">
-              <GlobalQuestionCard
-                :question="currentQuestion"
-                :answer="getAnswerForQuestion(currentQuestion.id)"
-                :is-saving="savingAnswerId === currentQuestion.id"
-                @answer-submitted="handleAnswerSubmit"
-              />
+            <div v-if="currentQuestion" class="max-w-3xl mx-auto">
+              <div class="relative">
+                <GlobalQuestionCard
+                  :question="currentQuestion"
+                  :answer="getAnswerForQuestion(currentQuestion.id)"
+                  :is-saving="savingAnswerId === currentQuestion.id"
+                  @answer-submitted="handleAnswerSubmit"
+                  class="transform transition-all duration-300"
+                />
+              </div>
               
-              <!-- Navigation Controls -->
-              <div class="flex items-center justify-between bg-white rounded-xl border border-gray-200 p-4">
+              <div class="mt-6 flex items-center justify-between">
                 <button
                   @click="goToPreviousQuestion"
                   :disabled="focusedQuestionIndex === 0"
                   :class="[
-                    'px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2',
+                    'px-5 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2',
                     focusedQuestionIndex === 0
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-[#09423C] text-white hover:bg-[#07332e]'
+                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                      : 'bg-white text-slate-700 border border-slate-200 hover:border-[#09423C] hover:text-[#09423C] shadow-sm hover:shadow-md'
                   ]"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -531,36 +540,44 @@ useSeoMeta({
                   Previous
                 </button>
                 
-                <div class="text-sm text-gray-600">
-                  Question {{ focusedQuestionIndex + 1 }} of {{ filteredQuestions.length }}
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+                  Question {{ focusedQuestionIndex + 1 }} / {{ filteredQuestions.length }}
                 </div>
                 
                 <button
                   @click="goToNextQuestion"
                   :disabled="focusedQuestionIndex === filteredQuestions.length - 1"
                   :class="[
-                    'px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2',
+                    'px-5 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2',
                     focusedQuestionIndex === filteredQuestions.length - 1
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-[#09423C] text-white hover:bg-[#07332e]'
+                      ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                      : 'bg-[#09423C] text-white shadow-md shadow-emerald-900/10 hover:bg-[#07332e] hover:shadow-lg'
                   ]"
                 >
-                  Next
+                  Next Question
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
               </div>
             </div>
-            <div v-else class="text-center py-12 bg-white rounded-xl border border-gray-200">
-              <p class="text-gray-500">No questions available</p>
+            
+            <div v-else class="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
+              <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+              </div>
+              <h3 class="text-lg font-medium text-slate-900">No questions available</h3>
+              <p class="text-slate-500 mt-1">Select a different category or try refreshing.</p>
             </div>
           </div>
           
-          <!-- List Mode: Show all questions -->
-          <div v-else class="space-y-4">
-            <div v-if="filteredQuestions.length === 0" class="text-center py-12 bg-white rounded-xl border border-gray-200">
-              <p class="text-gray-500">No questions found</p>
+          <div v-else class="space-y-4 pb-20">
+            <div v-if="filteredQuestions.length === 0" class="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
+              <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+              </div>
+              <h3 class="text-lg font-medium text-slate-900">No questions found</h3>
+              <p class="text-slate-500 mt-1">Try adjusting your filters.</p>
             </div>
             
             <GlobalQuestionCard
@@ -571,10 +588,25 @@ useSeoMeta({
               :answer="getAnswerForQuestion(question.id)"
               :is-saving="savingAnswerId === question.id"
               @answer-submitted="handleAnswerSubmit"
+              class="transition-transform duration-200 hover:translate-x-1"
             />
           </div>
+
         </main>
       </div>
     </UContainer>
   </div>
 </template>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 20px;
+}
+</style>
