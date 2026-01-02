@@ -84,6 +84,14 @@ const getAnswerForQuestion = (questionId: string) => {
   return answers.value.find(a => a.question_id === questionId)
 }
 
+// Get risk score color based on percentage (lower is better)
+const getRiskScoreColor = (percentage: number) => {
+  if (percentage <= 25) return 'text-green-600' // Low risk
+  if (percentage <= 50) return 'text-yellow-600' // Medium risk
+  if (percentage <= 75) return 'text-orange-600' // High risk
+  return 'text-red-600' // Very high risk
+}
+
 // Filter and sort questions by selected category
 const filteredQuestions = computed(() => {
   let filtered = questions.value
@@ -365,8 +373,11 @@ useSeoMeta({
                 <!-- Score & Red Flags -->
                 <div v-if="score" class="hidden md:flex items-center gap-6 border-r border-gray-200 pr-6">
                   <div class="flex flex-col items-end">
-                    <span class="text-xs font-semibold text-gray-500 uppercase">Score</span>
-                    <span class="text-lg font-bold text-[#09423C]">{{ score.total_score }}/{{ score.max_possible_score }}</span>
+                    <span class="text-xs font-semibold text-gray-500 uppercase">Risk Score</span>
+                    <span class="text-lg font-bold" :class="getRiskScoreColor(Math.round((score.total_score / score.max_possible_score) * 100))">
+                      {{ Math.round((score.total_score / score.max_possible_score) * 100) }}%
+                    </span>
+                    <span class="text-xs text-gray-400">Lower is better</span>
                   </div>
                   <div class="flex flex-col items-end">
                     <span class="text-xs font-semibold text-gray-500 uppercase">Red Flags</span>
