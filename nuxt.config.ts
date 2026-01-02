@@ -1,4 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import tailwindcss from "@tailwindcss/vite";
+
 export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
@@ -31,14 +33,16 @@ export default defineNuxtConfig({
     ssr: {
       // Include reka-ui in SSR bundle to handle it properly
       noExternal: ['reka-ui', '@nuxt/ui']
-    }
+    },
+    plugins: [
+      tailwindcss()
+    ]
   },
 
   // Build configuration for SSR compatibility
   build: {
     transpile: ['reka-ui']
   },
-
   // Component auto-import configuration
   components: [
     {

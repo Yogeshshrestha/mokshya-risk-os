@@ -5,6 +5,7 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
+    "start": "nuxt start",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
@@ -16,7 +17,9 @@
     "@nuxt/hints": "1.0.0-alpha.4",
     "@nuxt/image": "2.0.0",
     "@nuxt/ui": "^4.3.0",
-    "nuxt": "^4.2.2"
+    "nuxt": "^4.2.2",
+    "tailwindcss": "^4.1.18",
+    "@tailwindcss/vite": "^4.1.18"
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.12.1",

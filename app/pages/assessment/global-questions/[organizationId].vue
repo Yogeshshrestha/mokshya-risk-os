@@ -336,7 +336,14 @@ useSeoMeta({
               <ol class="flex items-center gap-2 text-sm text-gray-500">
                 <li>Assessment</li>
                 <li class="text-gray-300">/</li>
-                <li>Organization Profile</li>
+                <li>
+                  <NuxtLink
+                    :to="`/organizations/${organizationId}`"
+                    class="hover:text-[#09423C] transition-colors"
+                  >
+                    Organization Profile
+                  </NuxtLink>
+                </li>
                 <li class="text-gray-300">/</li>
                 <li class="font-medium text-[#09423C]">Control Assessment</li>
               </ol>
