@@ -15,13 +15,17 @@ onMounted(() => {
 // State
 const organizations = ref<OrganizationResponse[]>([])
 const isLoading = ref(true)
-const showCreateModal = ref(false)
+const showCreateForm = ref(false)
 
 // Fetch organizations
 const fetchOrganizations = async () => {
   try {
     isLoading.value = true
     organizations.value = await organization.listOrganizations()
+    // Auto-show form if no organizations exist
+    if (organizations.value.length === 0) {
+      showCreateForm.value = true
+    }
   } catch (error) {
     console.error('Failed to fetch organizations:', error)
   } finally {
@@ -35,8 +39,16 @@ onMounted(() => {
 
 // Handle organization created
 const handleOrganizationCreated = () => {
-  showCreateModal.value = false
+  showCreateForm.value = false
   fetchOrganizations()
+}
+
+// Handle form close
+const handleFormClose = () => {
+  // Only allow closing if there are organizations
+  if (organizations.value.length > 0) {
+    showCreateForm.value = false
+  }
 }
 
 // Format date
@@ -56,7 +68,7 @@ useSeoMeta({
 
 <template>
   <div class="min-h-screen bg-white">
-    <UContainer class="py-8">
+    <UContainer class="max-w-[1600px] px-4 lg:px-6 py-8">
       <!-- Header -->
       <div class="flex items-center justify-between mb-8">
         <div>
@@ -68,10 +80,12 @@ useSeoMeta({
           </p>
         </div>
         <button
-          @click="showCreateModal = true"
+          v-if="organizations.length > 0"
+          @click="showCreateForm = !showCreateForm"
           class="px-6 py-3 rounded-lg bg-[#09423C] text-white font-semibold hover:bg-[#07332e] transition-colors flex items-center gap-2 cursor-pointer"
         >
           <svg
+            v-if="!showCreateForm"
             class="w-5 h-5"
             fill="none"
             stroke="currentColor"
@@ -84,53 +98,37 @@ useSeoMeta({
               d="M12 4v16m8-8H4"
             />
           </svg>
-          Create Organization
+          <svg
+            v-else
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+          {{ showCreateForm ? 'Cancel' : 'Create Organization' }}
         </button>
       </div>
+
+      <!-- Create Organization Form - Inline -->
+      <CreateOrganizationForm
+        :is-open="showCreateForm || organizations.length === 0"
+        :has-organizations="organizations.length > 0"
+        @created="handleOrganizationCreated"
+        @close="handleFormClose"
+      />
 
       <!-- Loading State -->
       <div v-if="isLoading" class="flex items-center justify-center py-20">
         <div class="flex flex-col items-center gap-4">
           <div class="w-12 h-12 border-4 border-[#09423C] border-t-transparent rounded-full animate-spin"></div>
           <p class="text-mokshya-text">Loading organizations...</p>
-        </div>
-      </div>
-
-      <!-- Empty State -->
-      <div
-        v-else-if="organizations.length === 0"
-        class="bg-white rounded-lg border border-gray-200 p-12 text-center"
-      >
-        <div class="flex flex-col items-center gap-4">
-          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-            <svg
-              class="w-8 h-8 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-              />
-            </svg>
-          </div>
-          <div>
-            <h3 class="text-lg font-semibold text-mokshya-dark mb-2">
-              No organizations yet
-            </h3>
-            <p class="text-sm text-mokshya-text mb-6">
-              Create your first organization to get started
-            </p>
-            <button
-              @click="showCreateModal = true"
-              class="px-6 py-3 rounded-lg bg-[#09423C] text-white font-semibold hover:bg-[#07332e] transition-colors cursor-pointer"
-            >
-              Create Organization
-            </button>
-          </div>
         </div>
       </div>
 
@@ -233,12 +231,6 @@ useSeoMeta({
           </div>
         </div>
       </div>
-
-      <!-- Create Organization Modal -->
-      <CreateOrganizationModal
-        v-model="showCreateModal"
-        @created="handleOrganizationCreated"
-      />
     </UContainer>
   </div>
 </template>

@@ -56,8 +56,8 @@ export const IMAGES = {
   boardMembers: 'https://www.figma.com/api/mcp/asset/c99a13aa-b559-4617-9ec0-d97d9182118e',
   underwriters: 'https://www.figma.com/api/mcp/asset/1de5420a-5b4e-46bb-af93-03f8cc03209a',
 
-  // Other assets
-  orbitalVector: 'https://www.figma.com/api/mcp/asset/c0957895-6585-44ab-9878-c5041f9a7004',
+  // Other assets - Orbital path vector
+  orbitalVector: 'https://www.figma.com/api/mcp/asset/7a9b4d37-bf90-4ab3-9181-5a261ea35fad',
    
   plusIcon 
 } as const

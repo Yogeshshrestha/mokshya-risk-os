@@ -132,7 +132,7 @@ useSeoMeta({
 
 <template>
   <div class="min-h-screen bg-white">
-    <UContainer class="py-8">
+    <UContainer class="max-w-[1600px] px-4 lg:px-6 py-8">
       
       <div v-if="isLoading" class="animate-pulse space-y-8">
         <div class="h-4 w-32 bg-gray-200 rounded"></div>

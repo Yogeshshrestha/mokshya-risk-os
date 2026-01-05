@@ -79,6 +79,12 @@ const headerBgClass = computed(() => {
   }
 })
 
+// Determine if page should have wide container (organizations and assessment pages)
+const isWidePage = computed(() => {
+  const path = route.path
+  return path.startsWith('/organizations') || path.startsWith('/assessment')
+})
+
 useHead({
   meta: [
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
@@ -178,7 +184,7 @@ const handleNavigation = (e: Event, target: string) => {
     
     <!-- Custom header matching Figma design -->
     <header :class="['sticky top-0 z-50 border-b border-gray-100 transition-colors duration-300', headerBgClass]">
-      <UContainer class="flex items-center justify-between h-16">
+      <UContainer :class="['flex items-center justify-between h-16', isWidePage ? 'max-w-[1600px] px-4 lg:px-6' : '']">
         <!-- Left: Logo and text -->
         <div class="flex items-center">
           <NuxtLink to="/" class="flex items-center gap-2 cursor-pointer"> 

@@ -136,7 +136,7 @@ const handleClose = () => {
         >
           <div
             v-if="isOpen"
-            class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            class="modal-content bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
             @click.stop
           >
             <!-- Header -->
@@ -209,19 +209,19 @@ const handleClose = () => {
                 <label class="block text-sm font-semibold text-mokshya-dark">
                   Permissions
                 </label>
-                <div class="border border-gray-200 rounded-lg p-4 max-h-64 overflow-y-auto">
+                <div class="permissions-container border border-gray-200 rounded-lg p-4 max-h-64 overflow-y-auto">
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <label
                       v-for="permission in availablePermissions"
                       :key="permission"
-                      class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors"
+                      class="permission-item flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors"
                     >
                       <input
                         type="checkbox"
                         :checked="formData.permissions?.includes(permission)"
                         @change="togglePermission(permission)"
                         :disabled="isLoading"
-                        class="w-4 h-4 text-[#09423C] border-gray-300 rounded focus:ring-[#09423C] focus:ring-2"
+                        class="permission-checkbox w-4 h-4 rounded focus:ring-[#09423C] focus:ring-2"
                       >
                       <span class="text-sm text-mokshya-text flex-1">
                         {{ permission }}
@@ -264,4 +264,153 @@ const handleClose = () => {
     </Transition>
   </Teleport>
 </template>
+
+<style scoped>
+/* Force checkbox styling to override browser dark theme */
+.permission-checkbox {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-color: #ffffff !important;
+  border: 2px solid #d1d5db !important;
+  position: relative;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.permission-checkbox:checked {
+  background-color: #09423C !important;
+  border-color: #09423C !important;
+}
+
+.permission-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 8px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -60%) rotate(45deg);
+  display: block;
+}
+
+.permission-checkbox:hover:not(:disabled):not(:checked) {
+  border-color: #09423C !important;
+  background-color: #f9fafb !important;
+}
+
+.permission-checkbox:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Custom scrollbar for modal content */
+.modal-content {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.modal-content::-webkit-scrollbar {
+  width: 10px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+  border-radius: 5px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+  border-radius: 5px;
+  border: 2px solid #f1f5f9;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8 !important;
+}
+
+/* Custom scrollbar for permissions container */
+.permissions-container {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.permissions-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.permissions-container::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+  border-radius: 4px;
+}
+
+.permissions-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+  border-radius: 4px;
+  border: 2px solid #f1f5f9;
+}
+
+.permissions-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8 !important;
+}
+
+/* Force light theme colors even in dark mode browser */
+@media (prefers-color-scheme: dark) {
+  .permission-checkbox {
+    background-color: #ffffff !important;
+    border-color: #d1d5db !important;
+  }
+
+  .permission-checkbox:checked {
+    background-color: #09423C !important;
+    border-color: #09423C !important;
+  }
+
+  .permission-checkbox:checked::after {
+    border-color: #ffffff !important;
+  }
+
+  .permission-checkbox:hover:not(:disabled):not(:checked) {
+    border-color: #09423C !important;
+    background-color: #f9fafb !important;
+  }
+
+  .permissions-container {
+    scrollbar-color: #cbd5e1 #f1f5f9 !important;
+  }
+
+  .permissions-container::-webkit-scrollbar-track {
+    background: #f1f5f9 !important;
+  }
+
+  .permissions-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1 !important;
+    border-color: #f1f5f9 !important;
+  }
+
+  .permissions-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8 !important;
+  }
+
+  /* Modal content scrollbar in dark mode */
+  .modal-content {
+    scrollbar-color: #cbd5e1 #f1f5f9 !important;
+  }
+
+  .modal-content::-webkit-scrollbar-track {
+    background: #f1f5f9 !important;
+  }
+
+  .modal-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1 !important;
+    border-color: #f1f5f9 !important;
+  }
+
+  .modal-content::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8 !important;
+  }
+}
+</style>
 
