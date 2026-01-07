@@ -95,8 +95,15 @@ const headerBgClass = computed(() => {
 // Determine if header should be visible
 const showHeader = computed(() => {
   const path = route.path
-  // Hide main header on dashboard pages as they have their own header/sidebar
-  return !path.includes('/dashboard')
+  // Hide main header on all dashboard and organization-specific pages
+  // These pages use the DashboardSidebar and DashboardHeader instead
+  const isDashboardRoute = path.includes('/dashboard') || 
+                          path.includes('/assets') || 
+                          path.includes('/risks') || 
+                          path.includes('/settings')
+  
+  // We only show the public header on home, pricing, profile, and the main organizations list
+  return !isDashboardRoute
 })
 
 // Determine if page should have wide container (organizations and assessment pages)

@@ -28,6 +28,16 @@ const togglePersona = (val: string) => {
     <h1 class="text-[20px] font-extrabold text-[#09433e] tracking-tight">{{ title }}</h1>
     
     <div class="flex items-center gap-8">
+      <NuxtLink 
+        to="/organizations"
+        class="flex items-center gap-2 text-[13px] font-bold text-[#4f9690] hover:text-[#09433e] transition-colors group"
+      >
+        <svg class="size-4 transform group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z" />
+        </svg>
+        Switch Org
+      </NuxtLink>
+
       <div class="bg-[#e8f3f2] h-[48px] rounded-[14px] px-4 flex items-center gap-4 shadow-sm border border-[#d0e6e5]/30 relative">
         <span class="text-[12px] font-extrabold text-[#09433e] uppercase tracking-widest">Persona:</span>
         <div class="relative">
