@@ -5,10 +5,12 @@ import type {
   OrganizationInvitationResponse,
   RoleResponse
 } from '~/types/organization'
+import type { GlobalQuestionnaireScoreResponse } from '~/types/global-questionnaire'
 
 const route = useRoute()
 const router = useRouter()
 const organization = useOrganization()
+const questionnaire = useGlobalQuestionnaire()
 const auth = useAuth()
 
 const organizationId = route.params.id as string
@@ -18,16 +20,27 @@ const org = ref<OrganizationResponse | null>(null)
 const members = ref<OrganizationMemberWithUser[]>([])
 const invitations = ref<OrganizationInvitationResponse[]>([])
 const roles = ref<RoleResponse[]>([])
+const score = ref<GlobalQuestionnaireScoreResponse | null>(null)
 const isLoading = ref(true)
 const activeTab = ref<'overview' | 'members' | 'invitations' | 'roles'>('overview')
 const showInviteModal = ref(false)
 const showCreateRoleModal = ref(false)
+
+// Fetch score
+const fetchScore = async () => {
+  try {
+    score.value = await questionnaire.getOrganizationScore(organizationId)
+  } catch (error) {
+    console.error('Failed to fetch score:', error)
+  }
+}
 
 // Fetch organization data
 const fetchOrganization = async () => {
   try {
     isLoading.value = true
     org.value = await organization.getOrganization(organizationId)
+    await fetchScore()
   } catch (error) {
     console.error('Failed to fetch organization:', error)
     router.push('/organizations')
@@ -197,6 +210,16 @@ useSeoMeta({
             </div>
             
             <div class="flex gap-2 sm:gap-3 flex-shrink-0">
+               <NuxtLink 
+                  v-if="score && score.answered_questions === score.total_questions"
+                  :to="`/organizations/${organizationId}/dashboard`"
+                  class="flex items-center gap-2 bg-[#09423C] text-white px-4 py-2 rounded-lg font-bold hover:bg-[#07332e] transition-colors shadow-sm text-sm"
+               >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  View Dashboard
+               </NuxtLink>
                <button class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all">
                   <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
                </button>

@@ -650,6 +650,26 @@ useSeoMeta({
               @answer-submitted="handleAnswerSubmit"
               class="transition-transform duration-200 sm:hover:translate-x-1"
             />
+
+            <!-- Dashboard Call to Action when completed -->
+            <div v-if="overallProgress === 100" class="mt-12 p-8 bg-gradient-to-br from-[#09423C] to-emerald-800 rounded-2xl shadow-xl text-white text-center transform hover:scale-[1.01] transition-all">
+              <div class="inline-flex items-center justify-center size-16 bg-white/20 rounded-full mb-4">
+                <svg class="size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h2 class="text-2xl font-bold mb-2">Assessment Completed!</h2>
+              <p class="text-emerald-50 mb-8 max-w-md mx-auto">Your security posture has been evaluated. You can now view your full risk profile and intelligence dashboard.</p>
+              <NuxtLink 
+                :to="`/organizations/${organizationId}/dashboard`"
+                class="inline-flex items-center gap-2 bg-white text-[#09423C] px-8 py-4 rounded-xl font-bold hover:bg-emerald-50 transition-colors shadow-lg"
+              >
+                Go to Dashboard
+                <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </NuxtLink>
+            </div>
           </div>
 
         </main>

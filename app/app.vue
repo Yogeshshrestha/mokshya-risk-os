@@ -92,6 +92,13 @@ const headerBgClass = computed(() => {
   }
 })
 
+// Determine if header should be visible
+const showHeader = computed(() => {
+  const path = route.path
+  // Hide main header on dashboard pages as they have their own header/sidebar
+  return !path.includes('/dashboard')
+})
+
 // Determine if page should have wide container (organizations and assessment pages)
 const isWidePage = computed(() => {
   const path = route.path
@@ -123,7 +130,7 @@ useHead({
   }
 })
 
-const title = 'Nuxt Starter Template'
+const title = 'Dashboard'
 const description = 'A production-ready starter template powered by Nuxt UI. Build beautiful, accessible, and performant applications in minutes, not hours.'
 
 useSeoMeta({
@@ -196,7 +203,7 @@ const handleNavigation = (e: Event, target: string) => {
     <!-- Top teal strip --> 
     
     <!-- Custom header matching Figma design -->
-    <header :class="['sticky top-0 z-50 border-b border-gray-100 transition-colors duration-300', headerBgClass]">
+    <header v-if="showHeader" :class="['sticky top-0 z-50 border-b border-gray-100 transition-colors duration-300', headerBgClass]">
       <UContainer :class="['flex items-center justify-between h-14 sm:h-16', isWidePage ? 'max-w-[1600px] px-4 lg:px-6' : 'px-4 sm:px-6']">
         <!-- Left: Logo and text -->
         <div class="flex items-center flex-shrink-0">
