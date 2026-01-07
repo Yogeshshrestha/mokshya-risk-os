@@ -204,48 +204,48 @@ useSeoMeta({
 
 <template>
   <div class="min-h-screen bg-white">
-    <UContainer class="py-8">
+    <UContainer class="py-4 sm:py-6 lg:py-8 px-4 sm:px-6">
       <!-- Breadcrumb -->
-      <nav class="mb-6">
-        <ol class="flex items-center gap-2 text-sm text-mokshya-text">
-          <li>
+      <nav class="mb-4 sm:mb-6">
+        <ol class="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-mokshya-text overflow-x-auto">
+          <li class="flex-shrink-0">
             <NuxtLink to="/assessment" class="hover:text-mokshya-dark transition-colors">
               Assessment
             </NuxtLink>
           </li>
-          <li class="text-gray-400">/</li>
-          <li class="font-medium text-mokshya-dark">Organization Profile</li>
+          <li class="text-gray-400 flex-shrink-0">/</li>
+          <li class="font-medium text-mokshya-dark flex-shrink-0">Organization Profile</li>
         </ol>
       </nav>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         <!-- Main Content -->
         <div class="lg:col-span-2">
           <!-- Header -->
-          <div class="mb-8">
-            <div class="flex items-start justify-between mb-4">
-              <div>
-                <h1 class="text-3xl font-bold text-mokshya-dark mb-2">
+          <div class="mb-6 sm:mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+              <div class="flex-1 min-w-0">
+                <h1 class="text-2xl sm:text-3xl font-bold text-mokshya-dark mb-2">
                   Organization Profile
                 </h1>
-                <p class="text-base text-mokshya-text">
+                <p class="text-sm sm:text-base text-mokshya-text">
                   Please provide basic details about your organization to calibrate the risk model.
                 </p>
               </div>
               
               <!-- View Toggle -->
-              <div class="flex items-center gap-2 bg-gray-50 rounded-lg p-1">
+              <div class="flex items-center gap-2 bg-gray-50 rounded-lg p-1 w-full sm:w-auto">
                 <button
                   @click="viewMode = 'form'"
                   :class="[
-                    'px-4 py-2 rounded-md text-sm font-semibold transition-colors flex items-center gap-2',
+                    'px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-semibold transition-colors flex items-center gap-1.5 sm:gap-2 flex-1 sm:flex-initial justify-center',
                     viewMode === 'form'
                       ? 'bg-[#09423C] text-white'
                       : 'text-mokshya-text hover:bg-gray-100'
                   ]"
                 >
                   <svg
-                    class="w-4 h-4"
+                    class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -257,19 +257,20 @@ useSeoMeta({
                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     />
                   </svg>
-                  Form View
+                  <span class="hidden sm:inline">Form View</span>
+                  <span class="sm:hidden">Form</span>
                 </button>
                 <button
                   @click="viewMode = 'chat'"
                   :class="[
-                    'px-4 py-2 rounded-md text-sm font-semibold transition-colors flex items-center gap-2',
+                    'px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-semibold transition-colors flex items-center gap-1.5 sm:gap-2 flex-1 sm:flex-initial justify-center',
                     viewMode === 'chat'
                       ? 'bg-[#09423C] text-white'
                       : 'text-mokshya-text hover:bg-gray-100'
                   ]"
                 >
                   <svg
-                    class="w-4 h-4"
+                    class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -281,14 +282,15 @@ useSeoMeta({
                       d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                     />
                   </svg>
-                  Chat View
+                  <span class="hidden sm:inline">Chat View</span>
+                  <span class="sm:hidden">Chat</span>
                 </button>
               </div>
             </div>
           </div>
 
           <!-- Form View -->
-          <div v-if="viewMode === 'form'" class="space-y-6">
+          <div v-if="viewMode === 'form'" class="space-y-4 sm:space-y-6">
             <!-- Company Name -->
             <div class="space-y-2">
               <label class="block text-sm font-semibold text-mokshya-dark">
@@ -525,11 +527,11 @@ useSeoMeta({
             </div>
 
             <!-- Footer Actions -->
-            <div class="flex items-center justify-between pt-8 border-t border-gray-200 mt-8">
-              <div class="flex items-center gap-2 text-sm text-gray-600">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 pt-6 sm:pt-8 border-t border-gray-200 mt-6 sm:mt-8">
+              <div class="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
                 <svg
                   v-if="lastSavedText"
-                  class="w-4 h-4"
+                  class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -541,17 +543,17 @@ useSeoMeta({
                     d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                   />
                 </svg>
-                <span v-if="lastSavedText">{{ lastSavedText }}</span>
+                <span v-if="lastSavedText" class="truncate">{{ lastSavedText }}</span>
                 <span v-else-if="isSaving" class="text-gray-400">Saving...</span>
               </div>
               
               <button
                 @click="handleNextStep"
-                class="px-6 py-3 rounded-lg bg-[#09423C] text-white font-semibold hover:bg-[#07332e] transition-colors flex items-center gap-2 cursor-pointer"
+                class="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg bg-[#09423C] text-white font-semibold hover:bg-[#07332e] transition-colors flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-base"
               >
                 Next Step
                 <svg
-                  class="w-4 h-4"
+                  class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -568,12 +570,12 @@ useSeoMeta({
           </div>
 
           <!-- Chat View -->
-          <div v-else class="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col" style="height: calc(100vh - 300px); min-height: 600px;">
+          <div v-else class="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col" style="height: calc(100vh - 200px); min-height: 500px;">
             <!-- Chat Header -->
-            <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-200">
-              <div class="flex-shrink-0 w-10 h-10 bg-[#09423C] rounded-lg flex items-center justify-center">
+            <div class="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+              <div class="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-[#09423C] rounded-lg flex items-center justify-center">
                 <svg
-                  class="w-6 h-6 text-white"
+                  class="w-5 h-5 sm:w-6 sm:h-6 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -587,12 +589,12 @@ useSeoMeta({
                 </svg>
               </div>
               <div class="flex-1 min-w-0">
-                <h3 class="text-base font-semibold text-mokshya-dark">
+                <h3 class="text-sm sm:text-base font-semibold text-mokshya-dark truncate">
                   Mokshya AI Assistant
                 </h3>
-                <div class="flex items-center gap-2">
-                  <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span class="text-sm text-green-600">Online</span>
+                <div class="flex items-center gap-1.5 sm:gap-2">
+                  <div class="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+                  <span class="text-xs sm:text-sm text-green-600">Online</span>
                 </div>
               </div>
             </div>
@@ -600,7 +602,7 @@ useSeoMeta({
             <!-- Chat Messages Area -->
             <div
               ref="chatContainer"
-              class="flex-1 overflow-y-auto px-6 py-4 space-y-6 bg-gray-50"
+              class="flex-1 overflow-y-auto px-3 sm:px-6 py-3 sm:py-4 space-y-4 sm:space-y-6 bg-gray-50"
             >
               <div
                 v-for="message in chatMessages"
@@ -649,10 +651,10 @@ useSeoMeta({
                 </div>
 
                 <!-- Message Bubble -->
-                <div class="flex-1 min-w-0 max-w-[70%]">
+                <div class="flex-1 min-w-0 max-w-[85%] sm:max-w-[70%]">
                   <div
                     :class="[
-                      'rounded-lg px-4 py-3',
+                      'rounded-lg px-3 sm:px-4 py-2 sm:py-3',
                       message.type === 'assistant'
                         ? 'bg-gray-200 text-gray-900'
                         : 'bg-[#09423C] text-white'
@@ -660,7 +662,7 @@ useSeoMeta({
                   >
                     <p
                       :class="[
-                        'text-sm whitespace-pre-wrap break-words',
+                        'text-xs sm:text-sm whitespace-pre-wrap break-words',
                         message.type === 'assistant' ? 'text-gray-900' : 'text-white'
                       ]"
                     >
@@ -668,14 +670,14 @@ useSeoMeta({
                     </p>
                     <p
                       v-if="message.example"
-                      class="text-xs mt-2 pl-4 text-gray-600 italic border-l-2 border-gray-400"
+                      class="text-[10px] sm:text-xs mt-2 pl-2 sm:pl-4 text-gray-600 italic border-l-2 border-gray-400"
                     >
                       {{ message.example }}
                     </p>
                   </div>
                   <p
                     :class="[
-                      'text-xs mt-1.5',
+                      'text-[10px] sm:text-xs mt-1 sm:mt-1.5',
                       message.type === 'assistant' ? 'text-gray-500' : 'text-gray-500 text-right'
                     ]"
                   >
@@ -714,16 +716,16 @@ useSeoMeta({
             </div>
 
             <!-- Message Input Area -->
-            <div class="px-6 py-4 border-t border-gray-200 bg-white">
-              <div class="flex items-center gap-3">
+            <div class="px-3 sm:px-6 py-3 sm:py-4 border-t border-gray-200 bg-white">
+              <div class="flex items-center gap-2 sm:gap-3">
                 <!-- Plus Button -->
                 <button
                   type="button"
-                  class="flex-shrink-0 w-10 h-10 bg-[#09423C] rounded-full flex items-center justify-center text-white hover:bg-[#07332e] transition-colors cursor-pointer"
+                  class="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-[#09423C] rounded-full flex items-center justify-center text-white hover:bg-[#07332e] transition-colors cursor-pointer"
                   aria-label="Attach file"
                 >
                   <svg
-                    class="w-5 h-5"
+                    class="w-4 h-4 sm:w-5 sm:h-5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -742,20 +744,20 @@ useSeoMeta({
                   v-model="currentMessage"
                   @keypress="handleKeyPress"
                   type="text"
-                  placeholder="Type a message to Mokshya AI..."
+                  placeholder="Type a message..."
                   :disabled="isSending"
-                  class="flex-1 h-12 rounded-lg border border-gray-200 bg-gray-50 px-4 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mokshya-dark/70 focus:border-mokshya-dark/70 disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="flex-1 h-10 sm:h-12 rounded-lg border border-gray-200 bg-gray-50 px-3 sm:px-4 text-xs sm:text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-mokshya-dark/70 focus:border-mokshya-dark/70 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
 
                 <!-- Send Button -->
                 <button
                   @click="sendMessage"
                   :disabled="!currentMessage.trim() || isSending"
-                  class="flex-shrink-0 w-12 h-12 bg-[#09423C] rounded-lg flex items-center justify-center text-white hover:bg-[#07332e] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-[#09423C] rounded-lg flex items-center justify-center text-white hover:bg-[#07332e] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Send message"
                 >
                   <svg
-                    class="w-5 h-5"
+                    class="w-4 h-4 sm:w-5 sm:h-5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -771,9 +773,9 @@ useSeoMeta({
               </div>
 
               <!-- Disclaimer Footer -->
-              <div class="flex items-center gap-2 mt-3 text-xs text-gray-500">
+              <div class="flex items-start gap-2 mt-2 sm:mt-3 text-[10px] sm:text-xs text-gray-500">
                 <svg
-                  class="w-4 h-4 flex-shrink-0"
+                  class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 mt-0.5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -792,10 +794,10 @@ useSeoMeta({
         </div>
 
         <!-- Sidebar -->
-        <div class="lg:col-span-1 space-y-6">
+        <div class="lg:col-span-1 space-y-4 sm:space-y-6 order-2 lg:order-2">
           <!-- Assessment Progress -->
-          <div class="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-mokshya-dark mb-4">
+          <div class="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+            <h3 class="text-base sm:text-lg font-semibold text-mokshya-dark mb-3 sm:mb-4">
               Assessment Progress
             </h3>
             <div class="space-y-4">
@@ -812,10 +814,10 @@ useSeoMeta({
                   ></div>
                 </div>
               </div>
-              <div class="flex items-center gap-6 text-sm text-gray-600">
+              <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-xs sm:text-sm text-gray-600">
                 <div class="flex items-center gap-2">
                   <svg
-                    class="w-4 h-4"
+                    class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -831,7 +833,7 @@ useSeoMeta({
                 </div>
                 <div class="flex items-center gap-2">
                   <svg
-                    class="w-4 h-4"
+                    class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -850,10 +852,10 @@ useSeoMeta({
           </div>
 
           <!-- Why this matters? -->
-          <div class="bg-white rounded-lg border border-gray-200 p-6">
-            <div class="flex items-center gap-2 mb-3">
+          <div class="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+            <div class="flex items-center gap-2 mb-2 sm:mb-3">
               <svg
-                class="w-5 h-5 text-[#09423C]"
+                class="w-4 h-4 sm:w-5 sm:h-5 text-[#09423C] flex-shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -865,20 +867,20 @@ useSeoMeta({
                   d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
                 />
               </svg>
-              <h3 class="text-lg font-semibold text-mokshya-dark">
+              <h3 class="text-base sm:text-lg font-semibold text-mokshya-dark">
                 Why this matters?
               </h3>
             </div>
-            <p class="text-sm text-gray-600 leading-relaxed">
+            <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">
               Industry and size are the primary coefficients for our base risk model. Accuracy here ensures better insurance quotes later.
             </p>
           </div>
 
           <!-- Need help -->
-          <div class="bg-white rounded-lg border border-gray-200 p-6">
-            <div class="flex items-center gap-2 mb-3">
+          <div class="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+            <div class="flex items-center gap-2 mb-2 sm:mb-3">
               <svg
-                class="w-5 h-5 text-[#09423C]"
+                class="w-4 h-4 sm:w-5 sm:h-5 text-[#09423C] flex-shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -890,15 +892,15 @@ useSeoMeta({
                   d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
                 />
               </svg>
-              <h3 class="text-lg font-semibold text-mokshya-dark">
+              <h3 class="text-base sm:text-lg font-semibold text-mokshya-dark">
                 Need help defining your scope?
               </h3>
             </div>
-            <p class="text-sm text-gray-600 leading-relaxed mb-4">
+            <p class="text-xs sm:text-sm text-gray-600 leading-relaxed mb-3 sm:mb-4">
               Our specialists can help you determine the correct entity boundaries.
             </p>
             <button
-              class="text-sm font-semibold text-[#09423C] hover:underline transition-colors cursor-pointer"
+              class="text-xs sm:text-sm font-semibold text-[#09423C] hover:underline transition-colors cursor-pointer"
             >
               Chat with support
             </button>

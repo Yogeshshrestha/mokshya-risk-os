@@ -269,27 +269,28 @@ useSeoMeta({
 
 <template>
   <div class="min-h-screen bg-slate-50">
-    <UContainer class="max-w-[1600px] px-4 lg:px-6 py-8">
+    <UContainer class="max-w-[1600px] px-4 sm:px-6 lg:px-6 py-4 sm:py-6 lg:py-8">
       
       <div v-if="isLoading" class="flex items-center justify-center min-h-[60vh]">
-        <div class="flex flex-col items-center gap-6">
+        <div class="flex flex-col items-center gap-4 sm:gap-6">
           <div class="relative">
-            <div class="w-16 h-16 border-4 border-slate-100 border-t-[#09423C] rounded-full animate-spin"></div>
+            <div class="w-12 h-12 sm:w-16 sm:h-16 border-4 border-slate-100 border-t-[#09423C] rounded-full animate-spin"></div>
             <div class="absolute inset-0 flex items-center justify-center">
-              <div class="w-2 h-2 bg-[#09423C] rounded-full"></div>
+              <div class="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#09423C] rounded-full"></div>
             </div>
           </div>
-          <p class="text-slate-500 font-medium animate-pulse">Initializing Security Assessment...</p>
+          <p class="text-sm sm:text-base text-slate-500 font-medium animate-pulse text-center px-4">Initializing Security Assessment...</p>
         </div>
       </div>
 
-      <div v-else-if="currentOrg" class="flex flex-col lg:flex-row gap-8 items-start">
+      <div v-else-if="currentOrg" class="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8 items-start">
         
-        <aside class="w-full lg:w-80 flex-shrink-0 lg:sticky lg:top-8 transition-all duration-300">
-          <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="p-5 border-b border-slate-100 bg-slate-50/50">
-              <h2 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
-                <svg class="w-4 h-4 text-[#09423C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+        <!-- Categories Section - Mobile: At Top, Desktop: Sidebar (Left) -->
+        <aside class="w-full lg:w-80 flex-shrink-0 lg:sticky lg:top-8 transition-all duration-300 order-1 lg:order-1">
+          <div class="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-4 sm:p-5 border-b border-slate-100 bg-slate-50/50">
+              <h2 class="text-sm sm:text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#09423C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                 Assessment Categories
               </h2>
               
@@ -310,25 +311,80 @@ useSeoMeta({
               </div>
             </div>
 
-            <nav class="max-h-[calc(100vh-250px)] overflow-y-auto p-3 space-y-1 custom-scrollbar">
+            <!-- Mobile: Horizontal Scrollable Categories -->
+            <div class="lg:hidden overflow-x-auto p-3 custom-scrollbar">
+              <div class="flex gap-2 min-w-max">
+                <button
+                  @click="selectedCategory = 'all'; focusedQuestionIndex = 0"
+                  :class="[
+                    'flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap border flex-shrink-0',
+                    selectedCategory === 'all'
+                      ? 'bg-[#E3F5EB] border-[#09423C]/20 text-[#09423C] shadow-sm'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                  ]"
+                >
+                  <div 
+                    class="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-colors"
+                    :class="selectedCategory === 'all' ? 'bg-[#09423C] text-white' : 'bg-slate-100 text-slate-400'"
+                  >
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                  </div>
+                  <span class="font-semibold">All</span>
+                  <span class="text-[10px] opacity-70">({{ answers.length }}/{{ questions.length }})</span>
+                </button>
+
+                <button
+                  v-for="category in categoriesWithProgress"
+                  :key="category.name"
+                  @click="selectedCategory = category.name; focusedQuestionIndex = 0"
+                  :class="[
+                    'flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap border flex-shrink-0',
+                    selectedCategory === category.name
+                      ? 'bg-white border-[#09423C] ring-1 ring-[#09423C]/20 text-[#09423C] shadow-sm'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                  ]"
+                >
+                  <div 
+                    class="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 transition-all border"
+                    :class="[
+                      category.isCompleted
+                        ? 'bg-emerald-500 border-emerald-500 text-white'
+                        : selectedCategory === category.name
+                        ? 'border-[#09423C] bg-white'
+                        : 'border-slate-300 bg-white'
+                    ]"
+                  >
+                    <svg v-if="category.isCompleted" class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <div v-else-if="selectedCategory === category.name" class="w-1.5 h-1.5 rounded-full bg-[#09423C]"></div>
+                  </div>
+                  <span class="font-medium truncate max-w-[120px]">{{ category.name }}</span>
+                  <span class="text-[10px] opacity-70">({{ category.answered }}/{{ category.total }})</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Desktop: Vertical Categories List -->
+            <nav class="hidden lg:block max-h-[calc(100vh-250px)] overflow-y-auto p-2 sm:p-3 space-y-1 custom-scrollbar">
               <button
                 @click="selectedCategory = 'all'; focusedQuestionIndex = 0"
                 :class="[
-                  'w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all text-left group border',
+                  'w-full flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-sm transition-all text-left group border',
                   selectedCategory === 'all'
                     ? 'bg-[#E3F5EB] border-[#09423C]/10 shadow-sm'
                     : 'bg-transparent border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 ]"
               >
                 <div 
-                  class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+                  class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
                   :class="selectedCategory === 'all' ? 'bg-[#09423C] text-white' : 'bg-slate-100 text-slate-400 group-hover:text-slate-600'"
                 >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                  <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
                 </div>
                 
-                <div class="flex-1">
-                  <span class="block font-semibold" :class="selectedCategory === 'all' ? 'text-[#09423C]' : 'text-slate-700'">All Questions</span>
+                <div class="flex-1 min-w-0">
+                  <span class="block font-semibold truncate" :class="selectedCategory === 'all' ? 'text-[#09423C]' : 'text-slate-700'">All Questions</span>
                   <span class="text-xs font-medium" :class="selectedCategory === 'all' ? 'text-[#09423C]/70' : 'text-slate-400'">
                     {{ answers.length }} / {{ questions.length }} Answered
                   </span>
@@ -342,9 +398,9 @@ useSeoMeta({
                 :key="category.name"
                 @click="selectedCategory = category.name; focusedQuestionIndex = 0"
                 :class="[
-                  'w-full flex items-start gap-3 px-3 py-2.5 rounded-xl text-sm transition-all text-left group border',
+                  'w-full flex items-start gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm transition-all text-left group border',
                   selectedCategory === category.name
-                    ? 'bg-white border-[#09423C] ring-1 ring-[#09423C]/10 shadow-md transform scale-[1.02]'
+                    ? 'bg-white border-[#09423C] ring-1 ring-[#09423C]/10 shadow-md sm:transform sm:scale-[1.02]'
                     : 'bg-transparent border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 ]"
               >
@@ -406,113 +462,115 @@ useSeoMeta({
           </div>
         </aside>
 
-        <main class="flex-1 min-w-0">
+        <main class="flex-1 min-w-0 order-2 lg:order-2">
           
-          <div class="mb-6 space-y-4">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <nav class="flex items-center gap-2 text-sm text-slate-500">
-                <NuxtLink to="/organizations" class="hover:text-slate-800 transition-colors">Organizations</NuxtLink>
-                <span class="text-slate-300">/</span>
-                <NuxtLink :to="`/organizations/${organizationId}`" class="hover:text-slate-800 transition-colors">Profile</NuxtLink>
-                <span class="text-slate-300">/</span>
-                <span class="font-medium text-[#09423C] bg-[#E3F5EB] px-2 py-0.5 rounded-md">Control Assessment</span>
+          <div class="mb-4 sm:mb-6 space-y-3 sm:space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <nav class="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-slate-500 overflow-x-auto">
+                <NuxtLink to="/organizations" class="hover:text-slate-800 transition-colors whitespace-nowrap">Organizations</NuxtLink>
+                <span class="text-slate-300 flex-shrink-0">/</span>
+                <NuxtLink :to="`/organizations/${organizationId}`" class="hover:text-slate-800 transition-colors whitespace-nowrap truncate max-w-[100px] sm:max-w-none">Profile</NuxtLink>
+                <span class="text-slate-300 flex-shrink-0">/</span>
+                <span class="font-medium text-[#09423C] bg-[#E3F5EB] px-2 py-0.5 rounded-md whitespace-nowrap flex-shrink-0">Control Assessment</span>
               </nav>
             </div>
 
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col xl:flex-row gap-6 justify-between items-start xl:items-center">
-              <div>
-                <h1 class="text-2xl font-bold text-slate-900">
+            <div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 flex flex-col xl:flex-row gap-4 sm:gap-6 justify-between items-start xl:items-center">
+              <div class="flex-1 min-w-0">
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-900">
                   Control Assessment
                 </h1>
-                <p class="text-slate-500 text-sm mt-1">
-                  Complete the questionnaire to evaluate {{ currentOrg.name }}'s security posture.
+                <p class="text-slate-500 text-xs sm:text-sm mt-1">
+                  Complete the questionnaire to evaluate <span class="truncate inline-block max-w-[200px] sm:max-w-none">{{ currentOrg.name }}</span>'s security posture.
                 </p>
               </div>
 
-              <div v-if="score" class="flex flex-wrap items-center gap-4 lg:gap-8 w-full xl:w-auto p-4 bg-slate-50 rounded-xl border border-slate-100">
+              <div v-if="score" class="flex flex-wrap items-center gap-3 sm:gap-4 lg:gap-8 w-full xl:w-auto p-3 sm:p-4 bg-slate-50 rounded-lg sm:rounded-xl border border-slate-100">
                 
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 sm:gap-3">
                   <div class="flex flex-col">
-                    <span class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Risk Grade</span>
+                    <span class="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold text-slate-400">Risk Grade</span>
                     <div class="flex items-baseline gap-1">
-                      <span class="text-2xl font-bold font-mono" :class="getRiskGradeColor(score.risk_grade)">
+                      <span class="text-xl sm:text-2xl font-bold font-mono" :class="getRiskGradeColor(score.risk_grade)">
                         {{ score.risk_grade }}
                       </span>
                     </div>
                   </div>
                 </div>
                 
-                <div class="w-px h-8 bg-slate-200"></div>
+                <div class="w-px h-6 sm:h-8 bg-slate-200"></div>
 
                 <div class="flex flex-col">
-                  <span class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Compliance</span>
-                  <span class="text-xl font-bold" :class="getComplianceColor(score.compliance_percentage)">
+                  <span class="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold text-slate-400">Compliance</span>
+                  <span class="text-lg sm:text-xl font-bold" :class="getComplianceColor(score.compliance_percentage)">
                     {{ Math.round(score.compliance_percentage) }}%
                   </span>
                 </div>
 
-                <div class="w-px h-8 bg-slate-200"></div>
+                <div class="w-px h-6 sm:h-8 bg-slate-200"></div>
 
                 <div class="flex flex-col">
-                  <span class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Red Flags</span>
-                  <div class="flex items-center gap-1.5">
-                    <span class="text-xl font-bold" :class="score.red_flags_count > 0 ? 'text-rose-600' : 'text-slate-700'">
+                  <span class="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold text-slate-400">Red Flags</span>
+                  <div class="flex items-center gap-1 sm:gap-1.5">
+                    <span class="text-lg sm:text-xl font-bold" :class="score.red_flags_count > 0 ? 'text-rose-600' : 'text-slate-700'">
                       {{ score.red_flags_count }}
                     </span>
-                    <svg v-if="score.red_flags_count > 0" class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    <svg v-if="score.red_flags_count > 0" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="sticky top-4 z-20 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/80 backdrop-blur-md p-3 rounded-xl border border-slate-200/60 shadow-sm">
+          <div class="sticky top-0 sm:top-4 z-20 mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-white/80 backdrop-blur-md p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-slate-200/60 shadow-sm -mx-4 sm:mx-0 px-4 sm:px-3">
             
-            <div class="flex items-center gap-3 px-3">
-              <span class="text-xs font-semibold text-slate-600">Total Progress</span>
-              <div class="w-32 h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-100">
+            <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 lg:max-w-md">
+              <span class="text-xs font-semibold text-slate-600 whitespace-nowrap flex-shrink-0">Total Progress</span>
+              <div class="flex-1 min-w-0 h-2 sm:h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-100">
                 <div 
-                  class="h-full bg-gradient-to-r from-[#09423C] to-emerald-600 rounded-full"
+                  class="h-full bg-gradient-to-r from-[#09423C] to-emerald-600 rounded-full transition-all duration-500"
                   :style="{ width: `${overallProgress}%` }"
                 ></div>
               </div>
-              <span class="text-xs font-bold text-slate-900">{{ overallProgress }}%</span>
+              <span class="text-xs font-bold text-slate-900 whitespace-nowrap flex-shrink-0">{{ overallProgress }}%</span>
             </div>
 
-            <div class="flex bg-slate-100 rounded-lg p-1 border border-slate-200">
+            <div class="flex bg-slate-100 rounded-lg p-1 border border-slate-200 w-full sm:w-auto justify-center sm:justify-start">
               <button
                 @click="viewMode = 'focus'"
                 :class="[
-                  'px-3 py-1.5 text-xs font-semibold rounded-md flex items-center gap-2 transition-all duration-200',
+                  'px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-md flex items-center gap-1.5 sm:gap-2 transition-all duration-200 flex-1 sm:flex-initial justify-center',
                   viewMode === 'focus' 
                     ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' 
                     : 'text-slate-500 hover:text-slate-700'
                 ]"
               >
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                 </svg>
-                Focus Mode
+                <span class="hidden sm:inline">Focus Mode</span>
+                <span class="sm:hidden">Focus</span>
               </button>
               <button
                 @click="viewMode = 'list'"
                 :class="[
-                  'px-3 py-1.5 text-xs font-semibold rounded-md flex items-center gap-2 transition-all duration-200',
+                  'px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-md flex items-center gap-1.5 sm:gap-2 transition-all duration-200 flex-1 sm:flex-initial justify-center',
                   viewMode === 'list' 
                     ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' 
                     : 'text-slate-500 hover:text-slate-700'
                 ]"
               >
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
-                List View
+                <span class="hidden sm:inline">List View</span>
+                <span class="sm:hidden">List</span>
               </button>
             </div>
           </div>
 
           <div v-if="viewMode === 'focus'">
-            <div v-if="currentQuestion" class="max-w-3xl mx-auto">
+            <div v-if="currentQuestion" class="max-w-3xl mx-auto px-0 sm:px-4">
               <div class="relative">
                 <GlobalQuestionCard
                   :question="currentQuestion"
@@ -523,39 +581,41 @@ useSeoMeta({
                 />
               </div>
               
-              <div class="mt-6 flex items-center justify-between">
+              <div class="mt-4 sm:mt-6 flex items-center justify-between gap-2 sm:gap-4">
                 <button
                   @click="goToPreviousQuestion"
                   :disabled="focusedQuestionIndex === 0"
                   :class="[
-                    'px-5 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2',
+                    'px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2 flex-1 sm:flex-initial justify-center',
                     focusedQuestionIndex === 0
                       ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                       : 'bg-white text-slate-700 border border-slate-200 hover:border-[#09423C] hover:text-[#09423C] shadow-sm hover:shadow-md'
                   ]"
                 >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                   </svg>
-                  Previous
+                  <span class="hidden sm:inline">Previous</span>
+                  <span class="sm:hidden">Prev</span>
                 </button>
                 
-                <div class="text-xs font-semibold text-slate-400 uppercase tracking-widest">
-                  Question {{ focusedQuestionIndex + 1 }} / {{ filteredQuestions.length }}
+                <div class="text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-wider sm:tracking-widest text-center px-2 flex-shrink-0">
+                  <span class="hidden sm:inline">Question </span>{{ focusedQuestionIndex + 1 }} / {{ filteredQuestions.length }}
                 </div>
                 
                 <button
                   @click="goToNextQuestion"
                   :disabled="focusedQuestionIndex === filteredQuestions.length - 1"
                   :class="[
-                    'px-5 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2',
+                    'px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2 flex-1 sm:flex-initial justify-center',
                     focusedQuestionIndex === filteredQuestions.length - 1
                       ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                       : 'bg-[#09423C] text-white shadow-md shadow-emerald-900/10 hover:bg-[#07332e] hover:shadow-lg'
                   ]"
                 >
-                  Next Question
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span class="hidden sm:inline">Next Question</span>
+                  <span class="sm:hidden">Next</span>
+                  <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
@@ -571,13 +631,13 @@ useSeoMeta({
             </div>
           </div>
           
-          <div v-else class="space-y-4 pb-20">
-            <div v-if="filteredQuestions.length === 0" class="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
-              <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          <div v-else class="space-y-3 sm:space-y-4 pb-20">
+            <div v-if="filteredQuestions.length === 0" class="text-center py-12 sm:py-20 bg-white rounded-xl sm:rounded-2xl border border-dashed border-slate-300 px-4">
+              <div class="w-12 h-12 sm:w-16 sm:h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <svg class="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
               </div>
-              <h3 class="text-lg font-medium text-slate-900">No questions found</h3>
-              <p class="text-slate-500 mt-1">Try adjusting your filters.</p>
+              <h3 class="text-base sm:text-lg font-medium text-slate-900">No questions found</h3>
+              <p class="text-sm sm:text-base text-slate-500 mt-1">Try adjusting your filters.</p>
             </div>
             
             <GlobalQuestionCard
@@ -588,7 +648,7 @@ useSeoMeta({
               :answer="getAnswerForQuestion(question.id)"
               :is-saving="savingAnswerId === question.id"
               @answer-submitted="handleAnswerSubmit"
-              class="transition-transform duration-200 hover:translate-x-1"
+              class="transition-transform duration-200 sm:hover:translate-x-1"
             />
           </div>
 

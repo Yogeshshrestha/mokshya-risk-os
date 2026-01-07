@@ -400,26 +400,26 @@ const handleCancel = () => {
         </div>
 
         <!-- Actions -->
-        <div class="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
+        <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 mt-6 pt-6 border-t border-gray-200">
           <button
             v-if="hasOrganizations"
             type="button"
             @click="handleCancel"
             :disabled="isLoading"
-            class="px-6 py-2.5 rounded-lg border border-gray-300 text-mokshya-text font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+            class="w-full sm:w-auto px-4 sm:px-6 py-2.5 rounded-lg border border-gray-300 text-mokshya-text font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 text-sm sm:text-base"
           >
             Cancel
           </button>
           <button
             type="submit"
             :disabled="isLoading || !formData.name.trim()"
-            class="px-6 py-2.5 rounded-lg bg-[#09423C] text-white font-semibold hover:bg-[#07332e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            class="w-full sm:w-auto px-4 sm:px-6 py-2.5 rounded-lg bg-[#09423C] text-white font-semibold hover:bg-[#07332e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
           >
             <span v-if="isLoading">Creating...</span>
-            <span v-else>Create Organization</span>
+            <span v-else class="whitespace-nowrap">Create Organization</span>
             <div
               v-if="isLoading"
-              class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+              class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin flex-shrink-0"
             ></div>
           </button>
         </div>

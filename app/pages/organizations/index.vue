@@ -68,25 +68,25 @@ useSeoMeta({
 
 <template>
   <div class="min-h-screen bg-white">
-    <UContainer class="max-w-[1600px] px-4 lg:px-6 py-8">
+    <UContainer class="max-w-[1600px] px-4 sm:px-6 lg:px-6 py-4 sm:py-6 lg:py-8">
       <!-- Header -->
-      <div class="flex items-center justify-between mb-8">
-        <div>
-          <h1 class="text-3xl font-bold text-mokshya-dark mb-2">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+        <div class="flex-1 min-w-0">
+          <h1 class="text-2xl sm:text-3xl font-bold text-mokshya-dark mb-1 sm:mb-2">
             Organizations
           </h1>
-          <p class="text-base text-mokshya-text">
+          <p class="text-sm sm:text-base text-mokshya-text">
             Manage your organizations and teams
           </p>
         </div>
         <button
           v-if="organizations.length > 0"
           @click="showCreateForm = !showCreateForm"
-          class="px-6 py-3 rounded-lg bg-[#09423C] text-white font-semibold hover:bg-[#07332e] transition-colors flex items-center gap-2 cursor-pointer"
+          class="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg bg-[#09423C] text-white font-semibold hover:bg-[#07332e] transition-colors flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-base whitespace-nowrap"
         >
           <svg
             v-if="!showCreateForm"
-            class="w-5 h-5"
+            class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -100,7 +100,7 @@ useSeoMeta({
           </svg>
           <svg
             v-else
-            class="w-5 h-5"
+            class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -112,7 +112,8 @@ useSeoMeta({
               d="M6 18L18 6M6 6l12 12"
             />
           </svg>
-          {{ showCreateForm ? 'Cancel' : 'Create Organization' }}
+          <span class="hidden sm:inline">{{ showCreateForm ? 'Cancel' : 'Create Organization' }}</span>
+          <span class="sm:hidden">{{ showCreateForm ? 'Cancel' : 'Create' }}</span>
         </button>
       </div>
 
@@ -133,37 +134,37 @@ useSeoMeta({
       </div>
 
       <!-- Organizations Grid -->
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <div
           v-for="org in organizations"
           :key="org.id"
           @click="router.push(`/organizations/${org.id}`)"
-          class="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg hover:border-[#09423C]/30 transition-all cursor-pointer group"
+          class="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 hover:shadow-lg hover:border-[#09423C]/30 transition-all cursor-pointer group"
         >
-          <div class="flex items-start justify-between mb-4">
+          <div class="flex items-start justify-between gap-3 mb-3 sm:mb-4">
             <div class="flex-1 min-w-0">
-              <h3 class="text-lg font-semibold text-mokshya-dark mb-1 truncate group-hover:text-[#09423C] transition-colors">
+              <h3 class="text-base sm:text-lg font-semibold text-mokshya-dark mb-1 truncate group-hover:text-[#09423C] transition-colors">
                 {{ org.name }}
               </h3>
               <p
                 v-if="org.description"
-                class="text-sm text-mokshya-text line-clamp-2"
+                class="text-xs sm:text-sm text-mokshya-text line-clamp-2"
               >
                 {{ org.description }}
               </p>
             </div>
-            <div v-if="org.is_active" class="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg">
-                <span class="text-sm font-medium text-green-700">Active</span>
+            <div v-if="org.is_active" class="flex items-center gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-green-50 border border-green-200 rounded-lg flex-shrink-0">
+                <span class="text-xs sm:text-sm font-medium text-green-700">Active</span>
             </div>
-            <div v-else-if="org.is_active === false" class="flex items-center gap-2 px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg">
-              <span class="text-sm font-medium text-red-700">Inactive</span>
+            <div v-else-if="org.is_active === false" class="flex items-center gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-red-50 border border-red-200 rounded-lg flex-shrink-0">
+              <span class="text-xs sm:text-sm font-medium text-red-700">Inactive</span>
             </div>
           </div>
 
-          <div class="space-y-2 mb-4">
-            <div v-if="org.industry" class="flex items-center gap-2 text-sm text-mokshya-text">
+          <div class="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4">
+            <div v-if="org.industry" class="flex items-center gap-2 text-xs sm:text-sm text-mokshya-text">
               <svg
-                class="w-4 h-4 text-gray-400"
+                class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -175,11 +176,11 @@ useSeoMeta({
                   d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                 />
               </svg>
-              <span>{{ org.industry }}</span>
+              <span class="truncate">{{ org.industry }}</span>
             </div>
-            <div v-if="org.company_size" class="flex items-center gap-2 text-sm text-mokshya-text">
+            <div v-if="org.company_size" class="flex items-center gap-2 text-xs sm:text-sm text-mokshya-text">
               <svg
-                class="w-4 h-4 text-gray-400"
+                class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -191,11 +192,11 @@ useSeoMeta({
                   d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                 />
               </svg>
-              <span>{{ org.company_size }}</span>
+              <span class="truncate">{{ org.company_size }}</span>
             </div>
-            <div v-if="org.primary_operating_region" class="flex items-center gap-2 text-sm text-mokshya-text">
+            <div v-if="org.primary_operating_region" class="flex items-center gap-2 text-xs sm:text-sm text-mokshya-text">
               <svg
-                class="w-4 h-4 text-gray-400"
+                class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -207,16 +208,16 @@ useSeoMeta({
                   d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span>{{ org.primary_operating_region }}</span>
+              <span class="truncate">{{ org.primary_operating_region }}</span>
             </div>
           </div>
 
-          <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+          <div class="flex items-center justify-between pt-3 sm:pt-4 border-t border-gray-100">
             <span class="text-xs text-gray-500">
               Created {{ formatDate(org.created_at) }}
             </span>
             <svg
-              class="w-5 h-5 text-gray-400 group-hover:text-[#09423C] transition-colors"
+              class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-[#09423C] transition-colors flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

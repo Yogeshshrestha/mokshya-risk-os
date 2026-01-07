@@ -3,15 +3,24 @@ interface Props {
   title: string
   icon: string
   position: { x: number; y: number }
+  scale?: number
 }
 
-defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  scale: 1
+})
+
+// Calculate sizes based on scale
+const orbSize = computed(() => 119 * props.scale)
+const iconSize = computed(() => 32 * props.scale)
 </script>
 
 <template>
   <div
-    class="absolute w-[119px] h-[119px] animate-orbit-counter"
+    class="absolute animate-orbit-counter"
     :style="{
+      width: `${orbSize}px`,
+      height: `${orbSize}px`,
       left: `${position.x}px`,
       top: `${position.y}px`,
       transform: 'translate(-50%, -50%)',
@@ -24,19 +33,20 @@ defineProps<Props>()
       <div class="flex items-center justify-center mb-1.5">
         <UIcon
           :name="icon"
-          class="w-[32px] h-[32px] text-white"
+          :style="{ width: `${iconSize}px`, height: `${iconSize}px` }"
+          class="text-white"
           :aria-label="title"
         />
       </div>
       <span
         v-if="title.split(' ').length === 1"
-        class="font-bold text-base uppercase tracking-[0.3104px] leading-[18.624px]"
+        class="font-bold text-xs sm:text-sm lg:text-base uppercase tracking-[0.3104px] leading-tight lg:leading-[18.624px]"
       >
         {{ title }}
       </span>
       <span
         v-else
-        class="font-bold text-sm uppercase tracking-[0.3104px] text-center leading-[15.52px]"
+        class="font-bold text-[10px] sm:text-xs lg:text-sm uppercase tracking-[0.3104px] text-center leading-tight lg:leading-[15.52px]"
       >
         <div v-for="(word, index) in title.split(' ')" :key="index">
           {{ word }}

@@ -120,18 +120,18 @@ const handleClose = () => {
         >
           <div
             v-if="isOpen"
-            class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            class="bg-white rounded-lg sm:rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
             @click.stop
           >
             <!-- Header -->
-            <div class="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 class="text-xl font-semibold text-mokshya-dark">
+            <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+              <h2 class="text-lg sm:text-xl font-semibold text-mokshya-dark">
                 Create Organization
               </h2>
               <button
                 @click="handleClose"
                 :disabled="isLoading"
-                class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700 disabled:opacity-50 flex-shrink-0"
               >
                 <svg
                   class="w-5 h-5"
@@ -150,11 +150,11 @@ const handleClose = () => {
             </div>
 
             <!-- Form -->
-            <form @submit.prevent="handleSubmit" class="p-6 space-y-6">
+            <form @submit.prevent="handleSubmit" class="p-4 sm:p-6 space-y-4 sm:space-y-6">
               <!-- Error Message -->
               <div
                 v-if="error"
-                class="p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700"
+                class="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg text-xs sm:text-sm text-red-700"
               >
                 {{ error }}
               </div>
@@ -170,7 +170,7 @@ const handleClose = () => {
                   placeholder="e.g. Acme Corporation"
                   required
                   :disabled="isLoading"
-                  class="w-full h-12 rounded-lg border border-gray-200 bg-gray-50 px-4 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#09423C]/70 focus:border-[#09423C]/70 disabled:opacity-50"
+                  class="w-full h-11 sm:h-12 rounded-lg border border-gray-200 bg-gray-50 px-3 sm:px-4 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#09423C]/70 focus:border-[#09423C]/70 disabled:opacity-50"
                 >
               </div>
 
@@ -184,7 +184,7 @@ const handleClose = () => {
                   rows="3"
                   placeholder="Brief description of your organization"
                   :disabled="isLoading"
-                  class="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#09423C]/70 focus:border-[#09423C]/70 disabled:opacity-50 resize-none"
+                  class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 sm:px-4 py-2.5 sm:py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#09423C]/70 focus:border-[#09423C]/70 disabled:opacity-50 resize-none"
                 ></textarea>
               </div>
 
@@ -374,25 +374,25 @@ const handleClose = () => {
               </div>
 
               <!-- Actions -->
-              <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+              <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 pt-4 border-t border-gray-200 sticky bottom-0 bg-white -mx-4 sm:-mx-6 px-4 sm:px-6 pb-4 sm:pb-0">
                 <button
                   type="button"
                   @click="handleClose"
                   :disabled="isLoading"
-                  class="px-6 py-2.5 rounded-lg border border-gray-300 text-mokshya-text font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  class="w-full sm:w-auto px-4 sm:px-6 py-2.5 rounded-lg border border-gray-300 text-mokshya-text font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 text-sm sm:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   :disabled="isLoading || !formData.name.trim()"
-                  class="px-6 py-2.5 rounded-lg bg-[#09423C] text-white font-semibold hover:bg-[#07332e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  class="w-full sm:w-auto px-4 sm:px-6 py-2.5 rounded-lg bg-[#09423C] text-white font-semibold hover:bg-[#07332e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
                   <span v-if="isLoading">Creating...</span>
-                  <span v-else>Create Organization</span>
+                  <span v-else class="whitespace-nowrap">Create Organization</span>
                   <div
                     v-if="isLoading"
-                    class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+                    class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin flex-shrink-0"
                   ></div>
                 </button>
               </div>
