@@ -59,3 +59,10 @@ jobs:
 
       - name: Image digest
         run: echo "Image pushed with digest ${{ steps.build.outputs.digest }}"
+
+      - name: Deploy to Cloud Run
+        uses: 'google-github-actions/deploy-cloudrun@v2'
+        with:
+          service: 'mokshya-riskos-staging'
+          region: 'asia-south1'
+          image: 'asia-south1-docker.pkg.dev/mokshyaai/mokshya-risk-os/frontend:latest'
