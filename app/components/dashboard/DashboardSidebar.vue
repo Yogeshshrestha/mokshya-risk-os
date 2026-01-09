@@ -139,9 +139,7 @@ onMounted(fetchData)
           v-if="showOrgSwitcher"
           class="absolute top-full left-4 right-4 mt-2 bg-white rounded-xl shadow-xl border border-[#e0e8e7] py-2 z-50 max-h-[400px] overflow-y-auto"
         >
-          <div class="px-4 py-2 mb-1">
-            <p class="text-[10px] font-extrabold text-[#6b8a87] uppercase tracking-widest">Switch Organization</p>
-          </div>
+ 
           
           <div class="space-y-0.5">
             <button

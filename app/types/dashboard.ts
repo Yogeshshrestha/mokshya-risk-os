@@ -2,52 +2,79 @@ export interface RedFlag {
   code: string
   question_code: string
   question_text: string
-  severity: 'critical' | 'high' | 'medium' | 'low'
+  severity: 'critical' | 'major' | 'medium' | 'low'
   category: string
   recommendation: string
+  name?: string
+  triggered?: boolean
+  description?: string
+  remediation?: string
 }
 
 export interface FinancialExposure {
-  total_estimated_exposure_usd: number
-  data_breach_exposure: number
-  ransomware_exposure: number
-  business_interruption_exposure: number
-  regulatory_fines_exposure: number
-  high_criticality_assets: number
-  restricted_data_assets: number
-  high_rated_risks: number
-  calculation_notes: string
+  annual_revenue: number
+  daily_revenue: number
+  records_held: number
+  sector_multiplier: number
+  ransomware_loss: number
+  data_breach_loss: number
+  bec_loss: number
+  single_event_low: number
+  single_event_mid: number
+  single_event_high: number
+  expected_annual_loss_low: number
+  expected_annual_loss_mid: number
+  expected_annual_loss_high: number
+  pml_95: number
+  pml_99: number
 }
 
-export interface InsuranceReadiness {
-  eligibility: 'eligible' | 'conditional' | 'at_risk' | 'ineligible'
-  score: number
-  has_mfa: boolean
-  has_endpoint_protection: boolean
-  has_backup_strategy: boolean
-  has_incident_response_plan: boolean
-  has_security_training: boolean
-  has_privileged_access_management: boolean
-  critical_gaps: string[]
-  recommendations: string[]
-  estimated_premium_impact: string
+export interface RiskScoring {
+  base_scores: {
+    severity_raw: number
+    likelihood_raw: number
+    severity: number
+    likelihood: number
+    severity_factors: string[]
+    likelihood_factors: string[]
+  }
+  modified_scores: {
+    severity: number
+    likelihood: number
+    sector_modifier_severity: number
+    sector_modifier_likelihood: number
+    size_modifier_severity: number
+    size_modifier_likelihood: number
+  }
+  exposure_score: number
+  base_tier: string
+  red_flags: RedFlag[]
+  critical_red_flags_count: number
+  major_red_flags_count: number
+  total_tier_penalty: number
+  final_tier: string
+  financial_exposure: FinancialExposure
+  eligibility: string
+  eligibility_reason: string
+  calculation_timestamp: string
+  calculation_version: string
 }
 
 export interface ExecutiveSummary {
   organization_id: string
   organization_name: string
   assessment_date: string
-  risk_tier: 'critical' | 'high' | 'medium' | 'low'
-  risk_score: number
-  risk_grade: string
-  risk_trend: 'improving' | 'stable' | 'worsening'
+  risk_tier_grade: string
+  exposure_score: number
+  base_tier: string
   questionnaire_completion: number
   compliance_score: number
   red_flags_count: number
   critical_red_flags: number
+  major_red_flags: number
   red_flags: RedFlag[]
-  financial_exposure: FinancialExposure
-  insurance_readiness: InsuranceReadiness
+  insurance_eligibility: string
+  insurance_eligibility_reason: string
   total_assets: number
   high_criticality_assets: number
   total_risks: number
@@ -60,7 +87,7 @@ export interface DashboardRisk {
   id: string
   risk_id: string
   title: string
-  description: string
+  description: string | null
   category: string
   likelihood: string
   impact: string
@@ -71,7 +98,7 @@ export interface DashboardRisk {
   affected_asset_count: number
   max_asset_criticality: string
   treatment: string
-  existing_controls: string
+  existing_controls: string | null
   risk_owner: string
   target_mitigation_date: string
   days_until_due: number
@@ -101,12 +128,13 @@ export interface ControlDomain {
   domain: string
   display_name: string
   score: number
-  maturity_level: 'optimized' | 'managed' | 'defined' | 'developing' | 'initial'
+  maturity_level: string
   total_controls: number
   implemented_controls: number
   partial_controls: number
   missing_controls: number
-  trend: 'improving' | 'stable' | 'worsening'
+  trend: string
+  previous_score: number | null
   critical_gaps: string[]
 }
 
@@ -116,6 +144,8 @@ export interface ControlMaturity {
   domains: ControlDomain[]
   strongest_domain: string
   weakest_domain: string
+  industry_average: number | null
+  peer_comparison: number | null
 }
 
 export interface AssetCategorySummary {
@@ -153,8 +183,8 @@ export interface CRODashboardResponse {
   risk_register: RiskRegisterSummary
   control_maturity: ControlMaturity
   asset_summary: AssetSummary
+  risk_scoring: RiskScoring
   priority_actions: string[]
   report_available: boolean
   last_report_date: string | null
 }
-

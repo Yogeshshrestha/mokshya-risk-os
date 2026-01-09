@@ -39,32 +39,36 @@ const getIconPath = (iconName: string) => {
 </script>
 
 <template>
-  <div class="bg-white border border-[#e8f3f2] h-[160px] rounded-[16px] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] p-6 flex flex-col justify-between">
-    <div class="flex justify-between items-start">
-      <span class="text-[12px] font-bold text-[#4f9690] uppercase tracking-[0.7px]">
+  <div class="bg-white border border-[#e8f3f2] min-h-[160px] h-full rounded-[16px] shadow-sm p-6 flex flex-col justify-between group hover:border-[#09433e]/20 transition-all">
+    <div class="flex justify-between items-start mb-4">
+      <span class="text-[11px] font-black text-[#4f9690] uppercase tracking-[0.1em]">
         {{ title }}
       </span>
-      <div :class="['size-[32px] rounded-[6px] flex items-center justify-center', iconBg]">
-        <svg class="size-5 text-[#4f9690]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div :class="['size-[32px] rounded-[8px] flex items-center justify-center shadow-sm', iconBg]">
+        <svg class="size-4.5 text-[#4f9690] group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getIconPath(icon)" />
         </svg>
       </div>
     </div>
     
     <div>
-      <div class="flex items-baseline gap-2 mb-3">
-        <h3 :class="['text-[30px] font-extrabold leading-none', valueColor]">
+      <div class="flex items-baseline gap-2 mb-2">
+        <h3 :class="['text-[28px] font-extrabold leading-none', valueColor]">
           {{ value }}
         </h3>
-        <span v-if="secondaryValue" class="text-[14px] font-medium text-[#4f9690] opacity-60">
+        <span v-if="secondaryValue" class="text-[13px] font-bold text-[#4f9690] opacity-60">
           {{ secondaryValue }}
         </span>
       </div>
-      <div v-if="trend" class="flex items-center gap-2">
-        <svg v-if="trendIcon" :class="['size-4', trendColor]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getIconPath(trendIcon)" />
-        </svg>
-        <span :class="['text-[12px] font-bold', trendColor]">{{ trend }}</span>
+      <div v-if="trend" class="flex items-start gap-2 group relative">
+        <div v-if="trendIcon" class="mt-0.5 flex-shrink-0">
+          <svg :class="['size-3.5', trendColor]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" :d="getIconPath(trendIcon)" />
+          </svg>
+        </div>
+        <span :class="['text-[11px] font-bold leading-tight line-clamp-2', trendColor]" :title="trend">
+          {{ trend }}
+        </span>
       </div>
     </div>
   </div>
