@@ -24,7 +24,7 @@ const togglePersona = (val: string) => {
 </script>
 
 <template>
-  <header class="h-[81px] bg-white border-b border-[#e8f3f2] flex items-center justify-between px-8 sticky top-0 z-20 w-full">
+  <header class="h-[81px] bg-white border-b border-[#e8f3f2] flex items-center justify-between px-8 z-20 w-full flex-shrink-0">
     <h1 class="text-[20px] font-extrabold text-[#09433e] tracking-tight">{{ title }}</h1>
     
     <div class="flex items-center gap-8">

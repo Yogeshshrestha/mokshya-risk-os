@@ -7,6 +7,10 @@ import type {
 } from '~/types/organization'
 import type { GlobalQuestionnaireScoreResponse } from '~/types/global-questionnaire'
 
+definePageMeta({
+  layout: false
+})
+
 const route = useRoute()
 const router = useRouter()
 const organization = useOrganization()
@@ -25,6 +29,7 @@ const isLoading = ref(true)
 const activeTab = ref<'overview' | 'members' | 'invitations' | 'roles'>('overview')
 const showInviteModal = ref(false)
 const showCreateRoleModal = ref(false)
+const selectedPersona = ref('cro')
 
 // Fetch score
 const fetchScore = async () => {
@@ -144,10 +149,17 @@ useSeoMeta({
 </script>
 
 <template>
-  <div class="min-h-screen bg-white">
-    <UContainer class="max-w-[1600px] px-4 sm:px-6 lg:px-6 py-4 sm:py-6 lg:py-8">
+  <div class="flex h-screen bg-[#f8fbfb] overflow-hidden">
+    <DashboardSidebar />
+    
+    <div class="flex-1 flex flex-col min-w-0">
+      <DashboardHeader 
+        title="Organization Profile"
+        v-model:persona="selectedPersona"
+      />
       
-      <div v-if="isLoading" class="animate-pulse space-y-6 sm:space-y-8">
+      <main class="flex-1 overflow-y-auto p-8">
+        <div v-if="isLoading" class="animate-pulse space-y-6 max-w-[1600px] mx-auto">
         <div class="h-4 w-24 sm:w-32 bg-gray-200 rounded"></div>
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div class="space-y-3 flex-1">
@@ -259,7 +271,7 @@ useSeoMeta({
           </nav>
         </div>
 
-        <main>
+        <div class="pt-6">
           <Transition
             enter-active-class="transition ease-out duration-200"
             enter-from-class="opacity-0 translate-y-1"
@@ -287,7 +299,7 @@ useSeoMeta({
                        </p>
                     </div>
                     <NuxtLink
-                       :to="`/assessment/global-questions/${organizationId}`"
+                       :to="`/organizations/${organizationId}/assessment`"
                        class="relative z-10 w-full flex items-center justify-center gap-2 bg-white text-[#09423C] py-2.5 sm:py-3 px-4 rounded-lg sm:rounded-xl font-semibold hover:bg-gray-50 transition-colors shadow-sm text-sm sm:text-base"
                     >
                        Start Assessment
@@ -690,20 +702,21 @@ useSeoMeta({
               </div>
             </div>
           </Transition>
-        </main>
+        </div>
       </div>
+    </main>
 
       <InviteUserModal
         v-model="showInviteModal"
         :organization-id="organizationId"
-        @invited="handleInvitationSent"
+        @invited="fetchInvitations"
       />
       <CreateRoleModal
         v-model="showCreateRoleModal"
         :organization-id="organizationId"
         @created="handleRoleCreated"
       />
-    </UContainer>
+    </div>
   </div>
 </template>
 

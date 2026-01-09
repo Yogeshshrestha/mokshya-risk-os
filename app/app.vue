@@ -96,11 +96,13 @@ const headerBgClass = computed(() => {
 const showHeader = computed(() => {
   const path = route.path
   // Hide main header on all dashboard and organization-specific pages
-  // These pages use the DashboardSidebar and DashboardHeader instead
   const isDashboardRoute = path.includes('/dashboard') || 
+                          path.includes('/reports') || 
                           path.includes('/assets') || 
                           path.includes('/risks') || 
-                          path.includes('/settings')
+                          path.includes('/settings') ||
+                          path.includes('/assessment') ||
+                          path.startsWith('/organizations/') // Any nested org route
   
   // We only show the public header on home, pricing, profile, and the main organizations list
   return !isDashboardRoute

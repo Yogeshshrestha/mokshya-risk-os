@@ -136,10 +136,10 @@ const tabs = [
 </script>
 
 <template>
-  <div class="flex min-h-screen bg-[#f8fbfb]">
+  <div class="flex h-screen bg-[#f8fbfb] overflow-hidden">
     <DashboardSidebar />
     
-    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <div class="flex-1 flex flex-col min-w-0">
       <DashboardHeader 
         title="Organization Settings"
         v-model:persona="selectedPersona"
@@ -251,7 +251,7 @@ const tabs = [
                   </div>
 
                   <NuxtLink
-                    :to="`/assessment/global-questions/${organizationId}`"
+                    :to="`/organizations/${organizationId}/assessment`"
                     class="relative z-10 w-full flex items-center justify-center gap-2 bg-white text-[#09423C] py-3.5 rounded-xl font-extrabold hover:bg-emerald-50 transition-all shadow-sm text-[15px]"
                   >
                     Start Assessment

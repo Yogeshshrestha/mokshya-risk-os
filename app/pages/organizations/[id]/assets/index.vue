@@ -69,10 +69,10 @@ const selectedPersona = ref('cro')
 </script>
 
 <template>
-  <div class="flex min-h-screen bg-[#f8fbfb]">
+  <div class="flex h-screen bg-[#f8fbfb] overflow-hidden">
     <DashboardSidebar />
     
-    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <div class="flex-1 flex flex-col min-w-0">
       <DashboardHeader 
         title="Asset Management"
         v-model:persona="selectedPersona"
