@@ -6,6 +6,7 @@ const API_BASE_URL = 'https://riskos-stage-api.mokshya.ai/api/v1'
 
 interface RequestOptions extends RequestInit {
   requireAuth?: boolean
+  query?: Record<string, any>
 }
 
 export const useApi = () => {
@@ -41,7 +42,7 @@ export const useApi = () => {
     endpoint: string,
     options: RequestOptions = {}
   ): Promise<T> => {
-    const { requireAuth = false, ...fetchOptions } = options
+    const { requireAuth = false, query, ...fetchOptions } = options
 
     const headers: HeadersInit = {
       ...fetchOptions.headers,
@@ -62,7 +63,20 @@ export const useApi = () => {
       }
     }
 
-    const url = `${API_BASE_URL}${endpoint}`
+    // Build URL with query parameters
+    let url = `${API_BASE_URL}${endpoint}`
+    if (query && Object.keys(query).length > 0) {
+      const searchParams = new URLSearchParams()
+      Object.entries(query).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, String(value))
+        }
+      })
+      const queryString = searchParams.toString()
+      if (queryString) {
+        url += (url.includes('?') ? '&' : '?') + queryString
+      }
+    }
 
     try {
       const response = await fetch(url, {

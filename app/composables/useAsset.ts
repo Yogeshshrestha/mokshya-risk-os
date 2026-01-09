@@ -66,7 +66,7 @@ export const useAsset = () => {
     error.value = null
     try {
       return await api.request<Asset>(`/organizations/${organizationId}/assets/${assetId}`, {
-        method: 'PATCH',
+        method: 'PUT',
         requireAuth: true,
         body: JSON.stringify(data)
       })
@@ -74,6 +74,24 @@ export const useAsset = () => {
       const apiError = err as ApiError
       error.value = apiError.message || 'Failed to update asset'
       throw apiError
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const countAssets = async (organizationId: string, params?: Record<string, any>): Promise<number> => {
+    isLoading.value = true
+    error.value = null
+    try {
+      const response = await api.request<{ count: number }>(`/organizations/${organizationId}/assets/count`, {
+        method: 'GET',
+        requireAuth: true,
+        query: params
+      })
+      return response.count
+    } catch (err) {
+      console.warn('Failed to get asset count')
+      return 0
     } finally {
       isLoading.value = false
     }
@@ -120,6 +138,7 @@ export const useAsset = () => {
     listAssets,
     getAsset,
     updateAsset,
+    countAssets,
     retireAsset,
     deleteAsset
   }

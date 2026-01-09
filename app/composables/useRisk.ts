@@ -66,7 +66,7 @@ export const useRisk = () => {
     error.value = null
     try {
       return await api.request<Risk>(`/organizations/${organizationId}/risks/${riskId}`, {
-        method: 'PATCH',
+        method: 'PUT',
         requireAuth: true,
         body: JSON.stringify(data)
       })
@@ -74,6 +74,24 @@ export const useRisk = () => {
       const apiError = err as ApiError
       error.value = apiError.message || 'Failed to update risk'
       throw apiError
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const countRisks = async (organizationId: string, params?: Record<string, any>): Promise<number> => {
+    isLoading.value = true
+    error.value = null
+    try {
+      const response = await api.request<{ count: number }>(`/organizations/${organizationId}/risks/count`, {
+        method: 'GET',
+        requireAuth: true,
+        query: params
+      })
+      return response.count
+    } catch (err) {
+      console.warn('Failed to get risk count')
+      return 0
     } finally {
       isLoading.value = false
     }
@@ -135,7 +153,7 @@ export const useRisk = () => {
     error.value = null
     try {
       await api.request(`/organizations/${organizationId}/risks/${riskId}/status`, {
-        method: 'PATCH',
+        method: 'POST',
         requireAuth: true,
         body: JSON.stringify({ status })
       })
@@ -155,6 +173,7 @@ export const useRisk = () => {
     listRisks,
     getRisk,
     updateRisk,
+    countRisks,
     deleteRisk,
     getStatistics,
     reviewRisk,
