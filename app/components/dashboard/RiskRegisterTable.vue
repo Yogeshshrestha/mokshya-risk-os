@@ -1,43 +1,31 @@
 <script setup lang="ts">
-const risks = [
-  {
-    id: 'RSK-001',
-    description: 'Ransomware Vulnerability in CRM',
-    status: 'Critical',
-    owner: 'J. Doe',
-    avatar: 'https://avatar.vercel.sh/jdoe'
-  },
-  {
-    id: 'RSK-004',
-    description: 'Third-party Vendor Data Leak',
-    status: 'High',
-    owner: 'A. Smith',
-    avatar: 'https://avatar.vercel.sh/asmith'
-  },
-  {
-    id: 'RSK-009',
-    description: 'Cloud Misconfiguration (AWS)',
-    status: 'Medium',
-    owner: 'M. Li',
-    avatar: 'https://avatar.vercel.sh/mli'
-  },
-  {
-    id: 'RSK-012',
-    description: 'Phishing Susceptibility Rate',
-    status: 'Medium',
-    owner: 'K. West',
-    avatar: 'https://avatar.vercel.sh/kwest'
-  }
-]
+import type { DashboardRisk } from '~/types/dashboard'
+
+interface Props {
+  risks: DashboardRisk[]
+}
+
+const props = defineProps<Props>()
 
 const getStatusClass = (status: string) => {
-  switch (status) {
-    case 'Critical': return 'bg-[#fee2e2] text-[#991b1b]'
-    case 'High': return 'bg-[#ffedd5] text-[#9a3412]'
-    case 'Medium': return 'bg-[#fef9c3] text-[#854d0e]'
+  const s = status.toLowerCase()
+  switch (s) {
+    case 'critical': return 'bg-[#fee2e2] text-[#991b1b]'
+    case 'high': return 'bg-[#ffedd5] text-[#9a3412]'
+    case 'medium': return 'bg-[#fef9c3] text-[#854d0e]'
+    case 'low': return 'bg-[#f0fdf4] text-[#166534]'
     default: return 'bg-gray-100 text-gray-800'
   }
 }
+
+const getActionText = (risk: DashboardRisk) => {
+  if (risk.treatment === 'mitigate') return 'Mitigate'
+  if (risk.treatment === 'avoid') return 'Avoid'
+  if (risk.treatment === 'transfer') return 'Transfer'
+  if (risk.treatment === 'accept') return 'Accept'
+  return 'Review'
+}
+
 </script>
 
 <template>
@@ -62,24 +50,24 @@ const getStatusClass = (status: string) => {
         </thead>
         <tbody class="divide-y divide-[#e8f3f2]">
           <tr v-for="risk in risks" :key="risk.id" class="hover:bg-gray-50/50 transition-colors">
-            <td class="px-6 py-4 text-[14px] text-[#0e1b1a] whitespace-nowrap">{{ risk.id }}</td>
-            <td class="px-6 py-4 text-[14px] text-[#0e1b1a]">{{ risk.description }}</td>
+            <td class="px-6 py-4 text-[14px] text-[#0e1b1a] whitespace-nowrap">{{ risk.risk_id }}</td>
+            <td class="px-6 py-4 text-[14px] text-[#0e1b1a]">{{ risk.title }}</td>
             <td class="px-6 py-4">
-              <span :class="['px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap inline-block', getStatusClass(risk.status)]">
-                {{ risk.status }}
+              <span :class="['px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap inline-block', getStatusClass(risk.risk_rating)]">
+                {{ risk.risk_rating.toUpperCase() }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center gap-2">
-                <div class="size-6 rounded-full overflow-hidden bg-gray-200">
-                  <img :src="risk.avatar" alt="Avatar" class="size-full object-cover">
+                <div class="size-6 rounded-full overflow-hidden bg-[#e8f3f2] flex items-center justify-center">
+                  <span class="text-[10px] font-bold text-[#09423c]">{{ risk.risk_owner.split(' ').map(n => n[0]).join('') }}</span>
                 </div>
-                <span class="text-[14px] text-[#4f9690]">{{ risk.owner }}</span>
+                <span class="text-[14px] text-[#4f9690]">{{ risk.risk_owner }}</span>
               </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <button class="text-[13px] font-medium text-[#09433e] hover:underline cursor-pointer">
-                {{ risk.id === 'RSK-012' ? 'Train' : risk.id === 'RSK-009' ? 'Fix' : risk.id === 'RSK-004' ? 'Review' : 'Mitigate' }}
+                {{ getActionText(risk) }}
               </button>
             </td>
           </tr>

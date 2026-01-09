@@ -78,8 +78,8 @@ const selectedPersona = ref('cro')
         v-model:persona="selectedPersona"
       />
       
-      <main class="flex-1 overflow-y-auto p-8">
-        <div class="max-w-[1600px] mx-auto space-y-6">
+      <main class="flex-1 overflow-y-auto py-8">
+        <div class="px-4 sm:px-6 lg:px-8 mx-auto space-y-6">
           <!-- Page Actions -->
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>

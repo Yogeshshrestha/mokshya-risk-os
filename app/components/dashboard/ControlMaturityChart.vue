@@ -1,21 +1,36 @@
 <script setup lang="ts">
 import type { CategoryScore } from '~/types/global-questionnaire'
+import type { ControlDomain } from '~/types/dashboard'
 
 const props = defineProps<{
   scores?: Record<string, CategoryScore>
+  domains?: ControlDomain[]
 }>()
 
 // Default categories if none provided
 const defaultCategories = ['Cloud', 'DataPriv', 'IdAM', 'AppSec', 'NetSec', 'Endpt']
 
 const chartPoints = computed(() => {
-  const categories = props.scores ? Object.keys(props.scores).slice(0, 6) : defaultCategories
+  let categories: string[] = []
+  let values: number[] = []
+
+  if (props.domains && props.domains.length > 0) {
+    categories = props.domains.slice(0, 8).map(d => d.display_name)
+    values = props.domains.slice(0, 8).map(d => d.score)
+  } else if (props.scores) {
+    categories = Object.keys(props.scores).slice(0, 8)
+    values = categories.map(cat => props.scores?.[cat]?.compliance || 0)
+  } else {
+    categories = defaultCategories
+    values = new Array(categories.length).fill(50)
+  }
+
   const radius = 120 // Max radius from center (200, 200)
   
   return categories.map((cat, i) => {
     const angle = (i * (360 / categories.length) - 90) * (Math.PI / 180)
-    const compliance = props.scores?.[cat]?.compliance || 50 // Default to 50% if no data
-    const r = (compliance / 100) * radius
+    const score = values[i]
+    const r = (score / 100) * radius
     
     return {
       name: cat,

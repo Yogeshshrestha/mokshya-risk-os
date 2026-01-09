@@ -1,43 +1,52 @@
 <script setup lang="ts">
 import type { CategoryScore } from '~/types/global-questionnaire'
+import type { ControlDomain } from '~/types/dashboard'
 
 const props = defineProps<{
   scores?: Record<string, CategoryScore>
+  domains?: ControlDomain[]
 }>()
 
-const defaultDomains = [
-  { name: 'IDENTITY & ACCESS', current: 65, target: 80, color: 'bg-[#09433e]' },
-  { name: 'ENDPOINT SECURITY', current: 85, target: 80, color: 'bg-[#09433e]' },
-  { name: 'NETWORK SECURITY', current: 55, target: 80, color: 'bg-[#09433e]' },
-  { name: 'BACKUP & RECOVERY', current: 90, target: 80, color: 'bg-[#09433e]' },
-  { name: 'PATCH MGMT', current: 45, target: 80, color: 'bg-[#f59e0b]' },
-  { name: 'GOVERNANCE & TRAINING', current: 60, target: 80, color: 'bg-[#09433e]' },
-  { name: 'INCIDENT RESPONSE', current: 50, target: 80, color: 'bg-[#09433e]' },
-  { name: 'THIRD-PARTY RISK', current: 30, target: 80, color: 'bg-[#ef4444]' }
-]
-
 const domainsData = computed(() => {
-  if (!props.scores) return defaultDomains
+  if (props.domains && props.domains.length > 0) {
+    return props.domains.slice(0, 8).map(d => {
+      let color = 'bg-[#09433e]'
+      if (d.score < 40) color = 'bg-[#ef4444]'
+      else if (d.score < 70) color = 'bg-[#f59e0b]'
+      
+      return {
+        name: d.display_name.toUpperCase(),
+        current: d.score,
+        target: 80,
+        color
+      }
+    })
+  }
+
+  if (!props.scores) {
+    return [
+      { name: 'IDENTITY & ACCESS', current: 0, target: 80, color: 'bg-[#ef4444]' },
+      { name: 'ENDPOINT SECURITY', current: 0, target: 80, color: 'bg-[#ef4444]' },
+      { name: 'NETWORK SECURITY', current: 0, target: 80, color: 'bg-[#ef4444]' },
+      { name: 'BACKUP & RECOVERY', current: 0, target: 80, color: 'bg-[#ef4444]' },
+      { name: 'PATCH MGMT', current: 0, target: 80, color: 'bg-[#ef4444]' },
+      { name: 'GOVERNANCE & TRAINING', current: 0, target: 80, color: 'bg-[#ef4444]' },
+      { name: 'INCIDENT RESPONSE', current: 0, target: 80, color: 'bg-[#ef4444]' },
+      { name: 'THIRD-PARTY RISK', current: 0, target: 80, color: 'bg-[#ef4444]' }
+    ]
+  }
   
   return Object.entries(props.scores).slice(0, 8).map(([name, data]) => {
     const compliance = data.compliance || 0
-    let color = 'bg-[#09433e]' // Default Dark Green
+    let color = 'bg-[#09433e]'
     
-    // Logic to match the visual design colors
-    if (name.toUpperCase().includes('PATCH')) {
-      color = 'bg-[#f59e0b]' // Orange for Patch Mgmt
-    } else if (name.toUpperCase().includes('THIRD') || name.toUpperCase().includes('RISK')) {
-      color = 'bg-[#ef4444]' // Red for Third-Party Risk
-    } else if (compliance < 40) {
-      color = 'bg-[#ef4444]'
-    } else if (compliance < 70) {
-      color = 'bg-[#f59e0b]'
-    }
+    if (compliance < 40) color = 'bg-[#ef4444]'
+    else if (compliance < 70) color = 'bg-[#f59e0b]'
     
     return {
       name: name.toUpperCase(),
       current: compliance,
-      target: 65, // Match the visual line level in design
+      target: 80,
       color: color
     }
   })

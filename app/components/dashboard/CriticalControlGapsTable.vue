@@ -1,47 +1,30 @@
 <script setup lang="ts">
-const gaps = [
-  {
-    name: 'Vendor Risk Assessment',
-    domain: 'Third-Party Risk',
-    current: 'L1',
-    target: 'L3',
-    severity: 'Critical',
-    priority: 'P0'
-  },
-  {
-    name: 'Phishing Simulation',
-    domain: 'Governance & Training',
-    current: 'L2',
-    target: 'L3',
-    severity: 'High',
-    priority: 'P1'
-  },
-  {
-    name: 'Cloud MFA Enforcement',
-    domain: 'Identity & Access',
-    current: 'L1',
-    target: 'L3',
-    severity: 'Critical',
-    priority: 'P0'
-  },
-  {
-    name: 'EDR Deployment',
-    domain: 'Endpoint Security',
-    current: 'L2',
-    target: 'L3',
-    severity: 'Medium',
-    priority: 'P2'
-  }
-]
+import type { RedFlag } from '~/types/dashboard'
+
+interface Props {
+  redFlags: RedFlag[]
+}
+
+const props = defineProps<Props>()
 
 const getSeverityClass = (severity: string) => {
-  switch (severity) {
-    case 'Critical': return 'bg-[#fee2e2] text-[#991b1b]'
-    case 'High': return 'bg-[#ffedd5] text-[#9a3412]'
-    case 'Medium': return 'bg-[#fef9c3] text-[#854d0e]'
+  const s = severity.toLowerCase()
+  switch (s) {
+    case 'critical': return 'bg-[#fee2e2] text-[#991b1b]'
+    case 'high': return 'bg-[#ffedd5] text-[#9a3412]'
+    case 'medium': return 'bg-[#fef9c3] text-[#854d0e]'
     default: return 'bg-gray-100 text-gray-800'
   }
 }
+
+const getPriority = (severity: string) => {
+  const s = severity.toLowerCase()
+  if (s === 'critical') return 'P0'
+  if (s === 'high') return 'P1'
+  if (s === 'medium') return 'P2'
+  return 'P3'
+}
+
 </script>
 
 <template>
@@ -70,28 +53,33 @@ const getSeverityClass = (severity: string) => {
           </tr>
         </thead>
         <tbody class="divide-y divide-[#e8f3f2]">
-          <tr v-for="gap in gaps" :key="gap.name" class="hover:bg-gray-50/50 transition-colors group">
-            <td class="px-6 py-5 text-[14px] text-[#0e1b1a] font-bold">{{ gap.name }}</td>
-            <td class="px-6 py-5 text-[14px] text-[#4f9690] font-medium">{{ gap.domain }}</td>
+          <tr v-for="flag in redFlags" :key="flag.code" class="hover:bg-gray-50/50 transition-colors group">
+            <td class="px-6 py-5 text-[14px] text-[#0e1b1a] font-bold">{{ flag.question_text }}</td>
+            <td class="px-6 py-5 text-[14px] text-[#4f9690] font-medium">{{ flag.category }}</td>
             <td class="px-6 py-5 text-center">
-              <span class="px-2.5 py-1 rounded bg-[#fef2f2] text-[#ef4444] text-[11px] font-extrabold border border-[#fecaca]/30">{{ gap.current }}</span>
+              <span class="px-2.5 py-1 rounded bg-[#fef2f2] text-[#ef4444] text-[11px] font-extrabold border border-[#fecaca]/30">MISSING</span>
             </td>
             <td class="px-6 py-5 text-center">
-              <span class="px-2.5 py-1 rounded bg-gray-50 text-[#4f9690] text-[11px] font-extrabold border border-[#e8f3f2]">{{ gap.target }}</span>
+              <span class="px-2.5 py-1 rounded bg-gray-50 text-[#4f9690] text-[11px] font-extrabold border border-[#e8f3f2]">L3</span>
             </td>
             <td class="px-6 py-5">
               <div class="flex items-center gap-2.5">
-                <div :class="['size-2 rounded-full', gap.severity === 'Critical' ? 'bg-[#ef4444]' : gap.severity === 'High' ? 'bg-[#f59e0b]' : 'bg-[#10b981]']"></div>
-                <span :class="['text-[12px] font-extrabold', gap.severity === 'Critical' ? 'text-[#ef4444]' : gap.severity === 'High' ? 'text-[#f59e0b]' : 'text-[#10b981]']">
-                  {{ gap.severity }}
+                <div :class="['size-2 rounded-full', flag.severity === 'critical' ? 'bg-[#ef4444]' : flag.severity === 'high' ? 'bg-[#f59e0b]' : 'bg-[#10b981]']"></div>
+                <span :class="['text-[12px] font-extrabold uppercase', flag.severity === 'critical' ? 'text-[#ef4444]' : flag.severity === 'high' ? 'text-[#f59e0b]' : 'text-[#10b981]']">
+                  {{ flag.severity }}
                 </span>
               </div>
             </td>
-            <td class="px-6 py-5 text-center text-[13px] font-extrabold text-[#0e1b1a]">{{ gap.priority }}</td>
+            <td class="px-6 py-5 text-center text-[13px] font-extrabold text-[#0e1b1a]">{{ getPriority(flag.severity) }}</td>
             <td class="px-6 py-5 text-right px-8">
               <button class="text-[13px] font-extrabold text-[#09433e] hover:underline cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
-                Assign Owner
+                Mitigate
               </button>
+            </td>
+          </tr>
+          <tr v-if="redFlags.length === 0">
+            <td colspan="7" class="px-6 py-10 text-center text-[#4f9690] font-medium">
+              No critical control gaps detected.
             </td>
           </tr>
         </tbody>

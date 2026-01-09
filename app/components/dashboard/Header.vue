@@ -1,10 +1,64 @@
 <script setup lang="ts">
+const auth = useAuth()
+
 const personas = [
   { label: 'CRO', value: 'cro' },
   { label: 'CISO', value: 'ciso' },
   { label: 'CFO', value: 'cfo' }
 ]
 const selectedPersona = ref('cro')
+
+// Get user display name
+const userDisplayName = computed(() => {
+  const user = auth.user.value
+  if (user?.full_name) {
+    return user.full_name
+  }
+  if (user?.email) {
+    return user.email.split('@')[0]
+  }
+  return 'User'
+})
+
+// Get user avatar URL or generate initials
+const userAvatarUrl = computed(() => {
+  return auth.user.value?.avatar_url || null
+})
+
+// Get user initials for avatar fallback
+const userInitials = computed(() => {
+  const user = auth.user.value
+  if (!user) return 'U'
+  
+  if (user.full_name) {
+    const parts = user.full_name.split(' ')
+    if (parts.length >= 2) {
+      const first = parts[0]
+      const last = parts[parts.length - 1]
+      if (first && last && first.length > 0 && last.length > 0) {
+        return `${first[0]}${last[0]}`.toUpperCase()
+      }
+    }
+    return user.full_name.substring(0, 2).toUpperCase()
+  }
+  
+  if (user.email && user.email.length > 0) {
+    return user.email[0].toUpperCase()
+  }
+  
+  return 'U'
+})
+
+// Fetch user data on mount if not already loaded
+onMounted(async () => {
+  if (auth.isAuthenticated.value && !auth.user.value) {
+    try {
+      await auth.fetchUser()
+    } catch (err) {
+      console.error('Failed to fetch user data:', err)
+    }
+  }
+})
 </script>
 
 <template>
@@ -34,14 +88,22 @@ const selectedPersona = ref('cro')
         
         <div class="flex items-center gap-3.5 group cursor-pointer">
           <div class="text-right">
-            <p class="text-[14px] font-bold text-[#0e1b1a] group-hover:text-[#09433e] transition-colors">Alexandra Chen</p>
+            <p class="text-[14px] font-bold text-[#0e1b1a] group-hover:text-[#09433e] transition-colors">{{ userDisplayName }}</p>
             <p class="text-[12px] text-[#4f9690] font-medium">Chief Risk Officer</p>
           </div>
           <UAvatar 
-            src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=128&q=80" 
+            v-if="userAvatarUrl"
+            :src="userAvatarUrl" 
+            :alt="userDisplayName"
             size="md" 
             class="border-2 border-[#d0e6e5] shadow-sm group-hover:border-[#09433e] transition-all" 
           />
+          <div 
+            v-else
+            class="size-10 rounded-full border-2 border-[#d0e6e5] shadow-sm group-hover:border-[#09433e] transition-all bg-gray-200 flex items-center justify-center"
+          >
+            <span class="text-[14px] font-bold text-[#09433e]">{{ userInitials }}</span>
+          </div>
         </div>
       </div>
     </div>

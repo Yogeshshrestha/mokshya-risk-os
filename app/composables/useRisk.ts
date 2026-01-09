@@ -1,6 +1,5 @@
 import type { Risk, RiskCreate, RiskWithAssets, RiskStatistics } from '~/types/asset-risk'
 import type { ApiError } from '~/types/auth'
-import { SAMPLE_RISKS, SAMPLE_RISK_STATS, getSampleRiskWithAssets } from '~/constants/sample-asset-risk'
 
 export const useRisk = () => {
   const api = useApi()
@@ -34,10 +33,11 @@ export const useRisk = () => {
         requireAuth: true,
         query: params
       })
-      return response.length > 0 ? response : SAMPLE_RISKS
+      return response || []
     } catch (err) {
-      console.warn('Using sample risks due to API failure')
-      return SAMPLE_RISKS
+      const apiError = err as ApiError
+      error.value = apiError.message || 'Failed to list risks'
+      throw apiError
     } finally {
       isLoading.value = false
     }
@@ -52,10 +52,9 @@ export const useRisk = () => {
         requireAuth: true
       })
     } catch (err) {
-      console.warn('Using sample risk detail due to API failure')
-      const sample = getSampleRiskWithAssets(riskId)
-      if (sample) return sample
-      throw err
+      const apiError = err as ApiError
+      error.value = apiError.message || 'Failed to get risk'
+      throw apiError
     } finally {
       isLoading.value = false
     }
@@ -122,10 +121,21 @@ export const useRisk = () => {
         method: 'GET',
         requireAuth: true
       })
-      return response || SAMPLE_RISK_STATS
+      return response || {
+        total_risks: 0,
+        open_risks: 0,
+        in_progress_risks: 0,
+        mitigated_risks: 0,
+        accepted_risks: 0,
+        high_risks: 0,
+        medium_risks: 0,
+        low_risks: 0,
+        average_risk_score: 0
+      }
     } catch (err) {
-      console.warn('Using sample risk statistics due to API failure')
-      return SAMPLE_RISK_STATS
+      const apiError = err as ApiError
+      error.value = apiError.message || 'Failed to get risk statistics'
+      throw apiError
     } finally {
       isLoading.value = false
     }

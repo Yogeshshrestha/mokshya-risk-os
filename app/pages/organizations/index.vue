@@ -68,7 +68,7 @@ useSeoMeta({
 
 <template>
   <div class="min-h-screen bg-white">
-    <UContainer class="max-w-[1600px] px-4 sm:px-6 lg:px-6 py-4 sm:py-6 lg:py-8">
+    <UContainer class="py-4 sm:py-6 lg:py-8">
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <div class="flex-1 min-w-0">

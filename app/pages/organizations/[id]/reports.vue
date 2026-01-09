@@ -68,12 +68,12 @@ const getStatusColor = (status: string) => {
         v-model:persona="selectedPersona"
       />
       
-      <main class="flex-1 overflow-y-auto p-8">
+      <main class="flex-1 overflow-y-auto py-8">
         <div v-if="isLoading" class="flex items-center justify-center h-full">
           <div class="w-12 h-12 border-4 border-[#09423C] border-t-transparent rounded-full animate-spin"></div>
         </div>
         
-        <div v-else class="max-w-[1600px] mx-auto space-y-8">
+        <div v-else class="px-4 sm:px-6 lg:px-8 mx-auto space-y-8">
           <!-- Page Header -->
           <div class="flex items-center justify-between">
             <div>

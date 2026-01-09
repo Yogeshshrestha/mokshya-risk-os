@@ -1,6 +1,5 @@
 import type { Asset, AssetCreate, AssetWithRisks } from '~/types/asset-risk'
 import type { ApiError } from '~/types/auth'
-import { SAMPLE_ASSETS, getSampleAssetWithRisks } from '~/constants/sample-asset-risk'
 
 export const useAsset = () => {
   const api = useApi()
@@ -34,10 +33,11 @@ export const useAsset = () => {
         requireAuth: true,
         query: params
       })
-      return response.length > 0 ? response : SAMPLE_ASSETS
+      return response || []
     } catch (err) {
-      console.warn('Using sample assets due to API failure')
-      return SAMPLE_ASSETS
+      const apiError = err as ApiError
+      error.value = apiError.message || 'Failed to list assets'
+      throw apiError
     } finally {
       isLoading.value = false
     }
@@ -52,10 +52,9 @@ export const useAsset = () => {
         requireAuth: true
       })
     } catch (err) {
-      console.warn('Using sample asset detail due to API failure')
-      const sample = getSampleAssetWithRisks(assetId)
-      if (sample) return sample
-      throw err
+      const apiError = err as ApiError
+      error.value = apiError.message || 'Failed to get asset'
+      throw apiError
     } finally {
       isLoading.value = false
     }

@@ -108,10 +108,10 @@ const showHeader = computed(() => {
   return !isDashboardRoute
 })
 
-// Determine if page should have wide container (organizations and assessment pages)
+// Determine if page should have wide container (assessment pages only)
 const isWidePage = computed(() => {
   const path = route.path
-  return path.startsWith('/organizations') || path.startsWith('/assessment')
+  return path.startsWith('/assessment')
 })
 
 useHead({

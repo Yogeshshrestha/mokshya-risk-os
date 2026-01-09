@@ -145,12 +145,12 @@ const tabs = [
         v-model:persona="selectedPersona"
       />
       
-      <main class="flex-1 overflow-y-auto p-8">
+      <main class="flex-1 overflow-y-auto py-8">
         <div v-if="isLoading" class="flex items-center justify-center h-full">
           <div class="w-12 h-12 border-4 border-[#09423C] border-t-transparent rounded-full animate-spin"></div>
         </div>
         
-        <div v-else-if="org" class="max-w-[1200px] mx-auto space-y-8">
+        <div v-else-if="org" class="px-4 sm:px-6 lg:px-8 mx-auto space-y-8">
           <!-- Page Header -->
           <div class="flex flex-col gap-2">
             <h2 class="text-[24px] font-extrabold text-[#0e1b1a]">Settings</h2>

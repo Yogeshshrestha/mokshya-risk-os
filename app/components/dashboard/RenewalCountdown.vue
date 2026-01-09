@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white border border-[#e8f3f2] rounded-[16px] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] p-6 h-full flex flex-col justify-between">
+  <div class="bg-white border border-[#e8f3f2] rounded-[16px] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] p-6 h-full flex flex-col ">
     <h3 class="text-[16px] font-bold text-[#0e1b1a] mb-6">Renewal Countdown</h3>
     
     <div class="flex items-center gap-5">
