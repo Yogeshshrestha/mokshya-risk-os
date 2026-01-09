@@ -61,8 +61,8 @@ const categoriesWithProgress = computed(() => {
       name,
       total: stats.total,
       answered: stats.answered,
-      isCompleted: stats.answered === stats.total,
-      percentage: Math.round((stats.answered / stats.total) * 100),
+      isCompleted: stats.answered === stats.total && stats.total > 0,
+      percentage: stats.total > 0 ? Math.round((stats.answered / stats.total) * 100) : 0,
       firstCode: stats.firstCode
     }))
     .sort((a, b) => {
@@ -88,7 +88,18 @@ const getAnswerForQuestion = (questionId: string) => {
 
 const getCategoryPerformance = (categoryName: string) => {
   if (!score.value?.category_scores) return null
-  return score.value.category_scores[categoryName]
+  
+  const categoryScore = score.value.category_scores[categoryName]
+  if (!categoryScore) return null
+  
+  // Check if this category has any answered questions
+  const categoryQuestions = questions.value.filter(q => q.category === categoryName)
+  const hasAnswers = categoryQuestions.some(q => answers.value.some(a => a.question_id === q.id))
+  
+  // Only return performance data if there are answered questions
+  if (!hasAnswers) return null
+  
+  return categoryScore
 }
 
 const getComplianceColor = (percentage: number) => {
@@ -292,18 +303,26 @@ watch(selectedCategory, () => {
                       </div>
                       <span class="truncate flex-1">{{ category.name }}</span>
                       <span 
-                        v-if="getCategoryPerformance(category.name)"
-                        :class="['text-[10px] font-extrabold', getComplianceColor(getCategoryPerformance(category.name).compliance)]"
+                        class="text-[10px] font-extrabold"
+                        :class="category.answered > 0 && getCategoryPerformance(category.name)
+                          ? getComplianceColor(getCategoryPerformance(category.name).compliance)
+                          : 'text-[#94a3b8]'"
                       >
-                        {{ Math.round(getCategoryPerformance(category.name).compliance) }}%
+                        {{ category.answered > 0 && getCategoryPerformance(category.name)
+                          ? Math.round(getCategoryPerformance(category.name).compliance) + '%'
+                          : category.percentage + '%' }}
                       </span>
                     </div>
                     
                     <div class="w-full h-1 bg-[#f1f5f9] rounded-full overflow-hidden mt-1">
                       <div 
                         class="h-full transition-all duration-500 rounded-full"
-                        :class="getCategoryPerformance(category.name) ? getComplianceBarColor(getCategoryPerformance(category.name).compliance) : 'bg-[#09423c]'"
-                        :style="{ width: `${getCategoryPerformance(category.name)?.compliance || 0}%` }"
+                        :class="category.answered > 0 && getCategoryPerformance(category.name)
+                          ? getComplianceBarColor(getCategoryPerformance(category.name).compliance)
+                          : category.percentage > 0
+                          ? 'bg-[#cbd5e1]'
+                          : 'bg-[#e2e8f0]'"
+                        :style="{ width: `${category.percentage}%` }"
                       ></div>
                     </div>
                     

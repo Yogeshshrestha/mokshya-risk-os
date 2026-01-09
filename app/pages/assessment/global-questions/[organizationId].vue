@@ -56,8 +56,8 @@ const categoriesWithProgress = computed(() => {
       name,
       total: stats.total,
       answered: stats.answered,
-      isCompleted: stats.answered === stats.total,
-      percentage: Math.round((stats.answered / stats.total) * 100),
+      isCompleted: stats.answered === stats.total && stats.total > 0,
+      percentage: stats.total > 0 ? Math.round((stats.answered / stats.total) * 100) : 0,
       firstCode: stats.firstCode
     }))
     .sort((a, b) => {
@@ -84,10 +84,21 @@ const getAnswerForQuestion = (questionId: string) => {
   return answers.value.find(a => a.question_id === questionId)
 }
 
-// Get category performance data
+// Get category performance data - only return if category has answered questions
 const getCategoryPerformance = (categoryName: string) => {
   if (!score.value?.category_scores) return null
-  return score.value.category_scores[categoryName]
+  
+  const categoryScore = score.value.category_scores[categoryName]
+  if (!categoryScore) return null
+  
+  // Check if this category has any answered questions
+  const categoryQuestions = questions.value.filter(q => q.category === categoryName)
+  const hasAnswers = categoryQuestions.some(q => answers.value.some(a => a.question_id === q.id))
+  
+  // Only return performance data if there are answered questions
+  if (!hasAnswers) return null
+  
+  return categoryScore
 }
 
 // Get risk grade color based on grade letter
@@ -432,24 +443,30 @@ useSeoMeta({
                       {{ category.name }}
                     </span>
                     <span
-                      v-if="getCategoryPerformance(category.name)"
                       class="text-[10px] font-bold px-1.5 py-0.5 rounded ml-2"
-                      :class="[
-                        getComplianceColor(getCategoryPerformance(category.name).compliance),
-                        'bg-opacity-10 bg-slate-100'
-                      ]"
+                      :class="category.answered > 0 && getCategoryPerformance(category.name)
+                        ? [
+                            getComplianceColor(getCategoryPerformance(category.name).compliance),
+                            'bg-opacity-10 bg-slate-100'
+                          ]
+                        : 'text-slate-400 bg-slate-50'"
                     >
-                      {{ Math.round(getCategoryPerformance(category.name).compliance) }}%
+                      {{ category.answered > 0 && getCategoryPerformance(category.name)
+                        ? Math.round(getCategoryPerformance(category.name).compliance) + '%'
+                        : category.percentage + '%' }}
                     </span>
                   </div>
                   
                   <div class="flex items-center gap-2">
                     <div class="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden">
                       <div
-                        v-if="getCategoryPerformance(category.name)"
                         class="h-full rounded-full transition-all duration-500"
-                        :class="getComplianceBarColor(getCategoryPerformance(category.name).compliance)"
-                        :style="{ width: `${getCategoryPerformance(category.name).compliance}%` }"
+                        :class="category.answered > 0 && getCategoryPerformance(category.name)
+                          ? getComplianceBarColor(getCategoryPerformance(category.name).compliance)
+                          : category.percentage > 0
+                          ? 'bg-slate-300'
+                          : 'bg-slate-200'"
+                        :style="{ width: `${category.percentage}%` }"
                       ></div>
                     </div>
                     <span class="text-[10px] text-slate-400 font-medium flex-shrink-0">
