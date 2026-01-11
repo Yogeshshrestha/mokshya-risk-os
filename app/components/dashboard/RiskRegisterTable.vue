@@ -3,9 +3,13 @@ import type { DashboardRisk } from '~/types/dashboard'
 
 interface Props {
   risks: DashboardRisk[]
+  organizationId?: string
 }
 
 const props = defineProps<Props>()
+const route = useRoute()
+
+const organizationId = computed(() => props.organizationId || (route.params.id as string))
 
 const getStatusClass = (status: string) => {
   const s = status.toLowerCase()
@@ -32,12 +36,35 @@ const getActionText = (risk: DashboardRisk) => {
   <div class="bg-white border border-[#e8f3f2] rounded-[16px] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col h-full">
     <div class="px-6 py-5 border-b border-[#e8f3f2] flex justify-between items-center bg-white sticky top-0 z-10">
       <h3 class="text-[18px] font-bold text-[#0e1b1a]">Risk (Top Priority)</h3>
-      <button class="text-[14px] font-medium text-[#09433e] hover:underline cursor-pointer">
+      <NuxtLink 
+        v-if="risks.length > 0"
+        :to="`/organizations/${organizationId}/risks`"
+        class="text-[14px] font-medium text-[#09433e] hover:underline cursor-pointer"
+      >
         View All
-      </button>
+      </NuxtLink>
     </div>
     
-    <div class="overflow-x-auto flex-1">
+    <div v-if="risks.length === 0" class="flex-1 flex items-center justify-center p-12">
+      <div class="flex flex-col items-center justify-center text-center max-w-sm">
+        <div class="size-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+          <UIcon name="i-lucide-shield-alert" class="size-8 text-gray-300" />
+        </div>
+        <h3 class="text-[16px] font-bold text-[#0e1b1a] mb-2">No Risks Identified</h3>
+        <p class="text-[13px] text-[#4f9690] mb-6 leading-relaxed">
+          Start building your risk register by identifying and reporting risks for your organization.
+        </p>
+        <NuxtLink 
+          :to="`/organizations/${organizationId}/risks`"
+          class="inline-flex items-center gap-2 bg-[#09423C] text-white px-5 py-2.5 rounded-xl text-[13px] font-bold hover:bg-[#07332e] transition-colors"
+        >
+          <UIcon name="i-lucide-plus" class="size-4" />
+          Report Risk
+        </NuxtLink>
+      </div>
+    </div>
+    
+    <div v-else class="overflow-x-auto flex-1">
       <table class="w-full text-left border-collapse min-w-[600px]">
         <thead class="bg-[#09423c]/80 text-white uppercase text-[12px] font-bold tracking-[0.6px] sticky top-0">
           <tr>
@@ -66,9 +93,12 @@ const getActionText = (risk: DashboardRisk) => {
               </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-              <button class="text-[13px] font-medium text-[#09433e] hover:underline cursor-pointer">
+              <NuxtLink 
+                :to="`/organizations/${organizationId}/risks/${risk.id}`"
+                class="text-[13px] font-medium text-[#09433e] hover:underline cursor-pointer"
+              >
                 {{ getActionText(risk) }}
-              </button>
+              </NuxtLink>
             </td>
           </tr>
         </tbody>

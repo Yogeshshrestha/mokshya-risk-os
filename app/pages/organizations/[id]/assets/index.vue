@@ -21,7 +21,9 @@ const fetchAssets = async () => {
     if (selectedType.value) params.asset_type = selectedType.value
     if (searchQuery.value) params.search = searchQuery.value
     
-    assets.value = await assetApi.listAssets(organizationId, params)
+    const fetchedAssets = await assetApi.listAssets(organizationId, params)
+    // Sort assets by asset_id in ascending order
+    assets.value = fetchedAssets.sort((a, b) => a.asset_id.localeCompare(b.asset_id))
   } catch (error) {
     console.error('Failed to fetch assets:', error)
   } finally {

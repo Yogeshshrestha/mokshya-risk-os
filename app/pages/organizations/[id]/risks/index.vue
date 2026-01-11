@@ -29,7 +29,8 @@ const fetchData = async () => {
       riskApi.getStatistics(organizationId).catch(() => null)
     ])
     
-    risks.value = risksData
+    // Sort risks by risk_id in ascending order
+    risks.value = risksData.sort((a, b) => a.risk_id.localeCompare(b.risk_id))
     stats.value = statsData
   } catch (error) {
     console.error('Failed to fetch risks:', error)

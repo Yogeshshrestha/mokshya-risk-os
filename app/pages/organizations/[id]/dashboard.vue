@@ -167,6 +167,14 @@ const cisoStats = computed(() => {
     }
   ]
 })
+
+// Sort risks by risk_id in ascending order
+const sortedTopRisks = computed(() => {
+  if (!dashboardData.value?.risk_register?.top_risks) return []
+  return [...dashboardData.value.risk_register.top_risks].sort((a, b) => 
+    a.risk_id.localeCompare(b.risk_id)
+  )
+})
 </script>
 
 <template>
@@ -248,14 +256,8 @@ const cisoStats = computed(() => {
               <div class="lg:col-span-8 flex flex-col gap-6">
                 <!-- Risk Register Summary -->
                 <div class="bg-white border border-[#e8f3f2] rounded-[16px] shadow-sm flex flex-col h-full overflow-hidden">
-                  <div class="px-6 py-5 border-b border-[#e8f3f2] flex justify-between items-center bg-white sticky top-0 z-10">
-                    <h3 class="text-[18px] font-bold text-[#0e1b1a]">Primary Risk Vectors</h3>
-                    <NuxtLink :to="`/organizations/${organizationId}/risks`" class="text-[13px] font-bold text-[#09433e] hover:underline">
-                      View Register
-                    </NuxtLink>
-                  </div>
                   <div class="flex-1">
-                    <RiskRegisterTable :risks="dashboardData.risk_register.top_risks" />
+                    <RiskRegisterTable :risks="sortedTopRisks" :organization-id="organizationId" />
                   </div>
                 </div>
               </div>
