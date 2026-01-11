@@ -2,6 +2,17 @@
  * Global Questionnaire type definitions
  */
 
+export interface QuestionCategoryResponse {
+  id: string
+  code: string
+  name: string
+  description?: string | null
+  display_order: number
+  is_active: boolean
+  created_at: string
+  type?: string
+}
+
 export interface GlobalQuestionResponse {
   id: string
   code: string
@@ -10,6 +21,7 @@ export interface GlobalQuestionResponse {
   help_text?: string
   question_type: string
   category?: string
+  category_type?: string
   domain?: string
   display_order: number
   is_red_flag_trigger: boolean
@@ -23,6 +35,7 @@ export interface GlobalQuestionResponse {
   tags: string[]
   score_weights: Record<string, number>
   max_score: number
+  options?: Array<{ value: string; label: string } | Record<string, any>>
   created_at: string
   updated_at: string
 }

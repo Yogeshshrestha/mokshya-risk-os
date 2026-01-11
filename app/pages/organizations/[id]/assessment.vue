@@ -5,7 +5,8 @@ import GlobalQuestionCard from '~/components/global-questionnaire/GlobalQuestion
 import type {
   GlobalQuestionResponse,
   GlobalQuestionAnswerResponse,
-  GlobalQuestionnaireScoreResponse
+  GlobalQuestionnaireScoreResponse,
+  QuestionCategoryResponse,
 } from '~/types/global-questionnaire'
 
 definePageMeta({
@@ -24,6 +25,7 @@ const organizationId = route.params.id as string
 const questions = ref<GlobalQuestionResponse[]>([])
 const answers = ref<GlobalQuestionAnswerResponse[]>([])
 const score = ref<GlobalQuestionnaireScoreResponse | null>(null)
+const categories = ref<QuestionCategoryResponse[]>([])
 const isLoading = ref(true)
 const selectedCategory = ref<string>('all')
 const savingAnswerId = ref<string | null>(null)
@@ -34,14 +36,25 @@ const selectedPersona = ref('cro')
 // Get current organization
 const currentOrg = ref<any>(null)
 
+// Get category info by name
+const getCategoryInfo = (categoryName: string) => {
+  return categories.value.find(cat => cat.name === categoryName || cat.code === categoryName)
+}
+
 // Get categories with progress
 const categoriesWithProgress = computed(() => {
-  const categoryMap = new Map<string, { total: number; answered: number; firstCode: string }>()
+  const categoryMap = new Map<string, { total: number; answered: number; firstCode: string; type?: string }>()
   
   questions.value.forEach(q => {
     if (!q.category) return
     if (!categoryMap.has(q.category)) {
-      categoryMap.set(q.category, { total: 0, answered: 0, firstCode: q.code || '' })
+      const categoryInfo = getCategoryInfo(q.category)
+      categoryMap.set(q.category, { 
+        total: 0, 
+        answered: 0, 
+        firstCode: q.code || '',
+        type: categoryInfo?.type || q.category_type
+      })
     }
     
     const stats = categoryMap.get(q.category)!
@@ -49,6 +62,12 @@ const categoriesWithProgress = computed(() => {
     
     if (q.code && (!stats.firstCode || q.code < stats.firstCode)) {
       stats.firstCode = q.code
+    }
+    
+    // Update type from category info if available
+    if (!stats.type) {
+      const categoryInfo = getCategoryInfo(q.category)
+      stats.type = categoryInfo?.type || q.category_type
     }
     
     if (answers.value.some(a => a.question_id === q.id)) {
@@ -59,6 +78,7 @@ const categoriesWithProgress = computed(() => {
   return Array.from(categoryMap.entries())
     .map(([name, stats]) => ({
       name,
+      type: stats.type,
       total: stats.total,
       answered: stats.answered,
       isCompleted: stats.answered === stats.total && stats.total > 0,
@@ -153,19 +173,45 @@ const goToPreviousQuestion = () => {
 
 const fetchData = async () => {
   try {
-    const [orgData, questionsData, answersData, scoreData] = await Promise.all([
-      organization.getOrganization(organizationId),
+    isLoading.value = true
+    
+    // Fetch organization first (required)
+    try {
+      currentOrg.value = await organization.getOrganization(organizationId)
+    } catch (error) {
+      console.error('Failed to fetch organization:', error)
+      // Continue anyway - we'll show a message
+    }
+    
+    // Fetch other data in parallel
+    const [categoriesData, questionsData, answersData, scoreData] = await Promise.allSettled([
+      questionnaire.listCategories({ active_only: true }),
       questionnaire.listGlobalQuestions({ active_only: true }),
       questionnaire.listOrganizationAnswers(organizationId),
       questionnaire.getOrganizationScore(organizationId)
     ])
     
-    currentOrg.value = orgData
-    questions.value = questionsData
-    answers.value = answersData
-    score.value = scoreData
+    // Handle results - categories are optional
+    categories.value = categoriesData.status === 'fulfilled' ? categoriesData.value : []
+    questions.value = questionsData.status === 'fulfilled' ? questionsData.value : []
+    answers.value = answersData.status === 'fulfilled' ? answersData.value : []
+    score.value = scoreData.status === 'fulfilled' ? scoreData.value : null
+    
+    // Log any failures
+    if (categoriesData.status === 'rejected') {
+      console.warn('Categories fetch failed, continuing without them')
+    }
+    if (questionsData.status === 'rejected') {
+      console.error('Failed to fetch questions:', questionsData.reason)
+    }
+    if (answersData.status === 'rejected') {
+      console.error('Failed to fetch answers:', answersData.reason)
+    }
+    if (scoreData.status === 'rejected') {
+      console.warn('Score fetch failed, continuing without it')
+    }
   } catch (error) {
-    console.error('Failed to fetch assessment data:', error)
+    console.error('Unexpected error in fetchData:', error)
   } finally {
     isLoading.value = false
   }
@@ -224,7 +270,26 @@ watch(selectedCategory, () => {
           <div class="w-12 h-12 border-4 border-[#09423C] border-t-transparent rounded-full animate-spin"></div>
         </div>
         
-        <div v-else-if="currentOrg" class="max-w-[1600px] mx-auto">
+        <!-- Error State -->
+        <div v-else-if="!currentOrg && questions.length === 0" class="max-w-[1600px] mx-auto">
+          <div class="bg-white rounded-[16px] shadow-sm border border-[#e2e8f0] p-12 text-center">
+            <div class="inline-flex items-center justify-center size-16 bg-rose-50 rounded-full mb-4">
+              <svg class="size-8 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 class="text-[20px] font-extrabold text-[#09433e] mb-2">Unable to Load Assessment</h2>
+            <p class="text-[14px] text-[#64748b] mb-6">There was an error loading the assessment data. Please try refreshing the page.</p>
+            <button 
+              @click="fetchData"
+              class="px-6 py-3 bg-[#09423c] text-white rounded-xl font-bold hover:bg-[#07332e] transition-all"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+        
+        <div v-else-if="currentOrg || questions.length > 0" class="max-w-[1600px] mx-auto">
           <div class="flex flex-col lg:flex-row gap-8 items-start">
             
             <!-- Left: Categories (Compact) -->
@@ -301,7 +366,10 @@ watch(selectedCategory, () => {
                         </svg>
                         <div v-else-if="selectedCategory === category.name" class="w-2 h-2 rounded-full bg-[#09423c]"></div>
                       </div>
-                      <span class="truncate flex-1">{{ category.name }}</span>
+                      <div class="flex-1 min-w-0">
+                        <span class="truncate block">{{ category.name }}</span>
+                        <span v-if="category.type" class="text-[10px] font-bold text-[#94a3b8] uppercase tracking-tighter truncate block">{{ category.type }}</span>
+                      </div>
                       <span 
                         class="text-[10px] font-extrabold"
                         :class="category.answered > 0 && getCategoryPerformance(category.name)
@@ -373,6 +441,15 @@ watch(selectedCategory, () => {
 
               <!-- List View -->
               <div v-if="viewMode === 'list'" class="space-y-4">
+                <div v-if="filteredQuestions.length === 0" class="text-center py-12">
+                  <div class="inline-flex items-center justify-center size-16 bg-gray-100 rounded-full mb-4">
+                    <svg class="size-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <p class="text-[16px] font-bold text-[#64748b]">No questions available</p>
+                  <p class="text-[13px] text-[#94a3b8] mt-2">Questions will appear here once they are loaded.</p>
+                </div>
                 <GlobalQuestionCard
                   v-for="question in filteredQuestions"
                   :key="question.id"
@@ -384,37 +461,48 @@ watch(selectedCategory, () => {
               </div>
 
               <!-- Focus View -->
-              <div v-else-if="currentQuestion" class="space-y-6">
-                <GlobalQuestionCard
-                  :question="currentQuestion"
-                  :answer="getAnswerForQuestion(currentQuestion.id)"
-                  :is-saving="savingAnswerId === currentQuestion.id"
-                  @answer-submitted="handleAnswerSubmit"
-                />
-
-                <div class="flex items-center justify-between">
-                  <button
-                    @click="goToPreviousQuestion"
-                    :disabled="focusedQuestionIndex === 0"
-                    class="px-6 py-3 rounded-[12px] text-[14px] font-bold border border-[#e2e8f0] bg-white text-[#64748b] hover:border-[#09423c] hover:text-[#09423c] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-                    Previous
-                  </button>
-
-                  <span class="text-[14px] font-bold text-[#64748b]">
-                    {{ focusedQuestionIndex + 1 }} / {{ filteredQuestions.length }}
-                  </span>
-
-                  <button
-                    @click="goToNextQuestion"
-                    :disabled="focusedQuestionIndex === filteredQuestions.length - 1"
-                    class="px-6 py-3 rounded-[12px] text-[14px] font-bold bg-[#09423c] text-white hover:bg-[#07332e] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
-                  >
-                    Next Question
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-                  </button>
+              <div v-else-if="viewMode === 'focus'">
+                <div v-if="!currentQuestion" class="text-center py-12">
+                  <div class="inline-flex items-center justify-center size-16 bg-gray-100 rounded-full mb-4">
+                    <svg class="size-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <p class="text-[16px] font-bold text-[#64748b]">No questions available</p>
+                  <p class="text-[13px] text-[#94a3b8] mt-2">Select a category or wait for questions to load.</p>
                 </div>
+                <template v-else>
+                  <GlobalQuestionCard
+                    :question="currentQuestion"
+                    :answer="getAnswerForQuestion(currentQuestion.id)"
+                    :is-saving="savingAnswerId === currentQuestion.id"
+                    @answer-submitted="handleAnswerSubmit"
+                  />
+
+                  <div class="flex items-center justify-between">
+                    <button
+                      @click="goToPreviousQuestion"
+                      :disabled="focusedQuestionIndex === 0"
+                      class="px-6 py-3 rounded-[12px] text-[14px] font-bold border border-[#e2e8f0] bg-white text-[#64748b] hover:border-[#09423c] hover:text-[#09423c] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                      Previous
+                    </button>
+
+                    <span class="text-[14px] font-bold text-[#64748b]">
+                      {{ focusedQuestionIndex + 1 }} / {{ filteredQuestions.length }}
+                    </span>
+
+                    <button
+                      @click="goToNextQuestion"
+                      :disabled="focusedQuestionIndex === filteredQuestions.length - 1"
+                      class="px-6 py-3 rounded-[12px] text-[14px] font-bold bg-[#09423c] text-white hover:bg-[#07332e] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
+                    >
+                      Next Question
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                  </div>
+                </template>
               </div>
 
               <!-- Completion State -->

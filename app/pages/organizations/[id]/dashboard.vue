@@ -31,13 +31,26 @@ const selectedPersona = ref('cro')
 const fetchDashboardData = async () => {
   try {
     isLoading.value = true
-    // Fetch both assessment score and full CRO dashboard
-    const [scoreRes, dashboardRes] = await Promise.all([
-      questionnaire.getOrganizationScore(organizationId),
-      dashboard.getCRODashboard(organizationId)
-    ])
-    score.value = scoreRes
-    dashboardData.value = dashboardRes
+    
+    // Always fetch score first to check assessment completion
+    try {
+      score.value = await questionnaire.getOrganizationScore(organizationId)
+    } catch (error) {
+      console.error('Failed to fetch assessment score:', error)
+      // Score is required, so if it fails, we can't show anything meaningful
+      return
+    }
+    
+    // Only fetch dashboard data if assessment is complete
+    // If assessment is incomplete, dashboard API might fail anyway
+    if (score.value && score.value.answered_questions >= score.value.total_questions) {
+      try {
+        dashboardData.value = await dashboard.getCRODashboard(organizationId)
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error)
+        // Dashboard data is optional - we can still show score info
+      }
+    }
   } catch (error) {
     console.error('Failed to fetch dashboard data:', error)
   } finally {
@@ -171,7 +184,7 @@ const cisoStats = computed(() => {
           <div class="w-12 h-12 border-4 border-[#09423C] border-t-transparent rounded-full animate-spin"></div>
         </div>
         
-        <div v-else-if="score && dashboardData" class="px-4 sm:px-6 lg:px-8 mx-auto space-y-8 pb-12">
+        <div v-else-if="score" class="px-4 sm:px-6 lg:px-8 mx-auto space-y-8 pb-12">
           <!-- Assessment Incomplete Notice -->
           <div v-if="score.answered_questions < score.total_questions" class="relative overflow-hidden bg-white rounded-[24px] border border-[#e8f3f2] p-12 text-center shadow-sm min-h-[500px] flex items-center justify-center">
             <div class="absolute inset-0 bg-[#f8fbfb]/50 opacity-50" style="background-image: radial-gradient(#09423c 0.5px, transparent 0.5px); background-size: 24px 24px;"></div>
@@ -219,8 +232,8 @@ const cisoStats = computed(() => {
             </div>
           </div>
 
-          <!-- Dashboard Content (only visible if assessment complete) -->
-          <template v-else>
+          <!-- Dashboard Content (only visible if assessment complete AND dashboard data available) -->
+          <template v-else-if="dashboardData">
             <!-- 1. Stats Row -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <StatCard 
@@ -384,6 +397,54 @@ const cisoStats = computed(() => {
               <CriticalControlGapsTable :red-flags="dashboardData.executive_summary.red_flags" />
             </div>
           </template>
+          
+          <!-- Fallback if assessment complete but dashboard data unavailable -->
+          <div v-else class="relative overflow-hidden bg-white rounded-[24px] border border-[#e8f3f2] p-12 text-center shadow-sm min-h-[400px] flex items-center justify-center">
+            <div class="max-w-xl mx-auto">
+              <div class="w-20 h-20 bg-[#e8f3f2] rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-white">
+                <UIcon name="i-lucide-alert-circle" class="size-10 text-[#09423c]" />
+              </div>
+              <h2 class="text-2xl font-extrabold text-[#09423c] mb-4 tracking-tight">Dashboard Data Unavailable</h2>
+              <p class="text-[#4f9690] text-base mb-8 leading-relaxed font-medium">
+                Assessment is complete, but dashboard data is currently unavailable. Please try refreshing the page.
+              </p>
+              <button 
+                @click="fetchDashboardData"
+                class="inline-flex items-center justify-center gap-3 bg-[#09423c] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#07332e] transition-all shadow-lg shadow-[#09423c]/20"
+              >
+                Refresh Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Fallback if score is unavailable -->
+        <div v-else class="px-4 sm:px-6 lg:px-8 mx-auto pb-12">
+          <div class="relative overflow-hidden bg-white rounded-[24px] border border-[#e8f3f2] p-12 text-center shadow-sm min-h-[400px] flex items-center justify-center">
+            <div class="max-w-xl mx-auto">
+              <div class="w-20 h-20 bg-[#e8f3f2] rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-white">
+                <UIcon name="i-lucide-alert-circle" class="size-10 text-[#09423c]" />
+              </div>
+              <h2 class="text-2xl font-extrabold text-[#09423c] mb-4 tracking-tight">Unable to Load Assessment Data</h2>
+              <p class="text-[#4f9690] text-base mb-8 leading-relaxed font-medium">
+                We couldn't load your assessment information. Please try refreshing the page or contact support if the issue persists.
+              </p>
+              <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button 
+                  @click="fetchDashboardData"
+                  class="inline-flex items-center justify-center gap-3 bg-[#09423c] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#07332e] transition-all shadow-lg shadow-[#09423c]/20"
+                >
+                  Retry
+                </button>
+                <NuxtLink 
+                  :to="`/organizations/${organizationId}/assessment`"
+                  class="inline-flex items-center justify-center gap-3 bg-white text-[#4f9690] px-8 py-3 rounded-xl font-bold hover:text-[#09423c] hover:bg-gray-50 transition-all border border-[#e8f3f2]"
+                >
+                  Go to Assessment
+                </NuxtLink>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>

@@ -7,6 +7,7 @@ import type {
   GlobalQuestionAnswerCreate,
   GlobalQuestionAnswerResponse,
   GlobalQuestionnaireScoreResponse,
+  QuestionCategoryResponse,
 } from '~/types/global-questionnaire'
 import type { ApiError } from '~/types/auth'
 
@@ -14,6 +15,39 @@ export const useGlobalQuestionnaire = () => {
   const api = useApi()
   const isLoading = ref(false)
   const error = ref<string | null>(null)
+
+  /**
+   * List all question categories
+   */
+  const listCategories = async (params?: {
+    active_only?: boolean
+  }): Promise<QuestionCategoryResponse[]> => {
+    // Don't set global isLoading for this - let the caller manage loading state
+    error.value = null
+
+    try {
+      const queryParams = new URLSearchParams()
+      if (params?.active_only !== undefined) {
+        queryParams.append('active_only', params.active_only.toString())
+      }
+
+      const queryString = queryParams.toString()
+      const endpoint = `/questionnaire/categories${queryString ? `?${queryString}` : ''}`
+
+      const response = await api.request<QuestionCategoryResponse[]>(endpoint, {
+        method: 'GET',
+        requireAuth: true,
+      })
+
+      return response || []
+    } catch (err) {
+      const apiError = err as ApiError
+      error.value = apiError.message || 'Failed to list categories'
+      // Return empty array instead of throwing so page can still load
+      console.warn('Failed to fetch categories:', apiError.message)
+      return []
+    }
+  }
 
   /**
    * List all global questions
@@ -222,6 +256,7 @@ export const useGlobalQuestionnaire = () => {
   return {
     isLoading: readonly(isLoading),
     error: readonly(error),
+    listCategories,
     listGlobalQuestions,
     getGlobalQuestion,
     submitAnswer,

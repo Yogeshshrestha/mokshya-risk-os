@@ -82,7 +82,7 @@ const selectedPersona = ref('cro')
     
     <div class="flex-1 flex flex-col min-w-0">
       <DashboardHeader 
-        title="Risk Register"
+        title="Risk"
         v-model:persona="selectedPersona"
       />
       
@@ -91,7 +91,7 @@ const selectedPersona = ref('cro')
           <!-- Page Header -->
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 class="text-[24px] font-extrabold text-[#0e1b1a]">Risk Register</h2>
+              <h2 class="text-[24px] font-extrabold text-[#0e1b1a]">Risk</h2>
               <p class="text-[15px] text-[#4f9690]">Comprehensive list of identified security risks and their status.</p>
             </div>
             <button 

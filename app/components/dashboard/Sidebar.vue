@@ -7,10 +7,10 @@ const navItems = [
   { label: 'Reports', icon: 'i-lucide-bar-chart-3', to: `/organizations/${organizationId.value}/reports` }
 ]
 
-const bottomItems = [
+const bottomItems = computed(() => [
   { label: 'Settings', icon: 'i-lucide-settings', to: `/organizations/${organizationId.value}/settings` },
-  { label: 'Help / Support', icon: 'i-lucide-help-circle', to: '/support' }
-]
+  { label: 'Help / Support', icon: 'i-lucide-help-circle', to: `/organizations/${organizationId.value}/support` }
+])
 
 const auth = useAuth()
 const handleLogout = async () => {

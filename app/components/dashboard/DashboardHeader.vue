@@ -1,10 +1,13 @@
 <script setup lang="ts">
 interface Props {
   title: string
-  persona: string
+  persona?: string
+  showPersona?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  showPersona: true
+})
 const emit = defineEmits<{
   'update:persona': [val: string]
 }>()
@@ -99,14 +102,14 @@ onMounted(async () => {
     <div class="flex items-center gap-8">
     
 
-      <div class="bg-[#e8f3f2] h-[48px] rounded-[14px] px-4 flex items-center gap-4 shadow-sm border border-[#d0e6e5]/30 relative">
+      <div v-if="showPersona" class="bg-[#e8f3f2] h-[48px] rounded-[14px] px-4 flex items-center gap-4 shadow-sm border border-[#d0e6e5]/30 relative">
         <span class="text-[12px] font-extrabold text-[#09433e] uppercase tracking-widest">Persona:</span>
         <div class="relative">
           <button 
             @click="showPersonaDropdown = !showPersonaDropdown"
             class="bg-[#09423c] text-white rounded-[10px] px-4 py-2 flex items-center gap-5 hover:bg-[#07332e] h-[34px] shadow-sm transition-all border-none cursor-pointer"
           >
-            <span class="text-[15px] font-bold">{{ persona.toUpperCase() }}</span>
+            <span class="text-[15px] font-bold">{{ persona?.toUpperCase() }}</span>
             <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>

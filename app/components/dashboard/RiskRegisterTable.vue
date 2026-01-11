@@ -31,7 +31,7 @@ const getActionText = (risk: DashboardRisk) => {
 <template>
   <div class="bg-white border border-[#e8f3f2] rounded-[16px] shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col h-full">
     <div class="px-6 py-5 border-b border-[#e8f3f2] flex justify-between items-center bg-white sticky top-0 z-10">
-      <h3 class="text-[18px] font-bold text-[#0e1b1a]">Risk Register (Top Priority)</h3>
+      <h3 class="text-[18px] font-bold text-[#0e1b1a]">Risk (Top Priority)</h3>
       <button class="text-[14px] font-medium text-[#09433e] hover:underline cursor-pointer">
         View All
       </button>

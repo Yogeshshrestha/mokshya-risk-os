@@ -254,7 +254,7 @@ const tabs = [
                     :to="`/organizations/${organizationId}/assessment`"
                     class="relative z-10 w-full flex items-center justify-center gap-2 bg-white text-[#09423C] py-3.5 rounded-xl font-extrabold hover:bg-emerald-50 transition-all shadow-sm text-[15px]"
                   >
-                    Start Assessment
+                    Assessment
                     <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>

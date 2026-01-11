@@ -60,7 +60,37 @@ const hasRedFlag = computed(() => {
   return String(currentAnswer.value).toLowerCase() === props.question.red_flag_condition.trigger_value.toLowerCase()
 })
 
-const isCompleted = computed(() => currentAnswer.value !== null)
+// Get answer options - use question.options if available, otherwise default
+const answerOptions = computed(() => {
+  if (props.question.options && Array.isArray(props.question.options) && props.question.options.length > 0) {
+    // Handle both object array formats (with label/value) and any other structure
+    return props.question.options.map(opt => {
+      // If it's already an object with value and label
+      if (typeof opt === 'object' && opt !== null) {
+        // Check if it has value and label properties
+        if ('value' in opt && 'label' in opt) {
+          return { value: String(opt.value), label: String(opt.label) }
+        }
+        // If it's an object but we need to extract value/label
+        // Try common patterns
+        const value = opt.value || opt.id || opt.code || Object.values(opt)[0]
+        const label = opt.label || opt.name || opt.text || String(value)
+        return { value: String(value), label: String(label) }
+      }
+      // If it's a string, use it as both value and label
+      if (typeof opt === 'string') {
+        return { value: opt, label: getAnswerDisplay(opt) }
+      }
+      // Fallback
+      return { value: String(opt), label: getAnswerDisplay(String(opt)) }
+    })
+  }
+  // Default options for yes_no_partial question type
+  return ['yes', 'no', 'partial', 'n_a'].map(opt => ({
+    value: opt,
+    label: getAnswerDisplay(opt)
+  }))
+})
 </script>
 
 <template>
@@ -137,19 +167,19 @@ const isCompleted = computed(() => currentAnswer.value !== null)
           <!-- Answer Buttons -->
           <div class="flex gap-1.5 sm:gap-2 flex-wrap">
             <button
-              v-for="option in ['yes', 'no', 'partial', 'n_a']"
-              :key="option"
-              @click="handleAnswerChange(option)"
+              v-for="option in answerOptions"
+              :key="option.value"
+              @click="handleAnswerChange(option.value)"
               :disabled="isSaving"
               :class="[
                 'px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium border transition-all flex-shrink-0',
-                currentAnswer === option
+                currentAnswer === option.value
                   ? 'bg-[#09423C] text-white border-[#09423C]'
                   : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50',
                 isSaving && 'opacity-50 cursor-not-allowed'
               ]"
             >
-              {{ getAnswerDisplay(option) }}
+              {{ option.label }}
             </button>
           </div>
 
