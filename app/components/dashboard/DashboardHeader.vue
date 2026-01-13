@@ -103,9 +103,9 @@ onMounted(async () => {
         @click="emit('toggle-sidebar')"
         class="lg:hidden size-10 flex items-center justify-center hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
       >
-        <UIcon name="i-lucide-menu" class="size-6 text-[#09433e]" />
+        <UIcon name="i-lucide-menu" class="size-6 text-[#09423c]" />
       </button>
-      <h1 class="text-[18px] sm:text-[20px] font-extrabold text-[#09433e] tracking-tight">{{ title }}</h1>
+      <h1 class="text-[18px] sm:text-[20px] font-black text-[#09423c] tracking-tight uppercase">{{ title }}</h1>
     </div>
     
     <div class="flex items-center gap-2 sm:gap-6 lg:gap-8">

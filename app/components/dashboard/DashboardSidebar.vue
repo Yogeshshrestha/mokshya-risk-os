@@ -138,12 +138,15 @@ onMounted(fetchData)
         'lg:relative'
       ]"
     >
-    <div :class="['pb-6', isCollapsed ? 'p-4' : 'p-8']">
-      <div class="flex items-center justify-between mb-1">
+    <div :class="['flex-shrink-0 flex flex-col justify-center border-b border-[#e0e8e7]/50', isCollapsed ? 'h-[81px] px-2' : 'h-[81px] px-8']">
+      <div class="flex items-center justify-between">
         <NuxtLink v-if="!isCollapsed" to="/" @click="emit('close')" class="flex items-center gap-2 group">
-          <span class="text-[16px] font-extrabold text-[#09423c] tracking-tight group-hover:opacity-80 transition-opacity">Mokshya OS</span>
+          <span class="text-[18px] font-black text-[#09423c] tracking-tighter group-hover:opacity-80 transition-opacity uppercase">Mokshya OS</span>
           <div class="size-1.5 bg-[#09423c] rounded-full group-hover:scale-125 transition-transform"></div>
         </NuxtLink>
+        <div v-else class="mx-auto">
+          <div class="size-8 bg-[#09423c] rounded-lg flex items-center justify-center text-white font-black text-xs">M</div>
+        </div>
         <button 
           @click="emit('close')"
           class="lg:hidden size-8 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors"
@@ -151,10 +154,10 @@ onMounted(fetchData)
           <UIcon name="i-lucide-x" class="size-5 text-[#09423c]" />
         </button>
       </div>
-      <p v-if="!isCollapsed" class="text-[10px] font-bold text-[#6b8a87] uppercase tracking-widest opacity-80">Financial Technology</p>
+      <p v-if="!isCollapsed" class="text-[9px] font-black text-[#6b8a87] uppercase tracking-[0.15em] opacity-60 mt-0.5 leading-none">Financial Technology</p>
     </div>
     
-    <div :class="['mb-8 relative', isCollapsed ? 'px-2' : 'px-4']" ref="orgSwitcherRef">
+    <div :class="['my-6 relative', isCollapsed ? 'px-2' : 'px-4']" ref="orgSwitcherRef">
       <div 
         @click="showOrgSwitcher = !showOrgSwitcher"
         class="bg-gray-50/50 border border-[#e0e8e7] rounded-lg p-2.5 flex items-center justify-between shadow-sm group hover:border-[#09423c]/30 transition-colors cursor-pointer"
@@ -240,7 +243,7 @@ onMounted(fetchData)
       </Transition>
     </div>
     
-    <nav :class="['flex-1 space-y-1.5 overflow-y-auto custom-scrollbar', isCollapsed ? 'px-2' : 'px-3']">
+    <nav :class="['flex-1 space-y-1 overflow-y-auto custom-scrollbar', isCollapsed ? 'px-2' : 'px-3']">
       <NuxtLink 
         v-for="item in navItems" 
         :key="item.label"
@@ -248,19 +251,19 @@ onMounted(fetchData)
         @click="emit('close')"
         :class="[
           'flex items-center rounded-xl transition-all duration-200 group relative',
-          isCollapsed ? 'justify-center px-2 py-3' : 'gap-3.5 px-4 py-3',
+          isCollapsed ? 'justify-center px-2 py-3' : 'gap-3 px-4 py-3',
           isItemActive(item.to) 
-            ? 'bg-[#09433e]/5 text-[#09433e] font-bold shadow-sm' 
-            : 'text-[#6b8a87] hover:bg-gray-50/80 hover:text-[#09433e]'
+            ? 'bg-[#09423c]/5 text-[#09423c] font-bold shadow-sm' 
+            : 'text-[#6b8a87] hover:bg-gray-50/80 hover:text-[#09423c]'
         ]"
       >
-        <UIcon :name="item.icon" class="size-5.5 flex-shrink-0" :class="[isItemActive(item.to) ? 'text-[#09433e]' : 'text-[#6b8a87] group-hover:text-[#09433e]']" />
-        <span v-if="!isCollapsed" class="text-[14px]">{{ item.label }}</span>
-        <div v-if="isItemActive(item.to) && !isCollapsed" class="absolute left-0 w-1 h-5 bg-[#09433e] rounded-r-full"></div>
+        <UIcon :name="item.icon" class="size-5.5 flex-shrink-0 transition-colors" :class="[isItemActive(item.to) ? 'text-[#09423c]' : 'text-[#6b8a87] group-hover:text-[#09423c]']" />
+        <span v-if="!isCollapsed" class="text-[14px] tracking-tight">{{ item.label }}</span>
+        <div v-if="isItemActive(item.to) && !isCollapsed" class="absolute left-0 w-1 h-5 bg-[#09423c] rounded-r-full"></div>
       </NuxtLink>
     </nav>
     
-    <div :class="['mt-auto border-t border-[#e0e8e7] space-y-1', isCollapsed ? 'p-2' : 'p-4']">
+    <div :class="['mt-auto border-t border-[#e0e8e7] pt-4 space-y-1', isCollapsed ? 'p-2' : 'p-4']">
       <NuxtLink 
         v-for="item in bottomItems" 
         :key="item.label"
@@ -270,24 +273,24 @@ onMounted(fetchData)
           'flex items-center rounded-lg transition-colors group relative',
           isCollapsed ? 'justify-center px-2 py-2.5' : 'gap-3.5 px-4 py-2.5',
           isItemActive(item.to)
-            ? 'bg-[#09433e]/5 text-[#09433e] font-bold'
-            : 'text-[#09423c] hover:bg-gray-50'
+            ? 'bg-[#09423c]/5 text-[#09423c] font-bold'
+            : 'text-[#6b8a87] hover:bg-gray-50/80 hover:text-[#09423c]'
         ]"
       >
-        <UIcon :name="item.icon" class="size-5 flex-shrink-0" :class="[isItemActive(item.to) ? 'text-[#09433e]' : 'text-[#6b8a87] group-hover:text-[#09433e]']" />
-        <span v-if="!isCollapsed" class="text-[14px] font-medium">{{ item.label }}</span>
-        <div v-if="isItemActive(item.to) && !isCollapsed" class="absolute left-0 w-1 h-4 bg-[#09433e] rounded-r-full"></div>
+        <UIcon :name="item.icon" class="size-5 flex-shrink-0 transition-colors" :class="[isItemActive(item.to) ? 'text-[#09423c]' : 'text-[#6b8a87] group-hover:text-[#09423c]']" />
+        <span v-if="!isCollapsed" class="text-[14px] font-medium tracking-tight">{{ item.label }}</span>
+        <div v-if="isItemActive(item.to) && !isCollapsed" class="absolute left-0 w-1 h-4 bg-[#09423c] rounded-r-full"></div>
       </NuxtLink>
       
       <button 
         @click="() => { handleLogout(); emit('close'); }"
         :class="[
-          'w-full flex items-center rounded-lg text-[#dd4747] font-bold hover:bg-red-50 transition-colors group cursor-pointer',
+          'w-full flex items-center rounded-lg text-[#dd4747] font-bold hover:bg-red-50 transition-colors group cursor-pointer mt-1',
           isCollapsed ? 'justify-center px-2 py-2.5' : 'gap-3.5 px-4 py-2.5'
         ]"
       >
         <UIcon name="i-lucide-log-out" class="size-5 flex-shrink-0 text-[#dd4747]/70 group-hover:text-[#dd4747] transition-colors" />
-        <span v-if="!isCollapsed" class="text-[14px]">Logout</span>
+        <span v-if="!isCollapsed" class="text-[14px] tracking-tight">Logout</span>
       </button>
     </div>
 
