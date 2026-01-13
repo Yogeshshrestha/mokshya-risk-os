@@ -61,11 +61,11 @@ const getRatingBadge = (rating: RiskRating) => {
 
 const getStatusBadge = (status: RiskStatus) => {
   switch (status) {
-    case 'open': return 'bg-rose-50 text-rose-600'
-    case 'in_progress': return 'bg-blue-50 text-blue-600'
-    case 'mitigated': return 'bg-emerald-50 text-emerald-600'
-    case 'accepted': return 'bg-gray-50 text-gray-600'
-    default: return 'bg-gray-50 text-gray-600'
+    case 'open': return { bg: 'bg-rose-50', text: 'text-rose-600', dot: 'bg-rose-600' }
+    case 'in_progress': return { bg: 'bg-blue-50', text: 'text-blue-600', dot: 'bg-blue-600' }
+    case 'mitigated': return { bg: 'bg-emerald-50', text: 'text-emerald-600', dot: 'bg-emerald-600' }
+    case 'accepted': return { bg: 'bg-gray-50', text: 'text-gray-600', dot: 'bg-gray-600' }
+    default: return { bg: 'bg-gray-50', text: 'text-gray-600', dot: 'bg-gray-600' }
   }
 }
 
@@ -75,16 +75,41 @@ const getCategoryIcon = (category: RiskCategory) => {
 
 const showCreateRiskModal = ref(false)
 const selectedPersona = ref('cro')
+
+// Mobile sidebar state
+const showMobileSidebar = ref(false)
+
+const toggleSidebar = () => {
+  showMobileSidebar.value = !showMobileSidebar.value
+}
+
+const closeSidebar = () => {
+  showMobileSidebar.value = false
+}
+
+// Close sidebar on route change
+watch(() => route.path, () => {
+  showMobileSidebar.value = false
+})
 </script>
 
 <template>
   <div class="flex h-screen bg-[#f8fbfb] overflow-hidden">
-    <DashboardSidebar />
+    <!-- Desktop Sidebar (always visible on lg+) -->
+    <div class="hidden lg:block flex-shrink-0">
+      <DashboardSidebar :is-open="true" />
+    </div>
     
-    <div class="flex-1 flex flex-col min-w-0">
+    <!-- Mobile Sidebar (overlay) -->
+    <div class="lg:hidden">
+      <DashboardSidebar :is-open="showMobileSidebar" @close="closeSidebar" />
+    </div>
+    
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
       <DashboardHeader 
         title="Risk"
         v-model:persona="selectedPersona"
+        @toggle-sidebar="toggleSidebar"
       />
       
       <main class="flex-1 overflow-y-auto py-8">
@@ -107,56 +132,56 @@ const selectedPersona = ref('cro')
           </div>
 
           <!-- Statistics Cards -->
-          <div v-if="stats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="bg-white p-6 rounded-[20px] border border-[#e8f3f2] shadow-sm flex items-center gap-5">
-              <div class="size-12 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-600">
-                <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div v-if="stats" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div class="bg-white p-5 sm:p-6 rounded-[20px] border border-[#e8f3f2] shadow-sm flex items-center gap-4 sm:gap-5">
+              <div class="size-10 sm:size-12 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-600">
+                <svg class="size-5 sm:size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
               <div>
-                <p class="text-[12px] font-bold text-[#4f9690] uppercase tracking-wider mb-0.5">High Risks</p>
-                <p class="text-[24px] font-extrabold text-[#0e1b1a]">{{ stats.high_risks }}</p>
+                <p class="text-[10px] sm:text-[12px] font-bold text-[#4f9690] uppercase tracking-wider mb-0.5">High Risks</p>
+                <p class="text-[20px] sm:text-[24px] font-extrabold text-[#0e1b1a]">{{ stats.high_risks }}</p>
               </div>
             </div>
-            <div class="bg-white p-6 rounded-[20px] border border-[#e8f3f2] shadow-sm flex items-center gap-5">
-              <div class="size-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600">
-                <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white p-5 sm:p-6 rounded-[20px] border border-[#e8f3f2] shadow-sm flex items-center gap-4 sm:gap-5">
+              <div class="size-10 sm:size-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600">
+                <svg class="size-5 sm:size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
-                <p class="text-[12px] font-bold text-[#4f9690] uppercase tracking-wider mb-0.5">Open Risks</p>
-                <p class="text-[24px] font-extrabold text-[#0e1b1a]">{{ stats.open_risks }}</p>
+                <p class="text-[10px] sm:text-[12px] font-bold text-[#4f9690] uppercase tracking-wider mb-0.5">Open Risks</p>
+                <p class="text-[20px] sm:text-[24px] font-extrabold text-[#0e1b1a]">{{ stats.open_risks }}</p>
               </div>
             </div>
-            <div class="bg-white p-6 rounded-[20px] border border-[#e8f3f2] shadow-sm flex items-center gap-5">
-              <div class="size-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white p-5 sm:p-6 rounded-[20px] border border-[#e8f3f2] shadow-sm flex items-center gap-4 sm:gap-5">
+              <div class="size-10 sm:size-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                <svg class="size-5 sm:size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div>
-                <p class="text-[12px] font-bold text-[#4f9690] uppercase tracking-wider mb-0.5">Mitigated</p>
-                <p class="text-[24px] font-extrabold text-[#0e1b1a]">{{ stats.mitigated_risks }}</p>
+                <p class="text-[10px] sm:text-[12px] font-bold text-[#4f9690] uppercase tracking-wider mb-0.5">Mitigated</p>
+                <p class="text-[20px] sm:text-[24px] font-extrabold text-[#0e1b1a]">{{ stats.mitigated_risks }}</p>
               </div>
             </div>
-            <div class="bg-white p-6 rounded-[20px] border border-[#e8f3f2] shadow-sm flex items-center gap-5">
-              <div class="size-12 rounded-2xl bg-[#09423c]/5 flex items-center justify-center text-[#09423c]">
-                <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white p-5 sm:p-6 rounded-[20px] border border-[#e8f3f2] shadow-sm flex items-center gap-4 sm:gap-5">
+              <div class="size-10 sm:size-12 rounded-2xl bg-[#09423c]/5 flex items-center justify-center text-[#09423c]">
+                <svg class="size-5 sm:size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
               <div>
-                <p class="text-[12px] font-bold text-[#4f9690] uppercase tracking-wider mb-0.5">Avg Score</p>
-                <p class="text-[24px] font-extrabold text-[#0e1b1a]">{{ stats.average_risk_score.toFixed(1) }}</p>
+                <p class="text-[10px] sm:text-[12px] font-bold text-[#4f9690] uppercase tracking-wider mb-0.5">Avg Score</p>
+                <p class="text-[20px] sm:text-[24px] font-extrabold text-[#0e1b1a]">{{ stats.average_risk_score.toFixed(1) }}</p>
               </div>
             </div>
           </div>
 
           <!-- Filters -->
-          <div class="bg-white p-4 rounded-2xl border border-[#e8f3f2] shadow-sm flex flex-wrap items-center gap-4">
-            <div class="flex-1 min-w-[300px] relative">
+          <div class="bg-white p-4 rounded-2xl border border-[#e8f3f2] shadow-sm flex flex-col md:flex-row md:items-center gap-4">
+            <div class="flex-1 relative">
               <svg class="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -168,26 +193,28 @@ const selectedPersona = ref('cro')
                 class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#09423c]/20 focus:border-[#09423c]/30"
               />
             </div>
-            <select 
-              v-model="selectedCategory" 
-              @change="fetchData"
-              class="px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none min-w-[180px]"
-            >
-              <option value="">All Categories</option>
-              <option v-for="cat in riskCategories" :key="cat.value" :value="cat.value">
-                {{ cat.label }}
-              </option>
-            </select>
-            <select 
-              v-model="selectedRating" 
-              @change="fetchData"
-              class="px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none min-w-[150px]"
-            >
-              <option value="">All Ratings</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
+            <div class="flex flex-col sm:flex-row items-center gap-3">
+              <select 
+                v-model="selectedCategory" 
+                @change="fetchData"
+                class="w-full sm:w-auto px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none sm:min-w-[180px]"
+              >
+                <option value="">All Categories</option>
+                <option v-for="cat in riskCategories" :key="cat.value" :value="cat.value">
+                  {{ cat.label }}
+                </option>
+              </select>
+              <select 
+                v-model="selectedRating" 
+                @change="fetchData"
+                class="w-full sm:w-auto px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none sm:min-w-[150px]"
+              >
+                <option value="">All Ratings</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
           </div>
 
           <!-- Risks Table -->
@@ -209,12 +236,12 @@ const selectedPersona = ref('cro')
                 @click="showCreateRiskModal = true"
                 class="bg-[#09423C] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#07332e] transition-all cursor-pointer"
               >
-                Report Your First Risk
+                Report Risk
               </button>
             </div>
 
-            <div v-else class="overflow-x-auto">
-              <table class="w-full text-left border-collapse">
+            <div v-else class="overflow-x-auto flex-1">
+              <table class="w-full text-left border-collapse min-w-[1000px]">
                 <thead class="bg-[#09423c]/80 text-white uppercase text-[11px] font-extrabold tracking-[1px] sticky top-0">
                   <tr>
                     <th class="px-8 py-5">ID & Title</th>
@@ -257,14 +284,14 @@ const selectedPersona = ref('cro')
                     <td class="px-8 py-5 text-[14px] text-[#4f9690] font-medium">{{ risk.risk_owner }}</td>
                     <td class="px-8 py-5">
                       <div class="flex items-center gap-2">
-                        <div :class="['size-1.5 rounded-full', getStatusBadge(risk.status).split(' ')[1].replace('text-', 'bg-')]"></div>
-                        <span :class="['text-[12px] font-bold capitalize', getStatusBadge(risk.status).split(' ')[1]]">{{ risk.status.replace('_', ' ') }}</span>
+                        <div :class="['size-1.5 rounded-full', getStatusBadge(risk.status).dot]"></div>
+                        <span :class="['text-[12px] font-bold capitalize', getStatusBadge(risk.status).text]">{{ risk.status.replace('_', ' ') }}</span>
                       </div>
                     </td>
                     <td class="px-8 py-5 text-right px-8">
-                      <button class="text-[13px] font-extrabold text-[#09433e] hover:underline cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                      <NuxtLink :to="`/organizations/${organizationId}/risks/${risk.id}`" class="text-[13px] font-extrabold text-[#09433e] hover:underline cursor-pointer lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                         View Details
-                      </button>
+                      </NuxtLink>
                     </td>
                   </tr>
                 </tbody>

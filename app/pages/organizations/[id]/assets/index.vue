@@ -68,16 +68,41 @@ const getAssetIcon = (type: AssetType) => {
 
 const showAddAssetModal = ref(false)
 const selectedPersona = ref('cro')
+
+// Mobile sidebar state
+const showMobileSidebar = ref(false)
+
+const toggleSidebar = () => {
+  showMobileSidebar.value = !showMobileSidebar.value
+}
+
+const closeSidebar = () => {
+  showMobileSidebar.value = false
+}
+
+// Close sidebar on route change
+watch(() => route.path, () => {
+  showMobileSidebar.value = false
+})
 </script>
 
 <template>
   <div class="flex h-screen bg-[#f8fbfb] overflow-hidden">
-    <DashboardSidebar />
+    <!-- Desktop Sidebar (always visible on lg+) -->
+    <div class="hidden lg:block flex-shrink-0">
+      <DashboardSidebar :is-open="true" />
+    </div>
     
-    <div class="flex-1 flex flex-col min-w-0">
+    <!-- Mobile Sidebar (overlay) -->
+    <div class="lg:hidden">
+      <DashboardSidebar :is-open="showMobileSidebar" @close="closeSidebar" />
+    </div>
+    
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
       <DashboardHeader 
         title="Asset Management"
         v-model:persona="selectedPersona"
+        @toggle-sidebar="toggleSidebar"
       />
       
       <main class="flex-1 overflow-y-auto py-8">
@@ -100,8 +125,8 @@ const selectedPersona = ref('cro')
           </div>
 
           <!-- Filters -->
-          <div class="bg-white p-4 rounded-2xl border border-[#e8f3f2] shadow-sm flex flex-wrap items-center gap-4">
-            <div class="flex-1 min-w-[300px] relative">
+          <div class="bg-white p-4 rounded-2xl border border-[#e8f3f2] shadow-sm flex flex-col md:flex-row md:items-center gap-4">
+            <div class="flex-1 relative">
               <svg class="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -113,16 +138,18 @@ const selectedPersona = ref('cro')
                 class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#09423c]/20 focus:border-[#09423c]/30"
               />
             </div>
-            <select 
-              v-model="selectedType" 
-              @change="fetchAssets"
-              class="px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none min-w-[180px]"
-            >
-              <option value="">All Asset Types</option>
-              <option v-for="type in assetTypes" :key="type.value" :value="type.value">
-                {{ type.label }}
-              </option>
-            </select>
+            <div class="flex items-center gap-2">
+              <select 
+                v-model="selectedType" 
+                @change="fetchAssets"
+                class="flex-1 md:flex-none px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none md:min-w-[180px]"
+              >
+                <option value="">All Asset Types</option>
+                <option v-for="type in assetTypes" :key="type.value" :value="type.value">
+                  {{ type.label }}
+                </option>
+              </select>
+            </div>
           </div>
 
           <!-- Assets Table -->
@@ -148,8 +175,8 @@ const selectedPersona = ref('cro')
               </button>
             </div>
 
-            <div v-else class="overflow-x-auto">
-              <table class="w-full text-left border-collapse">
+            <div v-else class="overflow-x-auto flex-1">
+              <table class="w-full text-left border-collapse min-w-[1000px]">
                 <thead class="bg-[#09423c]/80 text-white uppercase text-[11px] font-extrabold tracking-[1px] sticky top-0">
                   <tr>
                     <th class="px-8 py-5">ID & Name</th>
@@ -192,9 +219,9 @@ const selectedPersona = ref('cro')
                       </span>
                     </td>
                     <td class="px-8 py-5 text-right">
-                      <button class="text-[13px] font-extrabold text-[#09433e] hover:underline cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                      <NuxtLink :to="`/organizations/${organizationId}/assets/${asset.id}`" class="text-[13px] font-extrabold text-[#09433e] hover:underline cursor-pointer lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                         Details
-                      </button>
+                      </NuxtLink>
                     </td>
                   </tr>
                 </tbody>

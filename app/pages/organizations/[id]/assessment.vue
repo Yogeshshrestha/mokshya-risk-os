@@ -253,25 +253,49 @@ onMounted(() => {
 watch(selectedCategory, () => {
   focusedQuestionIndex.value = 0
 })
+// Mobile sidebar state
+const showMobileSidebar = ref(false)
+
+const toggleSidebar = () => {
+  showMobileSidebar.value = !showMobileSidebar.value
+}
+
+const closeSidebar = () => {
+  showMobileSidebar.value = false
+}
+
+// Close sidebar on route change
+watch(() => route.path, () => {
+  showMobileSidebar.value = false
+})
 </script>
 
 <template>
   <div class="flex h-screen bg-[#f8fbfb] overflow-hidden">
-    <DashboardSidebar />
+    <!-- Desktop Sidebar (always visible on lg+) -->
+    <div class="hidden lg:block flex-shrink-0">
+      <DashboardSidebar :is-open="true" />
+    </div>
     
-    <div class="flex-1 flex flex-col min-w-0">
+    <!-- Mobile Sidebar (overlay) -->
+    <div class="lg:hidden">
+      <DashboardSidebar :is-open="showMobileSidebar" @close="closeSidebar" />
+    </div>
+    
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
       <DashboardHeader 
         title="Control Assessment"
         v-model:persona="selectedPersona"
+        @toggle-sidebar="toggleSidebar"
       />
       
-      <main class="flex-1 overflow-y-auto p-8">
+      <main class="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8">
         <div v-if="isLoading" class="flex items-center justify-center h-full">
           <div class="w-12 h-12 border-4 border-[#09423C] border-t-transparent rounded-full animate-spin"></div>
         </div>
         
         <!-- Error State -->
-        <div v-else-if="!currentOrg && questions.length === 0" class="max-w-[1600px] mx-auto">
+        <div v-else-if="!currentOrg && questions.length === 0" class="max-w-[1600px] mx-auto w-full">
           <div class="bg-white rounded-[16px] shadow-sm border border-[#e2e8f0] p-12 text-center">
             <div class="inline-flex items-center justify-center size-16 bg-rose-50 rounded-full mb-4">
               <svg class="size-8 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -289,13 +313,13 @@ watch(selectedCategory, () => {
           </div>
         </div>
         
-        <div v-else-if="currentOrg || questions.length > 0" class="max-w-[1600px] mx-auto">
-          <div class="flex flex-col lg:flex-row gap-8 items-start">
+        <div v-else-if="currentOrg || questions.length > 0" class="max-w-[1600px] mx-auto w-full">
+          <div class="flex flex-col lg:flex-row gap-6 sm:gap-8 items-start">
             
-            <!-- Left: Categories (Compact) -->
-            <aside class="w-full lg:w-72 flex-shrink-0 sticky top-0 self-start">
+            <!-- Left: Categories -->
+            <aside class="w-full lg:w-72 flex-shrink-0 lg:sticky lg:top-8 self-start z-10">
               <div class="bg-white rounded-[16px] shadow-sm border border-[#e2e8f0] overflow-hidden">
-                <div class="p-5 border-b border-[#f1f5f9] bg-[#f8fafc]">
+                <div class="p-4 sm:p-5 border-b border-[#f1f5f9] bg-[#f8fafc]">
                   <h3 class="text-[14px] font-extrabold text-[#09433e] uppercase tracking-wider mb-4">Categories</h3>
                   
                   <div class="space-y-3">
@@ -315,7 +339,7 @@ watch(selectedCategory, () => {
                   </div>
                 </div>
 
-                <nav class="p-2 space-y-1 max-h-[calc(100vh-250px)] overflow-y-auto custom-scrollbar">
+                <nav class="p-2 flex flex-col gap-1 max-h-[calc(100vh-400px)] lg:max-h-[calc(100vh-250px)] overflow-y-auto custom-scrollbar">
                   <button
                     @click="selectedCategory = 'all'"
                     :class="[
@@ -346,7 +370,7 @@ watch(selectedCategory, () => {
                     :class="[
                       'w-full flex flex-col gap-2 px-3 py-3 rounded-[12px] text-[13px] font-bold transition-all text-left border',
                       selectedCategory === category.name
-                        ? 'bg-white border-[#09423c] shadow-md text-[#09423c] translate-x-1'
+                        ? 'bg-white border-[#09423c] shadow-md text-[#09423c] lg:translate-x-1'
                         : 'bg-transparent border-transparent text-[#64748b] hover:bg-[#f8fafc] hover:text-[#09423c]'
                     ]"
                   >
@@ -405,35 +429,35 @@ watch(selectedCategory, () => {
             <!-- Right: Questions Content -->
             <div class="flex-1 min-w-0">
               <!-- Mode Switcher -->
-              <div class="mb-6 flex items-center justify-between">
+              <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h2 class="text-[20px] font-extrabold text-[#09433e]">{{ selectedCategory === 'all' ? 'All Questions' : selectedCategory }}</h2>
-                  <p class="text-[13px] font-medium text-[#64748b] mt-1">Complete the assessment to update your risk profile.</p>
+                  <h2 class="text-[18px] sm:text-[20px] font-extrabold text-[#09433e]">{{ selectedCategory === 'all' ? 'All Questions' : selectedCategory }}</h2>
+                  <p class="text-[12px] sm:text-[13px] font-medium text-[#64748b] mt-1">Complete the assessment to update your risk profile.</p>
                 </div>
 
-                <div class="flex bg-[#f1f5f9] rounded-[12px] p-1 border border-[#e2e8f0]">
+                <div class="flex bg-[#f1f5f9] rounded-[12px] p-1 border border-[#e2e8f0] self-start sm:self-auto">
                   <button
                     @click="viewMode = 'list'"
                     :class="[
-                      'px-4 py-2 text-[12px] font-bold rounded-[10px] flex items-center gap-2 transition-all',
+                      'flex-1 sm:flex-none px-3 sm:px-4 py-2 text-[11px] sm:text-[12px] font-bold rounded-[10px] flex items-center justify-center gap-2 transition-all',
                       viewMode === 'list' 
                         ? 'bg-white text-[#09423c] shadow-sm' 
                         : 'text-[#64748b] hover:text-[#09423c]'
                     ]"
                   >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                     List View
                   </button>
                   <button
                     @click="viewMode = 'focus'"
                     :class="[
-                      'px-4 py-2 text-[12px] font-bold rounded-[10px] flex items-center gap-2 transition-all',
+                      'flex-1 sm:flex-none px-3 sm:px-4 py-2 text-[11px] sm:text-[12px] font-bold rounded-[10px] flex items-center justify-center gap-2 transition-all',
                       viewMode === 'focus' 
                         ? 'bg-white text-[#09423c] shadow-sm' 
                         : 'text-[#64748b] hover:text-[#09423c]'
                     ]"
                   >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
                     Focus Mode
                   </button>
                 </div>
@@ -506,22 +530,20 @@ watch(selectedCategory, () => {
               </div>
 
               <!-- Completion State -->
-              <div v-if="overallProgress === 100" class="mt-12 p-10 bg-gradient-to-br from-[#09423C] to-[#07332e] rounded-[24px] shadow-xl text-white text-center">
-                <div class="inline-flex items-center justify-center size-20 bg-white/10 rounded-full mb-6">
-                  <svg class="size-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+              <div v-if="overallProgress === 100" class="mt-12 p-8 sm:p-12 bg-white border border-[#e8f3f2] rounded-[24px] shadow-sm text-center">
+                <div class="inline-flex items-center justify-center size-16 bg-emerald-50 rounded-full mb-6">
+                  <UIcon name="i-lucide-check-circle" class="size-8 text-emerald-600" />
                 </div>
-                <h2 class="text-[28px] font-extrabold mb-3">Assessment Complete!</h2>
-                <p class="text-emerald-100/80 mb-8 max-w-md mx-auto font-medium">Your security posture has been fully evaluated. Your risk metrics and compliance score are now updated.</p>
+                <h2 class="text-[24px] font-extrabold text-[#0e1b1a] mb-2">Assessment Complete</h2>
+                <p class="text-[15px] text-[#4f9690] mb-8 max-w-md mx-auto">
+                  Your security posture has been evaluated. Your risk metrics and compliance scores are now updated.
+                </p>
                 <NuxtLink 
                   :to="`/organizations/${organizationId}/dashboard`"
-                  class="inline-flex items-center gap-3 bg-white text-[#09423C] px-10 py-4 rounded-[14px] font-extrabold hover:bg-emerald-50 transition-all shadow-lg hover:translate-y-[-2px]"
+                  class="inline-flex items-center gap-2 bg-[#09423c] text-white px-8 py-3.5 rounded-xl font-bold hover:bg-[#07332e] transition-all shadow-md cursor-pointer"
                 >
-                  View Updated Dashboard
-                  <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
+                  View Dashboard
+                  <UIcon name="i-lucide-arrow-right" class="size-4" />
                 </NuxtLink>
               </div>
             </div>

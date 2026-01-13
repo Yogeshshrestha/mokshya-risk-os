@@ -175,16 +175,41 @@ const sortedTopRisks = computed(() => {
     a.risk_id.localeCompare(b.risk_id)
   )
 })
+
+// Mobile sidebar state
+const showMobileSidebar = ref(false)
+
+const toggleSidebar = () => {
+  showMobileSidebar.value = !showMobileSidebar.value
+}
+
+const closeSidebar = () => {
+  showMobileSidebar.value = false
+}
+
+// Close sidebar on route change
+watch(() => route.path, () => {
+  showMobileSidebar.value = false
+})
 </script>
 
 <template>
   <div class="flex h-screen bg-[#f8fbfb] overflow-hidden">
-    <DashboardSidebar />
+    <!-- Desktop Sidebar (always visible on lg+) -->
+    <div class="hidden lg:block flex-shrink-0">
+      <DashboardSidebar :is-open="true" />
+    </div>
     
-    <div class="flex-1 flex flex-col min-w-0">
+    <!-- Mobile Sidebar (overlay) -->
+    <div class="lg:hidden">
+      <DashboardSidebar :is-open="showMobileSidebar" @close="closeSidebar" />
+    </div>
+    
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
       <DashboardHeader 
         :title="selectedPersona === 'ciso' ? 'CISO Dashboard' : 'CRO Dashboard'"
         v-model:persona="selectedPersona"
+        @toggle-sidebar="toggleSidebar"
       />
       
       <main class="flex-1 overflow-y-auto py-8">
@@ -192,7 +217,7 @@ const sortedTopRisks = computed(() => {
           <div class="w-12 h-12 border-4 border-[#09423C] border-t-transparent rounded-full animate-spin"></div>
         </div>
         
-        <div v-else-if="score" class="px-4 sm:px-6 lg:px-8 mx-auto space-y-8 pb-12">
+        <div v-else-if="score" class="px-4 sm:px-6 lg:px-8 mx-auto space-y-6 sm:space-y-8 pb-12 max-w-full">
           <!-- Assessment Incomplete Notice -->
           <div v-if="score.answered_questions < score.total_questions" class="relative overflow-hidden bg-white rounded-[24px] border border-[#e8f3f2] p-12 text-center shadow-sm min-h-[500px] flex items-center justify-center">
             <div class="absolute inset-0 bg-[#f8fbfb]/50 opacity-50" style="background-image: radial-gradient(#09423c 0.5px, transparent 0.5px); background-size: 24px 24px;"></div>
@@ -243,7 +268,7 @@ const sortedTopRisks = computed(() => {
           <!-- Dashboard Content (only visible if assessment complete AND dashboard data available) -->
           <template v-else-if="dashboardData">
             <!-- 1. Stats Row -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               <StatCard 
                 v-for="stat in (selectedPersona === 'ciso' ? cisoStats : dashboardStats)" 
                 :key="stat.title"
@@ -252,7 +277,7 @@ const sortedTopRisks = computed(() => {
             </div>
 
             <!-- 2. Primary Intelligence Row -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-stretch">
               <div class="lg:col-span-8 flex flex-col gap-6">
                 <!-- Risk Register Summary -->
                 <div class="bg-white border border-[#e8f3f2] rounded-[16px] shadow-sm flex flex-col h-full overflow-hidden">
@@ -267,7 +292,7 @@ const sortedTopRisks = computed(() => {
             </div>
 
             <!-- 3. Intelligence Row 2 (Insights, Exposure, Assets) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 items-stretch">
               <!-- Risk Factors -->
               <div class="bg-white border border-[#e8f3f2] rounded-[16px] shadow-sm flex flex-col h-full">
                 <div class="px-6 py-5 border-b border-[#e8f3f2] flex justify-between items-center">
@@ -365,7 +390,7 @@ const sortedTopRisks = computed(() => {
             </div>
 
             <!-- 4. Planning & Actions Row -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-stretch">
               <div class="lg:col-span-8">
                 <MitigationRoadmap :actions="dashboardData.priority_actions" />
               </div>

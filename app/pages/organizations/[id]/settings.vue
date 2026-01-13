@@ -133,16 +133,40 @@ const tabs = [
   { id: 'invitations', label: 'Invitations', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
   { id: 'roles', label: 'Roles & Permissions', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' }
 ]
+// Mobile sidebar state
+const showMobileSidebar = ref(false)
+
+const toggleSidebar = () => {
+  showMobileSidebar.value = !showMobileSidebar.value
+}
+
+const closeSidebar = () => {
+  showMobileSidebar.value = false
+}
+
+// Close sidebar on route change
+watch(() => route.path, () => {
+  showMobileSidebar.value = false
+})
 </script>
 
 <template>
   <div class="flex h-screen bg-[#f8fbfb] overflow-hidden">
-    <DashboardSidebar />
+    <!-- Desktop Sidebar (always visible on lg+) -->
+    <div class="hidden lg:block flex-shrink-0">
+      <DashboardSidebar :is-open="true" />
+    </div>
     
-    <div class="flex-1 flex flex-col min-w-0">
+    <!-- Mobile Sidebar (overlay) -->
+    <div class="lg:hidden">
+      <DashboardSidebar :is-open="showMobileSidebar" @close="closeSidebar" />
+    </div>
+    
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
       <DashboardHeader 
         title="Organization Settings"
         v-model:persona="selectedPersona"
+        @toggle-sidebar="toggleSidebar"
       />
       
       <main class="flex-1 overflow-y-auto py-8">
@@ -158,101 +182,103 @@ const tabs = [
           </div>
 
           <!-- Tabs Navigation -->
-          <div class="flex items-center gap-2 p-1 bg-gray-100/50 rounded-2xl w-fit border border-[#e8f3f2]">
-            <button 
-              v-for="tab in tabs" 
-              :key="tab.id"
-              @click="activeTab = tab.id as any"
-              :class="[
-                'flex items-center gap-2.5 px-6 py-3 rounded-xl text-[14px] font-bold transition-all duration-200 cursor-pointer',
-                activeTab === tab.id 
-                  ? 'bg-white text-[#09433e] shadow-sm' 
-                  : 'text-[#6b8a87] hover:text-[#09433e] hover:bg-white/50'
-              ]"
-            >
-              <svg class="size-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="tab.icon" />
-              </svg>
-              {{ tab.label }}
-              <span v-if="tab.id === 'members'" class="bg-[#09433e]/10 text-[#09433e] px-2 py-0.5 rounded-full text-[11px] ml-1">{{ members.length }}</span>
-              <span v-if="tab.id === 'invitations' && invitations.length > 0" class="bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full text-[11px] ml-1">{{ invitations.length }}</span>
-            </button>
+          <div class="overflow-x-auto custom-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div class="flex items-center gap-2 p-1 bg-gray-100/50 rounded-2xl w-max sm:w-fit border border-[#e8f3f2]">
+              <button 
+                v-for="tab in tabs" 
+                :key="tab.id"
+                @click="activeTab = tab.id as any"
+                :class="[
+                  'flex items-center gap-2.5 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-[13px] sm:text-[14px] font-bold transition-all duration-200 cursor-pointer whitespace-nowrap',
+                  activeTab === tab.id 
+                    ? 'bg-white text-[#09433e] shadow-sm' 
+                    : 'text-[#6b8a87] hover:text-[#09433e] hover:bg-white/50'
+                ]"
+              >
+                <svg class="size-4 sm:size-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="tab.icon" />
+                </svg>
+                {{ tab.label }}
+                <span v-if="tab.id === 'members'" class="bg-[#09433e]/10 text-[#09433e] px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] ml-1">{{ members.length }}</span>
+                <span v-if="tab.id === 'invitations' && invitations.length > 0" class="bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] ml-1">{{ invitations.length }}</span>
+              </button>
+            </div>
           </div>
 
           <!-- Tab Content -->
-          <div class="mt-8 transition-all duration-300">
+          <div class="mt-6 sm:mt-8 transition-all duration-300">
             <!-- Overview Tab -->
-            <div v-if="activeTab === 'overview'" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div class="lg:col-span-2 space-y-8">
-                <div class="bg-white border border-[#e8f3f2] rounded-[20px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.05)] p-8">
-                  <div class="flex items-center gap-6 mb-8 pb-8 border-b border-[#f8fbfb]">
-                    <div class="size-20 rounded-2xl bg-gradient-to-br from-[#09423C] to-[#1a6b61] flex items-center justify-center text-white text-[32px] font-extrabold shadow-lg shadow-[#09423C]/20">
+            <div v-if="activeTab === 'overview'" class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+              <div class="lg:col-span-2 space-y-6 sm:space-y-8">
+                <div class="bg-white border border-[#e8f3f2] rounded-[20px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.05)] p-6 sm:p-8">
+                  <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 mb-8 pb-8 border-b border-[#f8fbfb] text-center sm:text-left">
+                    <div class="size-16 sm:size-20 rounded-2xl bg-gradient-to-br from-[#09423C] to-[#1a6b61] flex items-center justify-center text-white text-[28px] sm:text-[32px] font-extrabold shadow-lg shadow-[#09423C]/20 flex-shrink-0">
                       {{ org.name.substring(0, 1).toUpperCase() }}
                     </div>
-                    <div>
-                      <h3 class="text-[20px] font-extrabold text-[#0e1b1a] mb-1">{{ org.name }}</h3>
-                      <p class="text-[14px] text-[#4f9690]">{{ org.industry }} • {{ org.company_size }} Employees</p>
+                    <div class="min-w-0">
+                      <h3 class="text-[18px] sm:text-[20px] font-extrabold text-[#0e1b1a] mb-1 truncate">{{ org.name }}</h3>
+                      <p class="text-[13px] sm:text-[14px] text-[#4f9690]">{{ org.industry }} • {{ org.company_size }} Employees</p>
                     </div>
                   </div>
 
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-6 sm:gap-y-8">
                     <div>
-                      <label class="text-[11px] font-extrabold text-[#4f9690] uppercase tracking-wider block mb-2">Region</label>
-                      <p class="text-[15px] font-bold text-[#0e1b1a] flex items-center gap-2">
+                      <label class="text-[10px] sm:text-[11px] font-extrabold text-[#4f9690] uppercase tracking-wider block mb-2">Region</label>
+                      <p class="text-[14px] sm:text-[15px] font-bold text-[#0e1b1a] flex items-center justify-center sm:justify-start gap-2">
                         <span class="size-2 bg-indigo-500 rounded-full"></span>
                         {{ org.primary_operating_region }}
                       </p>
                     </div>
                     <div>
-                      <label class="text-[11px] font-extrabold text-[#4f9690] uppercase tracking-wider block mb-2">Annual Revenue</label>
-                      <p class="text-[15px] font-bold text-[#0e1b1a]">${{ org.annual_revenue_usd?.toLocaleString() }}</p>
+                      <label class="text-[10px] sm:text-[11px] font-extrabold text-[#4f9690] uppercase tracking-wider block mb-2">Annual Revenue</label>
+                      <p class="text-[14px] sm:text-[15px] font-bold text-[#0e1b1a]">${{ org.annual_revenue_usd?.toLocaleString() }}</p>
                     </div>
-                    <div class="md:col-span-2">
-                      <label class="text-[11px] font-extrabold text-[#4f9690] uppercase tracking-wider block mb-2">Description</label>
-                      <p class="text-[15px] text-[#0e1b1a] leading-relaxed opacity-80">{{ org.description || 'No description provided.' }}</p>
+                    <div class="sm:col-span-2">
+                      <label class="text-[10px] sm:text-[11px] font-extrabold text-[#4f9690] uppercase tracking-wider block mb-2">Description</label>
+                      <p class="text-[14px] sm:text-[15px] text-[#0e1b1a] leading-relaxed opacity-80">{{ org.description || 'No description provided.' }}</p>
                     </div>
                   </div>
                 </div>
 
-                <div class="bg-white border border-[#e8f3f2] rounded-[20px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.05)] p-8">
+                <div class="bg-white border border-[#e8f3f2] rounded-[20px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.05)] p-6 sm:p-8">
                   <h3 class="text-[18px] font-extrabold text-[#0e1b1a] mb-6">Security Profile</h3>
-                  <div v-if="score" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-[#f8fbfb] p-5 rounded-2xl border border-[#e8f3f2]/50">
-                      <span class="text-[11px] font-extrabold text-[#4f9690] uppercase tracking-wider block mb-1">Risk Grade</span>
-                      <span class="text-[24px] font-extrabold text-[#09433e]">{{ score.risk_grade }}</span>
+                  <div v-if="score" class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                    <div class="bg-[#f8fbfb] p-4 sm:p-5 rounded-2xl border border-[#e8f3f2]/50 flex flex-col items-center sm:items-start">
+                      <span class="text-[10px] sm:text-[11px] font-extrabold text-[#4f9690] uppercase tracking-wider block mb-1">Risk Grade</span>
+                      <span class="text-[20px] sm:text-[24px] font-extrabold text-[#09433e]">{{ score.risk_grade }}</span>
                     </div>
-                    <div class="bg-[#f8fbfb] p-5 rounded-2xl border border-[#e8f3f2]/50">
-                      <span class="text-[11px] font-extrabold text-[#4f9690] uppercase tracking-wider block mb-1">Compliance</span>
-                      <span class="text-[24px] font-extrabold text-[#09433e]">{{ Math.round(score.compliance_percentage) }}%</span>
+                    <div class="bg-[#f8fbfb] p-4 sm:p-5 rounded-2xl border border-[#e8f3f2]/50 flex flex-col items-center sm:items-start">
+                      <span class="text-[10px] sm:text-[11px] font-extrabold text-[#4f9690] uppercase tracking-wider block mb-1">Compliance</span>
+                      <span class="text-[20px] sm:text-[24px] font-extrabold text-[#09433e]">{{ Math.round(score.compliance_percentage) }}%</span>
                     </div>
-                    <div class="bg-[#f8fbfb] p-5 rounded-2xl border border-[#e8f3f2]/50">
-                      <span class="text-[11px] font-extrabold text-[#4f9690] uppercase tracking-wider block mb-1">Red Flags</span>
-                      <span class="text-[24px] font-extrabold text-rose-600">{{ score.red_flags_count }}</span>
+                    <div class="bg-[#f8fbfb] p-4 sm:p-5 rounded-2xl border border-[#e8f3f2]/50 flex flex-col items-center sm:items-start">
+                      <span class="text-[10px] sm:text-[11px] font-extrabold text-[#4f9690] uppercase tracking-wider block mb-1">Red Flags</span>
+                      <span class="text-[20px] sm:text-[24px] font-extrabold text-rose-600">{{ score.red_flags_count }}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div class="lg:col-span-1 space-y-8">
-                <div class="bg-[#09423C] rounded-[24px] p-8 text-white shadow-xl shadow-[#09423C]/10 relative overflow-hidden flex flex-col justify-between h-full min-h-[300px]">
+              <div class="lg:col-span-1">
+                <div class="bg-[#09423C] rounded-[24px] p-6 sm:p-8 text-white shadow-xl shadow-[#09423C]/10 relative overflow-hidden flex flex-col justify-between min-h-[250px] sm:min-h-[300px]">
                   <div class="absolute -top-10 -right-10 size-40 bg-white/5 rounded-full blur-3xl"></div>
                   <div class="absolute bottom-0 right-0 size-32 bg-teal-400/20 rounded-full blur-xl"></div>
                   
                   <div class="relative z-10">
-                    <div class="size-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-6">
-                      <svg class="size-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="size-10 sm:size-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4 sm:mb-6">
+                      <svg class="size-5 sm:size-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                       </svg>
                     </div>
-                    <h3 class="text-[20px] font-bold mb-3">Security Assessment</h3>
-                    <p class="text-teal-100/80 text-[14px] mb-8 leading-relaxed">
+                    <h3 class="text-[18px] sm:text-[20px] font-bold mb-2 sm:mb-3">Security Assessment</h3>
+                    <p class="text-teal-100/80 text-[13px] sm:text-[14px] mb-6 sm:mb-8 leading-relaxed">
                       Evaluate your organization's controls to improve your security posture and compliance rating.
                     </p>
                   </div>
 
                   <NuxtLink
                     :to="`/organizations/${organizationId}/assessment`"
-                    class="relative z-10 w-full flex items-center justify-center gap-2 bg-white text-[#09423C] py-3.5 rounded-xl font-extrabold hover:bg-emerald-50 transition-all shadow-sm text-[15px]"
+                    class="relative z-10 w-full flex items-center justify-center gap-2 bg-white text-[#09423C] py-3 sm:py-3.5 rounded-xl font-extrabold hover:bg-emerald-50 transition-all shadow-sm text-[14px] sm:text-[15px]"
                   >
                     Assessment
                     <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -265,12 +291,12 @@ const tabs = [
 
             <!-- Members Tab -->
             <div v-else-if="activeTab === 'members'" class="space-y-6">
-              <div class="flex justify-between items-center bg-white p-6 rounded-[20px] border border-[#e8f3f2] shadow-sm">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-[20px] border border-[#e8f3f2] shadow-sm">
                 <div>
                   <h3 class="text-[18px] font-extrabold text-[#0e1b1a]">Team Members</h3>
                   <p class="text-[14px] text-[#4f9690]">Manage who has access to this organization.</p>
                 </div>
-                <button @click="showInviteModal = true" class="bg-[#09423C] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#07332e] transition-all shadow-md shadow-emerald-900/10 flex items-center gap-2 cursor-pointer">
+                <button @click="showInviteModal = true" class="bg-[#09423C] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#07332e] transition-all shadow-md shadow-emerald-900/10 flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto">
                   <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                   </svg>
@@ -279,66 +305,68 @@ const tabs = [
               </div>
 
               <div class="bg-white rounded-[20px] border border-[#e8f3f2] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.05)] overflow-hidden">
-                <table class="w-full text-left border-collapse">
-                  <thead class="bg-[#09423c]/80 text-white uppercase text-[11px] font-extrabold tracking-[1px]">
-                    <tr>
-                      <th class="px-8 py-5">Member</th>
-                      <th class="px-8 py-5">Role</th>
-                      <th class="px-8 py-5 text-center">Status</th>
-                      <th class="px-8 py-5">Joined</th>
-                      <th class="px-8 py-5 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-[#e8f3f2]">
-                    <tr v-for="member in members" :key="member.id" class="hover:bg-gray-50/50 transition-colors group">
-                      <td class="px-8 py-5">
-                        <div class="flex items-center gap-4">
-                          <div :class="['size-10 rounded-full flex items-center justify-center text-[13px] font-bold ring-4 ring-white shadow-sm', getAvatarColor(member.user_full_name)]">
-                            {{ getInitials(member.user_full_name || member.user_email) }}
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left border-collapse min-w-[800px]">
+                    <thead class="bg-[#09423c]/80 text-white uppercase text-[11px] font-extrabold tracking-[1px]">
+                      <tr>
+                        <th class="px-8 py-5">Member</th>
+                        <th class="px-8 py-5">Role</th>
+                        <th class="px-8 py-5 text-center">Status</th>
+                        <th class="px-8 py-5">Joined</th>
+                        <th class="px-8 py-5 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#e8f3f2]">
+                      <tr v-for="member in members" :key="member.id" class="hover:bg-gray-50/50 transition-colors group">
+                        <td class="px-8 py-5">
+                          <div class="flex items-center gap-4">
+                            <div :class="['size-10 rounded-full flex items-center justify-center text-[13px] font-bold ring-4 ring-white shadow-sm flex-shrink-0', getAvatarColor(member.user_full_name)]">
+                              {{ getInitials(member.user_full_name || member.user_email) }}
+                            </div>
+                            <div class="min-w-0">
+                              <p class="text-[14px] font-bold text-[#0e1b1a] truncate">{{ member.user_full_name || 'Unknown User' }}</p>
+                              <p class="text-[12px] text-[#4f9690] truncate">{{ member.user_email }}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p class="text-[14px] font-bold text-[#0e1b1a]">{{ member.user_full_name || 'Unknown User' }}</p>
-                            <p class="text-[12px] text-[#4f9690]">{{ member.user_email }}</p>
+                        </td>
+                        <td class="px-8 py-5">
+                          <span v-if="member.role_id && getRoleName(member.role_id)" class="px-3 py-1 rounded-full text-[11px] font-extrabold bg-[#E3F5EB] text-[#09423C] border border-[#09423C]/20 uppercase whitespace-nowrap">
+                            {{ getRoleName(member.role_id) }}
+                          </span>
+                          <span v-else class="text-gray-400 text-[13px] italic">No Role</span>
+                        </td>
+                        <td class="px-8 py-5 text-center">
+                          <div class="flex items-center justify-center gap-2">
+                            <div :class="['size-2 rounded-full', member.is_active ? 'bg-emerald-500' : 'bg-gray-300']"></div>
+                            <span class="text-[13px] font-bold text-[#0e1b1a]">{{ member.is_active ? 'Active' : 'Inactive' }}</span>
                           </div>
-                        </div>
-                      </td>
-                      <td class="px-8 py-5">
-                        <span v-if="member.role_id && getRoleName(member.role_id)" class="px-3 py-1 rounded-full text-[11px] font-extrabold bg-[#E3F5EB] text-[#09423C] border border-[#09423C]/20 uppercase">
-                          {{ getRoleName(member.role_id) }}
-                        </span>
-                        <span v-else class="text-gray-400 text-[13px] italic">No Role</span>
-                      </td>
-                      <td class="px-8 py-5 text-center">
-                        <div class="flex items-center justify-center gap-2">
-                          <div :class="['size-2 rounded-full', member.is_active ? 'bg-emerald-500' : 'bg-gray-300']"></div>
-                          <span class="text-[13px] font-bold text-[#0e1b1a]">{{ member.is_active ? 'Active' : 'Inactive' }}</span>
-                        </div>
-                      </td>
-                      <td class="px-8 py-5 text-[13px] text-[#4f9690] font-medium">
-                        {{ formatDate(member.joined_at) }}
-                      </td>
-                      <td class="px-8 py-5 text-right">
-                        <button 
-                          @click="handleRemoveMember(member.id)"
-                          class="text-[13px] font-extrabold text-rose-600 hover:underline cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          Remove
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                        </td>
+                        <td class="px-8 py-5 text-[13px] text-[#4f9690] font-medium whitespace-nowrap">
+                          {{ formatDate(member.joined_at) }}
+                        </td>
+                        <td class="px-8 py-5 text-right">
+                          <button 
+                            @click="handleRemoveMember(member.id)"
+                            class="text-[13px] font-extrabold text-rose-600 hover:underline cursor-pointer lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
             <!-- Invitations Tab -->
             <div v-else-if="activeTab === 'invitations'" class="space-y-6">
-              <div class="flex justify-between items-center bg-white p-6 rounded-[20px] border border-[#e8f3f2] shadow-sm">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-[20px] border border-[#e8f3f2] shadow-sm">
                 <div>
                   <h3 class="text-[18px] font-extrabold text-[#0e1b1a]">Pending Invitations</h3>
                   <p class="text-[14px] text-[#4f9690]">Track sent invites and their status.</p>
                 </div>
-                <button @click="showInviteModal = true" class="bg-[#09423C] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#07332e] transition-all shadow-md shadow-emerald-900/10 flex items-center gap-2 cursor-pointer">
+                <button @click="showInviteModal = true" class="bg-[#09423C] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#07332e] transition-all shadow-md shadow-emerald-900/10 flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto">
                   <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                   </svg>
@@ -347,65 +375,67 @@ const tabs = [
               </div>
 
               <div class="bg-white rounded-[20px] border border-[#e8f3f2] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.05)] overflow-hidden">
-                <table class="w-full text-left border-collapse">
-                  <thead class="bg-[#09423c]/80 text-white uppercase text-[11px] font-extrabold tracking-[1px]">
-                    <tr>
-                      <th class="px-8 py-5">Email Address</th>
-                      <th class="px-8 py-5 text-center">Status</th>
-                      <th class="px-8 py-5">Sent Date</th>
-                      <th class="px-8 py-5">Expires</th>
-                      <th class="px-8 py-5 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-[#e8f3f2]">
-                    <tr v-if="invitations.length === 0">
-                      <td colspan="5" class="px-8 py-16 text-center">
-                        <div class="flex flex-col items-center justify-center opacity-40">
-                          <svg class="size-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                          </svg>
-                          <p class="text-[16px] font-bold">No pending invitations</p>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr v-for="invitation in invitations" :key="invitation.id" class="hover:bg-gray-50/50 transition-colors group">
-                      <td class="px-8 py-5">
-                        <div class="flex items-center gap-3">
-                          <div class="size-8 bg-gray-50 rounded-lg flex items-center justify-center text-[#4f9690] border border-[#e8f3f2]">
-                            <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206" />
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left border-collapse min-w-[800px]">
+                    <thead class="bg-[#09423c]/80 text-white uppercase text-[11px] font-extrabold tracking-[1px]">
+                      <tr>
+                        <th class="px-8 py-5">Email Address</th>
+                        <th class="px-8 py-5 text-center">Status</th>
+                        <th class="px-8 py-5">Sent Date</th>
+                        <th class="px-8 py-5">Expires</th>
+                        <th class="px-8 py-5 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#e8f3f2]">
+                      <tr v-if="invitations.length === 0">
+                        <td colspan="5" class="px-8 py-16 text-center">
+                          <div class="flex flex-col items-center justify-center opacity-40">
+                            <svg class="size-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                             </svg>
+                            <p class="text-[16px] font-bold">No pending invitations</p>
                           </div>
-                          <span class="text-[14px] font-bold text-[#0e1b1a]">{{ invitation.email }}</span>
-                        </div>
-                      </td>
-                      <td class="px-8 py-5 text-center">
-                        <span class="px-3 py-1 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-600 border border-amber-100 uppercase">Pending</span>
-                      </td>
-                      <td class="px-8 py-5 text-[13px] text-[#4f9690] font-medium">{{ formatDate(invitation.created_at) }}</td>
-                      <td class="px-8 py-5 text-[13px] text-[#4f9690] font-medium">{{ formatDate(invitation.expires_at) }}</td>
-                      <td class="px-8 py-5 text-right">
-                        <button 
-                          @click="handleRevokeInvitation(invitation.id)"
-                          class="text-[13px] font-extrabold text-rose-600 hover:underline cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          Revoke
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                        </td>
+                      </tr>
+                      <tr v-for="invitation in invitations" :key="invitation.id" class="hover:bg-gray-50/50 transition-colors group">
+                        <td class="px-8 py-5">
+                          <div class="flex items-center gap-3">
+                            <div class="size-8 bg-gray-50 rounded-lg flex items-center justify-center text-[#4f9690] border border-[#e8f3f2] flex-shrink-0">
+                              <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206" />
+                              </svg>
+                            </div>
+                            <span class="text-[14px] font-bold text-[#0e1b1a] truncate">{{ invitation.email }}</span>
+                          </div>
+                        </td>
+                        <td class="px-8 py-5 text-center">
+                          <span class="px-3 py-1 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-600 border border-amber-100 uppercase whitespace-nowrap">Pending</span>
+                        </td>
+                        <td class="px-8 py-5 text-[13px] text-[#4f9690] font-medium whitespace-nowrap">{{ formatDate(invitation.created_at) }}</td>
+                        <td class="px-8 py-5 text-[13px] text-[#4f9690] font-medium whitespace-nowrap">{{ formatDate(invitation.expires_at) }}</td>
+                        <td class="px-8 py-5 text-right">
+                          <button 
+                            @click="handleRevokeInvitation(invitation.id)"
+                            class="text-[13px] font-extrabold text-rose-600 hover:underline cursor-pointer lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
+                          >
+                            Revoke
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
             <!-- Roles Tab -->
             <div v-else-if="activeTab === 'roles'" class="space-y-6">
-              <div class="flex justify-between items-center bg-white p-6 rounded-[20px] border border-[#e8f3f2] shadow-sm">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-[20px] border border-[#e8f3f2] shadow-sm">
                 <div>
                   <h3 class="text-[18px] font-extrabold text-[#0e1b1a]">Roles & Permissions</h3>
                   <p class="text-[14px] text-[#4f9690]">Define custom access levels for your team.</p>
                 </div>
-                <button @click="showCreateRoleModal = true" class="bg-[#09423C] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#07332e] transition-all shadow-md shadow-emerald-900/10 flex items-center gap-2 cursor-pointer">
+                <button @click="showCreateRoleModal = true" class="bg-[#09423C] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#07332e] transition-all shadow-md shadow-emerald-900/10 flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto">
                   <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
@@ -414,19 +444,19 @@ const tabs = [
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                <div v-for="role in roles" :key="role.id" class="group bg-white rounded-[24px] border border-[#e8f3f2] p-8 hover:shadow-xl hover:shadow-[#09433e]/5 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                <div v-for="role in roles" :key="role.id" class="group bg-white rounded-[24px] border border-[#e8f3f2] p-6 sm:p-8 hover:shadow-xl hover:shadow-[#09433e]/5 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
                   <div class="absolute top-0 left-0 w-1.5 h-full bg-[#09423C] opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   
                   <div class="flex items-start justify-between mb-6">
-                    <div class="size-12 rounded-2xl bg-[#f8fbfb] border border-[#e8f3f2] flex items-center justify-center text-[#09423C] group-hover:bg-[#09423C] group-hover:text-white transition-colors">
-                      <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="size-10 sm:size-12 rounded-2xl bg-[#f8fbfb] border border-[#e8f3f2] flex items-center justify-center text-[#09423C] group-hover:bg-[#09423C] group-hover:text-white transition-colors">
+                      <svg class="size-5 sm:size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                       </svg>
                     </div>
                     <div class="flex items-center gap-2">
                       <button 
                         @click="handleDeleteRole(role.id)"
-                        class="size-8 rounded-lg flex items-center justify-center text-rose-600 hover:bg-rose-50 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
+                        class="size-8 rounded-lg flex items-center justify-center text-rose-600 hover:bg-rose-50 transition-colors lg:opacity-0 lg:group-hover:opacity-100 cursor-pointer"
                         title="Delete Role"
                       >
                         <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -437,28 +467,28 @@ const tabs = [
                     </div>
                   </div>
 
-                  <h4 class="text-[18px] font-extrabold text-[#0e1b1a] mb-2">{{ role.name }}</h4>
-                  <p class="text-[13px] text-[#4f9690] mb-8 min-h-[40px] leading-relaxed opacity-80">{{ role.description || 'No description provided.' }}</p>
+                  <h4 class="text-[16px] sm:text-[18px] font-extrabold text-[#0e1b1a] mb-2 truncate">{{ role.name }}</h4>
+                  <p class="text-[12px] sm:text-[13px] text-[#4f9690] mb-6 sm:mb-8 min-h-[40px] leading-relaxed opacity-80">{{ role.description || 'No description provided.' }}</p>
 
                   <div class="space-y-4">
                     <div class="flex items-center justify-between">
-                      <span class="text-[11px] font-extrabold text-[#4f9690] uppercase tracking-wider">Permissions</span>
-                      <span class="text-[11px] font-extrabold text-[#09423C] bg-[#09423C]/5 px-2 py-0.5 rounded-full">{{ role.permissions.length }} Total</span>
+                      <span class="text-[10px] sm:text-[11px] font-extrabold text-[#4f9690] uppercase tracking-wider">Permissions</span>
+                      <span class="text-[10px] sm:text-[11px] font-extrabold text-[#09423C] bg-[#09423C]/5 px-2 py-0.5 rounded-full">{{ role.permissions.length }} Total</span>
                     </div>
-                    <div class="flex flex-wrap gap-2">
-                      <span v-for="permission in role.permissions.slice(0, 3)" :key="permission" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-gray-50 text-[#4f9690] border border-[#e8f3f2] uppercase tracking-tight">
+                    <div class="flex flex-wrap gap-1.5 sm:gap-2">
+                      <span v-for="permission in role.permissions.slice(0, 3)" :key="permission" class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[9px] sm:text-[11px] font-bold bg-gray-50 text-[#4f9690] border border-[#e8f3f2] uppercase tracking-tight">
                         {{ permission }}
                       </span>
-                      <span v-if="role.permissions.length > 3" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-gray-50 text-gray-400 border border-dashed border-gray-200">
+                      <span v-if="role.permissions.length > 3" class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[9px] sm:text-[11px] font-bold bg-gray-50 text-gray-400 border border-dashed border-gray-200">
                         +{{ role.permissions.length - 3 }}
                       </span>
                     </div>
                   </div>
 
-                  <div class="mt-8 pt-6 border-t border-[#f8fbfb] flex justify-end">
-                    <button class="text-[13px] font-extrabold text-[#09433e] hover:underline flex items-center gap-1 cursor-pointer group/btn">
+                  <div class="mt-6 sm:mt-8 pt-6 border-t border-[#f8fbfb] flex justify-end">
+                    <button class="text-[12px] sm:text-[13px] font-extrabold text-[#09433e] hover:underline flex items-center gap-1 cursor-pointer group/btn">
                       Edit Role
-                      <svg class="size-4 transform group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="size-3.5 sm:size-4 transform group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                       </svg>
                     </button>

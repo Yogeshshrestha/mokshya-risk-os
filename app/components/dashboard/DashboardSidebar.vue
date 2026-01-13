@@ -2,6 +2,18 @@
 import CreateOrganizationModal from '~/components/organizations/CreateOrganizationModal.vue'
 import type { OrganizationResponse } from '~/types/organization'
 
+interface Props {
+  isOpen?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  isOpen: true
+})
+
+const emit = defineEmits<{
+  'close': []
+}>()
+
 const route = useRoute()
 const router = useRouter()
 const organizationApi = useOrganization()
@@ -13,6 +25,7 @@ const currentOrg = ref<OrganizationResponse | null>(null)
 const showOrgSwitcher = ref(false)
 const showCreateModal = ref(false)
 const isLoading = ref(true)
+const isCollapsed = ref(false)
 
 // Navigation
 const navItems = computed(() => [
@@ -66,6 +79,7 @@ const switchOrganization = (id: string) => {
   else if (path.includes('/settings')) target = `/organizations/${id}/settings`
 
   router.push(target)
+  emit('close')
 }
 
 const handleOrgCreated = async () => {
@@ -91,28 +105,68 @@ onMounted(fetchData)
 </script>
 
 <template>
-  <aside class="w-[260px] bg-white border-r border-[#e0e8e7] h-screen sticky top-0 flex flex-col flex-shrink-0">
-    <div class="p-8 pb-6">
-      <NuxtLink to="/" class="flex items-center gap-2 mb-1 group">
-        <span class="text-[16px] font-extrabold text-[#09423c] tracking-tight group-hover:opacity-80 transition-opacity">Mokshya OS</span>
-        <div class="size-1.5 bg-[#09423c] rounded-full group-hover:scale-125 transition-transform"></div>
-      </NuxtLink>
-      <p class="text-[10px] font-bold text-[#6b8a87] uppercase tracking-widest opacity-80">Financial Technology</p>
+  <!-- Mobile Overlay -->
+  <Transition
+    enter-active-class="transition-opacity duration-300"
+    enter-from-class="opacity-0"
+    enter-to-class="opacity-100"
+    leave-active-class="transition-opacity duration-300"
+    leave-from-class="opacity-100"
+    leave-to-class="opacity-0"
+  >
+    <div 
+      v-if="props.isOpen"
+      @click="emit('close')"
+      class="fixed inset-0 bg-black/50 z-40 lg:hidden"
+    ></div>
+  </Transition>
+
+  <!-- Sidebar -->
+  <Transition
+    enter-active-class="transition-transform duration-300 ease-out"
+    enter-from-class="-translate-x-full lg:translate-x-0"
+    enter-to-class="translate-x-0"
+    leave-active-class="transition-transform duration-300 ease-in"
+    leave-from-class="translate-x-0"
+    leave-to-class="-translate-x-full lg:translate-x-0"
+  >
+    <aside 
+      v-if="props.isOpen"
+      :class="[
+        'fixed lg:sticky top-0 left-0 h-screen bg-white border-r border-[#e0e8e7] flex flex-col flex-shrink-0 z-50',
+        isCollapsed ? 'w-[73px]' : 'w-[260px]',
+        'lg:relative'
+      ]"
+    >
+    <div :class="['pb-6', isCollapsed ? 'p-4' : 'p-8']">
+      <div class="flex items-center justify-between mb-1">
+        <NuxtLink v-if="!isCollapsed" to="/" @click="emit('close')" class="flex items-center gap-2 group">
+          <span class="text-[16px] font-extrabold text-[#09423c] tracking-tight group-hover:opacity-80 transition-opacity">Mokshya OS</span>
+          <div class="size-1.5 bg-[#09423c] rounded-full group-hover:scale-125 transition-transform"></div>
+        </NuxtLink>
+        <button 
+          @click="emit('close')"
+          class="lg:hidden size-8 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <UIcon name="i-lucide-x" class="size-5 text-[#09423c]" />
+        </button>
+      </div>
+      <p v-if="!isCollapsed" class="text-[10px] font-bold text-[#6b8a87] uppercase tracking-widest opacity-80">Financial Technology</p>
     </div>
     
-    <div class="px-4 mb-8 relative" ref="orgSwitcherRef">
+    <div :class="['mb-8 relative', isCollapsed ? 'px-2' : 'px-4']" ref="orgSwitcherRef">
       <div 
         @click="showOrgSwitcher = !showOrgSwitcher"
         class="bg-gray-50/50 border border-[#e0e8e7] rounded-lg p-2.5 flex items-center justify-between shadow-sm group hover:border-[#09423c]/30 transition-colors cursor-pointer"
         :class="{ 'border-[#09423c] ring-2 ring-[#09423c]/5': showOrgSwitcher }"
       >
-        <div class="flex items-center gap-3 overflow-hidden">
+          <div class="flex items-center gap-3 overflow-hidden">
           <div class="size-7 bg-[#09423c] rounded-md flex items-center justify-center flex-shrink-0 shadow-sm">
              <svg class="size-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
              </svg>
           </div>
-          <div class="flex flex-col min-w-0">
+          <div v-if="!isCollapsed" class="flex flex-col min-w-0">
             <span class="text-[13px] font-bold text-[#09423c] truncate">
               {{ currentOrg?.name || 'Loading...' }}
             </span>
@@ -186,47 +240,54 @@ onMounted(fetchData)
       </Transition>
     </div>
     
-    <nav class="flex-1 px-3 space-y-1.5 overflow-y-auto custom-scrollbar">
+    <nav :class="['flex-1 space-y-1.5 overflow-y-auto custom-scrollbar', isCollapsed ? 'px-2' : 'px-3']">
       <NuxtLink 
         v-for="item in navItems" 
         :key="item.label"
         :to="item.to"
+        @click="emit('close')"
         :class="[
-          'flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-200 group relative',
+          'flex items-center rounded-xl transition-all duration-200 group relative',
+          isCollapsed ? 'justify-center px-2 py-3' : 'gap-3.5 px-4 py-3',
           isItemActive(item.to) 
             ? 'bg-[#09433e]/5 text-[#09433e] font-bold shadow-sm' 
             : 'text-[#6b8a87] hover:bg-gray-50/80 hover:text-[#09433e]'
         ]"
       >
-        <UIcon :name="item.icon" class="size-5.5" :class="[isItemActive(item.to) ? 'text-[#09433e]' : 'text-[#6b8a87] group-hover:text-[#09433e]']" />
-        <span class="text-[14px]">{{ item.label }}</span>
-        <div v-if="isItemActive(item.to)" class="absolute left-0 w-1 h-5 bg-[#09433e] rounded-r-full"></div>
+        <UIcon :name="item.icon" class="size-5.5 flex-shrink-0" :class="[isItemActive(item.to) ? 'text-[#09433e]' : 'text-[#6b8a87] group-hover:text-[#09433e]']" />
+        <span v-if="!isCollapsed" class="text-[14px]">{{ item.label }}</span>
+        <div v-if="isItemActive(item.to) && !isCollapsed" class="absolute left-0 w-1 h-5 bg-[#09433e] rounded-r-full"></div>
       </NuxtLink>
     </nav>
     
-    <div class="p-4 mt-auto border-t border-[#e0e8e7] space-y-1">
+    <div :class="['mt-auto border-t border-[#e0e8e7] space-y-1', isCollapsed ? 'p-2' : 'p-4']">
       <NuxtLink 
         v-for="item in bottomItems" 
         :key="item.label"
         :to="item.to"
+        @click="emit('close')"
         :class="[
-          'flex items-center gap-3.5 px-4 py-2.5 rounded-lg transition-colors group relative',
+          'flex items-center rounded-lg transition-colors group relative',
+          isCollapsed ? 'justify-center px-2 py-2.5' : 'gap-3.5 px-4 py-2.5',
           isItemActive(item.to)
             ? 'bg-[#09433e]/5 text-[#09433e] font-bold'
             : 'text-[#09423c] hover:bg-gray-50'
         ]"
       >
-        <UIcon :name="item.icon" class="size-5" :class="[isItemActive(item.to) ? 'text-[#09433e]' : 'text-[#6b8a87] group-hover:text-[#09433e]']" />
-        <span class="text-[14px] font-medium">{{ item.label }}</span>
-        <div v-if="isItemActive(item.to)" class="absolute left-0 w-1 h-4 bg-[#09433e] rounded-r-full"></div>
+        <UIcon :name="item.icon" class="size-5 flex-shrink-0" :class="[isItemActive(item.to) ? 'text-[#09433e]' : 'text-[#6b8a87] group-hover:text-[#09433e]']" />
+        <span v-if="!isCollapsed" class="text-[14px] font-medium">{{ item.label }}</span>
+        <div v-if="isItemActive(item.to) && !isCollapsed" class="absolute left-0 w-1 h-4 bg-[#09433e] rounded-r-full"></div>
       </NuxtLink>
       
       <button 
-        @click="handleLogout"
-        class="w-full flex items-center gap-3.5 px-4 py-2.5 rounded-lg text-[#dd4747] font-bold hover:bg-red-50 transition-colors group cursor-pointer"
+        @click="() => { handleLogout(); emit('close'); }"
+        :class="[
+          'w-full flex items-center rounded-lg text-[#dd4747] font-bold hover:bg-red-50 transition-colors group cursor-pointer',
+          isCollapsed ? 'justify-center px-2 py-2.5' : 'gap-3.5 px-4 py-2.5'
+        ]"
       >
-        <UIcon name="i-lucide-log-out" class="size-5 text-[#dd4747]/70 group-hover:text-[#dd4747] transition-colors" />
-        <span class="text-[14px]">Logout</span>
+        <UIcon name="i-lucide-log-out" class="size-5 flex-shrink-0 text-[#dd4747]/70 group-hover:text-[#dd4747] transition-colors" />
+        <span v-if="!isCollapsed" class="text-[14px]">Logout</span>
       </button>
     </div>
 
@@ -235,7 +296,8 @@ onMounted(fetchData)
       v-model="showCreateModal"
       @created="handleOrgCreated"
     />
-  </aside>
+    </aside>
+  </Transition>
 </template>
 
 <style scoped>

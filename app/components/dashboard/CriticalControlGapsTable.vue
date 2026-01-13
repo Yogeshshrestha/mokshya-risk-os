@@ -79,19 +79,19 @@ const getPriority = (severity: string) => {
               </button>
             </td>
           </tr>
-          <tr v-if="redFlags.length === 0">
-            <td colspan="6" class="px-6 py-16 text-center">
-              <div class="flex flex-col items-center justify-center">
-                <div class="size-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4">
-                  <UIcon name="i-lucide-shield-check" class="size-8 text-emerald-500" />
-                </div>
-                <p class="text-[16px] font-bold text-[#0e1b1a]">No Critical Gaps Detected</p>
-                <p class="text-[13px] text-[#4f9690] mt-1">Your security posture is meeting all critical requirements.</p>
-              </div>
-            </td>
-          </tr>
         </tbody>
       </table>
+
+      <!-- Empty State -->
+      <div v-if="redFlags.length === 0" class="p-16 text-center">
+        <div class="flex flex-col items-center justify-center">
+          <div class="size-16 bg-emerald-50 rounded-full flex items-center justify-center mb-4">
+            <UIcon name="i-lucide-shield-check" class="size-8 text-emerald-500" />
+          </div>
+          <p class="text-[16px] font-bold text-[#0e1b1a]">No Critical Gaps Detected</p>
+          <p class="text-[13px] text-[#4f9690] mt-1">Your security posture is meeting all critical requirements.</p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
