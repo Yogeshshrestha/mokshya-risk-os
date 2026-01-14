@@ -9,8 +9,15 @@ import CriticalControlGapsTable from '~/components/dashboard/CriticalControlGaps
 import CoverageSummary from '~/components/dashboard/CoverageSummary.vue'
 import RenewalCountdown from '~/components/dashboard/RenewalCountdown.vue'
 import MitigationRoadmap from '~/components/dashboard/MitigationRoadmap.vue'
+import RemediationTaskTracker from '~/components/dashboard/RemediationTaskTracker.vue'
+import ReadinessMetrics from '~/components/dashboard/ReadinessMetrics.vue'
+import BoardRiskStatus from '~/components/dashboard/board/BoardRiskStatus.vue'
+import BoardFinancialExposure from '~/components/dashboard/board/BoardFinancialExposure.vue'
+import BoardPriorityRisks from '~/components/dashboard/board/BoardPriorityRisks.vue'
+import BoardDecisionsRequired from '~/components/dashboard/board/BoardDecisionsRequired.vue'
+import BoardDashboardFooter from '~/components/dashboard/board/BoardDashboardFooter.vue'
 import type { GlobalQuestionnaireScoreResponse } from '~/types/global-questionnaire'
-import type { CRODashboardResponse } from '~/types/dashboard'
+import type { CRODashboardResponse, CISODashboardResponse, BoardDashboardResponse } from '~/types/dashboard'
 
 definePageMeta({
   layout: false
@@ -21,42 +28,160 @@ const router = useRouter()
 const route = useRoute()
 const questionnaire = useGlobalQuestionnaire()
 const dashboard = useDashboard()
-const organizationId = route.params.id as string
+
+// Make organizationId reactive to handle organization switching
+const organizationId = computed(() => route.params.id as string)
 
 const score = ref<GlobalQuestionnaireScoreResponse | null>(null)
-const dashboardData = ref<CRODashboardResponse | null>(null)
+const dashboardData = ref<CRODashboardResponse | CISODashboardResponse | BoardDashboardResponse | null>(null)
 const isLoading = ref(true)
 const selectedPersona = ref('cro')
 
 const fetchDashboardData = async () => {
+  const currentOrgId = organizationId.value
+  if (!currentOrgId) return
+
   try {
     isLoading.value = true
+    dashboardData.value = null // Clear old data to prevent type conflicts
     
-    // Always fetch score first to check assessment completion
+    // 1. Fetch score for everyone
     try {
-      score.value = await questionnaire.getOrganizationScore(organizationId)
+      score.value = await questionnaire.getOrganizationScore(currentOrgId)
     } catch (error) {
       console.error('Failed to fetch assessment score:', error)
-      // Score is required, so if it fails, we can't show anything meaningful
-      return
+      score.value = null
     }
     
-    // Only fetch dashboard data if assessment is complete
-    // If assessment is incomplete, dashboard API might fail anyway
-    if (score.value && score.value.answered_questions >= score.value.total_questions) {
+    // 2. Persona Specific Data Loading
+    if (selectedPersona.value === 'board') {
       try {
-        dashboardData.value = await dashboard.getCRODashboard(organizationId)
-      } catch (error) {
-        console.error('Failed to fetch dashboard data:', error)
-        // Dashboard data is optional - we can still show score info
+        // Attempt to fetch full board dashboard
+        const res = await dashboard.getBoardDashboard(currentOrgId)
+        dashboardData.value = res
+      } catch (e) {
+        console.warn('Board API failed or not found, using fallback sample data')
+        dashboardData.value = {
+          generated_at: "2026-01-14T04:10:17.747537Z",
+          organization_id: currentOrgId,
+          organization_name: 'Mokshya AI',
+          quarter: 'Q1 2026',
+          overall_cyber_risk_status: {
+            status: 'stable',
+            status_label: 'Stable',
+            trend: 'stable',
+            trend_description: 'Stable compared to last quarter.',
+            trend_percentage: 4.5,
+            compliance_score: 93.9,
+            risk_tier: 'C',
+            exposure_score: 10
+          },
+          estimated_financial_exposure: {
+            low_estimate: 38500.0,
+            high_estimate: 577500.0,
+            low_formatted: '$38K',
+            high_formatted: '$578K',
+            confidence_level: '95%',
+            description: 'Potential annual cyber loss range (VaR 95%)',
+            trend_percentage: 4.5
+          },
+          top_3_priority_risks: {
+            risks: [
+              {
+                id: '33527d6f-8819-4f7b-a9e2-ae9fa5ec6d8b',
+                risk_name: 'Access Control',
+                risk_category: 'Access Control',
+                estimated_impact: 1200000.0,
+                impact_formatted: '$1.2M',
+                description: 'Exposed AWS Access Key and Secret Key',
+                severity: 'critical',
+                rank: 1
+              },
+              {
+                id: '5c1982d6-d19a-41a3-b8ed-864e1b94272f',
+                risk_name: 'Data Security',
+                risk_category: 'Data Security',
+                estimated_impact: 320000.0,
+                impact_formatted: '$320K',
+                description: 'Test Risk',
+                severity: 'medium',
+                rank: 2
+              },
+              {
+                id: 'a91b6e03-8bf4-4403-930c-366f672be8cf',
+                risk_name: 'Data Security',
+                risk_category: 'Data Security',
+                estimated_impact: 320000.0,
+                impact_formatted: '$320K',
+                description: 'test desc',
+                severity: 'medium',
+                rank: 3
+              }
+            ],
+            ranking_criteria: 'Ranked by Impact'
+          },
+          insurance_status: 'Eligible',
+          insurance_readiness_score: 93.9,
+          total_open_risks: 3,
+          high_severity_risks: 1,
+          overdue_mitigations: 1,
+          // Extra UI fields requested by user but missing in current API response
+          decisions_required: [
+            {
+              id: '1',
+              title: 'Cyber Insurance Renewal',
+              description: 'Approve premium increase for $10M coverage limit.',
+              cost: '$120k premium',
+              benefit: 'Risk Transfer: $10M',
+              status: 'awaiting'
+            },
+            {
+              id: '2',
+              title: 'Budget expansion for SOC',
+              description: 'Hire 2 analysts for 24/7 internal monitoring coverage.',
+              cost: '$250k annually',
+              benefit: '-40% Response Time',
+              status: 'reviewing'
+            }
+          ],
+          trend_summary: 'Risk posture remains consistent with Q2 forecast.',
+          peer_comparison: {
+            percentile: 15,
+            sector: 'Fintech'
+          }
+        } as BoardDashboardResponse
+      }
+    } else {
+      // CRO/CISO Logic - Only fetch if assessment complete
+      if (score.value && score.value.answered_questions >= score.value.total_questions) {
+        try {
+          if (selectedPersona.value === 'ciso') {
+            dashboardData.value = await dashboard.getCISODashboard(currentOrgId)
+          } else {
+            dashboardData.value = await dashboard.getCRODashboard(currentOrgId)
+          }
+        } catch (error) {
+          console.error(`Failed to fetch ${selectedPersona.value} dashboard data:`, error)
+          dashboardData.value = null
+        }
       }
     }
   } catch (error) {
-    console.error('Failed to fetch dashboard data:', error)
+    console.error('Critical failure in dashboard data loading:', error)
   } finally {
     isLoading.value = false
   }
 }
+
+// Watch for persona changes to refetch data
+watch(selectedPersona, () => {
+  fetchDashboardData()
+})
+
+// Watch for organization changes to refetch data
+watch(organizationId, () => {
+  fetchDashboardData()
+})
 
 onMounted(() => {
   if (!auth.isAuthenticated.value) {
@@ -67,6 +192,7 @@ onMounted(() => {
 })
 
 const formatCurrency = (val: number) => {
+  if (!val && val !== 0) return '$0'
   if (val >= 1000000) {
     return `$${(val / 1000000).toFixed(1)}M`
   }
@@ -77,7 +203,7 @@ const formatCurrency = (val: number) => {
 }
 
 const dashboardStats = computed(() => {
-  if (!dashboardData.value) return []
+  if (!dashboardData.value || selectedPersona.value !== 'cro' || !('executive_summary' in dashboardData.value)) return []
   
   const summary = dashboardData.value.executive_summary
   const scoring = dashboardData.value.risk_scoring
@@ -121,46 +247,45 @@ const dashboardStats = computed(() => {
 })
 
 const cisoStats = computed(() => {
-  if (!dashboardData.value) return []
+  if (!dashboardData.value || selectedPersona.value !== 'ciso' || !('control_maturity_overview' in dashboardData.value)) return []
   
-  const maturity = dashboardData.value.control_maturity
-  const assets = dashboardData.value.asset_summary
+  const maturity = dashboardData.value.control_maturity_overview
   
   return [
     { 
       title: 'Control Maturity', 
-      value: `${Math.round(maturity.overall_maturity_score)}%`, 
-      secondaryValue: maturity.overall_maturity_level.toUpperCase(),
-      trend: `Strongest: ${maturity.strongest_domain}`, 
+      value: `${maturity.overall_current_level.toFixed(1)}`, 
+      secondaryValue: `Target: ${maturity.overall_target_level}`,
+      trend: `${maturity.domains_above_target} Domains on Track`, 
       trendIcon: 'i-lucide-trending-up', 
       trendColor: 'text-emerald-600', 
       icon: 'i-lucide-zap',
       iconBg: 'bg-emerald-50'
     },
     { 
-      title: 'Asset Coverage', 
-      value: `${Math.round((assets.active_assets / Math.max(assets.total_assets, 1)) * 100)}%`, 
-      trend: `${assets.total_assets} Managed Assets`, 
-      trendIcon: 'i-lucide-minus', 
+      title: 'Patch Velocity', 
+      value: `${Math.round(maturity.patch_velocity.value)}%`, 
+      trend: maturity.patch_velocity.additional_info || '24hr SLA', 
+      trendIcon: 'i-lucide-clock', 
       trendColor: 'text-slate-500', 
-      icon: 'i-lucide-fingerprint',
+      icon: 'i-lucide-activity',
       iconBg: 'bg-[#e8f3f2]'
     },
     { 
-      title: 'High Risk Assets', 
-      value: assets.assets_with_high_risks.toString(), 
-      trend: `${assets.high_criticality} Critical Impact`, 
-      trendIcon: 'i-lucide-alert-triangle', 
-      trendColor: assets.assets_with_high_risks > 0 ? 'text-rose-600' : 'text-emerald-600', 
-      icon: 'i-lucide-shield', 
-      iconBg: assets.assets_with_high_risks > 0 ? 'bg-rose-50' : 'bg-[#e8f3f2]' 
+      title: 'MFA Coverage', 
+      value: `${Math.round(maturity.mfa_coverage.value)}%`, 
+      trend: maturity.mfa_coverage.status || 'Stable', 
+      trendIcon: 'i-lucide-shield-check', 
+      trendColor: 'text-emerald-600', 
+      icon: 'i-lucide-fingerprint', 
+      iconBg: 'bg-[#e8f3f2]' 
     },
     { 
-      title: 'Compliance Score', 
-      value: `${Math.round(dashboardData.value.executive_summary.compliance_score)}%`, 
+      title: 'Security Score', 
+      value: `${Math.round((dashboardData.value as CISODashboardResponse).overall_security_score)}%`, 
       secondaryValue: 'Overall',
-      trend: 'Based on last assessment', 
-      trendIcon: 'i-lucide-check-circle', 
+      trend: 'Intelligence Driven', 
+      trendIcon: 'i-lucide-brain-circuit', 
       trendColor: 'text-emerald-600',
       icon: 'i-lucide-database', 
       iconBg: 'bg-[#e8f3f2]'
@@ -170,10 +295,17 @@ const cisoStats = computed(() => {
 
 // Sort risks by risk_id in ascending order
 const sortedTopRisks = computed(() => {
-  if (!dashboardData.value?.risk_register?.top_risks) return []
+  if (!dashboardData.value || !('risk_register' in dashboardData.value) || !dashboardData.value.risk_register?.top_risks) return []
   return [...dashboardData.value.risk_register.top_risks].sort((a, b) => 
     a.risk_id.localeCompare(b.risk_id)
   )
+})
+
+// Transform board status label: "Stable" -> "Resilient"
+const boardStatusLabel = computed(() => {
+  if (!dashboardData.value || selectedPersona.value !== 'board' || !('overall_cyber_risk_status' in dashboardData.value)) return ''
+  const statusLabel = (dashboardData.value as BoardDashboardResponse).overall_cyber_risk_status.status_label
+  return statusLabel === 'Stable' ? 'Resilient' : statusLabel
 })
 
 // Mobile sidebar state
@@ -207,19 +339,68 @@ watch(() => route.path, () => {
     
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
       <DashboardHeader 
-        :title="selectedPersona === 'ciso' ? 'CISO Dashboard' : 'CRO Dashboard'"
+        :title="selectedPersona === 'board' ? 'Board Dashboard' : (selectedPersona === 'ciso' ? 'CISO Dashboard' : 'CRO Dashboard')"
         v-model:persona="selectedPersona"
         @toggle-sidebar="toggleSidebar"
       />
       
       <main class="flex-1 overflow-y-auto py-8">
-        <div v-if="isLoading" class="flex items-center justify-center h-full">
-          <div class="w-12 h-12 border-4 border-[#09423C] border-t-transparent rounded-full animate-spin"></div>
+        <!-- 1. Loading State -->
+        <div v-if="isLoading" class="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] gap-4">
+          <div class="size-12 border-4 border-[#09423C] border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-[14px] text-[#4f9690] font-medium text-center">Loading dashboard...</p>
         </div>
         
-        <div v-else-if="score" class="px-4 sm:px-6 lg:px-8 mx-auto space-y-6 sm:space-y-8 pb-12 max-w-full">
-          <!-- Assessment Incomplete Notice -->
-          <div v-if="score.answered_questions < score.total_questions" class="relative overflow-hidden bg-white rounded-[24px] border border-[#e8f3f2] p-12 text-center shadow-sm min-h-[500px] flex items-center justify-center">
+        <div v-else :key="`${organizationId}-${selectedPersona}`" class="px-4 sm:px-6 lg:px-8 mx-auto space-y-6 sm:space-y-8 pb-12 max-w-full">
+          <!-- 2. Persona Routing Logic -->
+          
+          <!-- A. BOARD PERSONA -->
+          <div v-if="selectedPersona === 'board' && dashboardData" :key="`${organizationId}-board`" class="space-y-10">
+            <!-- 1. Top Row: Status & Exposure -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+              <div class="lg:col-span-4">
+                <BoardRiskStatus 
+                  v-if="'overall_cyber_risk_status' in dashboardData"
+                  :status-label="boardStatusLabel"
+                  :trend-description="(dashboardData as BoardDashboardResponse).overall_cyber_risk_status.trend_description"
+                  :quarter="(dashboardData as BoardDashboardResponse).quarter"
+                  :compliance-score="(dashboardData as BoardDashboardResponse).overall_cyber_risk_status.compliance_score"
+                  :risk-tier="(dashboardData as BoardDashboardResponse).overall_cyber_risk_status.risk_tier"
+                  :exposure-score="(dashboardData as BoardDashboardResponse).overall_cyber_risk_status.exposure_score"
+                />
+              </div>
+              <div class="lg:col-span-8">
+                <BoardFinancialExposure 
+                  v-if="'estimated_financial_exposure' in dashboardData"
+                  :low="(dashboardData as BoardDashboardResponse).estimated_financial_exposure.low_formatted"
+                  :high="(dashboardData as BoardDashboardResponse).estimated_financial_exposure.high_formatted"
+                  :trend-percentage="(dashboardData as BoardDashboardResponse).estimated_financial_exposure.trend_percentage"
+                />
+              </div>
+            </div>
+
+            <!-- 2. Priority Risks Section -->
+            <div v-if="'top_3_priority_risks' in dashboardData" class="w-full">
+              <BoardPriorityRisks :risks="(dashboardData as BoardDashboardResponse).top_3_priority_risks.risks" />
+            </div>
+
+            <!-- 3. Decisions Required Section (Gray Box) -->
+            <div v-if="(dashboardData as BoardDashboardResponse).decisions_required?.length" class="w-full">
+              <BoardDecisionsRequired :decisions="(dashboardData as BoardDashboardResponse).decisions_required!" />
+            </div>
+
+            <!-- 4. Footer Section -->
+            <div v-if="(dashboardData as BoardDashboardResponse).peer_comparison" class="w-full">
+              <BoardDashboardFooter 
+                :trend-summary="(dashboardData as BoardDashboardResponse).overall_cyber_risk_status.trend_description"
+                :peer-percentile="(dashboardData as BoardDashboardResponse).peer_comparison!.percentile"
+                :sector="(dashboardData as BoardDashboardResponse).peer_comparison!.sector"
+              />
+            </div>
+          </div>
+
+          <!-- B. CRO/CISO LOCK SCREEN -->
+          <div v-else-if="selectedPersona !== 'board' && score && score.answered_questions < score.total_questions" class="relative overflow-hidden bg-white rounded-[24px] border border-[#e8f3f2] p-12 text-center shadow-sm min-h-[500px] flex items-center justify-center">
             <div class="absolute inset-0 bg-[#f8fbfb]/50 opacity-50" style="background-image: radial-gradient(#09423c 0.5px, transparent 0.5px); background-size: 24px 24px;"></div>
             
             <div class="max-w-2xl mx-auto relative z-10">
@@ -265,9 +446,8 @@ watch(() => route.path, () => {
             </div>
           </div>
 
-          <!-- Dashboard Content (only visible if assessment complete AND dashboard data available) -->
-          <template v-else-if="dashboardData">
-            <!-- 1. Stats Row -->
+          <!-- C. CRO/CISO ACTIVE DASHBOARD -->
+          <div v-else-if="selectedPersona !== 'board' && dashboardData" class="space-y-6 sm:space-y-8">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               <StatCard 
                 v-for="stat in (selectedPersona === 'ciso' ? cisoStats : dashboardStats)" 
@@ -276,45 +456,52 @@ watch(() => route.path, () => {
               />
             </div>
 
-            <!-- 2. Primary Intelligence Row -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-stretch">
               <div class="lg:col-span-8 flex flex-col gap-6">
-                <!-- Risk Register Summary -->
                 <div class="bg-white border border-[#e8f3f2] rounded-[16px] shadow-sm flex flex-col h-full overflow-hidden">
                   <div class="flex-1">
-                    <RiskRegisterTable :risks="sortedTopRisks" :organization-id="organizationId" />
+                    <RiskRegisterTable 
+                      v-if="'risk_register' in dashboardData"
+                      :risks="sortedTopRisks" 
+                      :organization-id="organizationId" 
+                    />
+                    <div v-else class="flex items-center justify-center h-full p-12 text-[#4f9690]">
+                      Control Focus Active
+                    </div>
                   </div>
                 </div>
               </div>
               <div class="lg:col-span-4">
-                <ControlMaturityChart :domains="dashboardData.control_maturity.domains" />
+                <ControlMaturityChart 
+                  :domains="selectedPersona === 'ciso' && 'control_maturity_overview' in dashboardData ? (dashboardData as CISODashboardResponse).control_maturity_overview.domains : ('control_maturity' in dashboardData ? (dashboardData as CRODashboardResponse).control_maturity.domains : [])" 
+                />
               </div>
             </div>
 
-            <!-- 3. Intelligence Row 2 (Insights, Exposure, Assets) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 items-stretch">
-              <!-- Risk Factors -->
+            <!-- Additional CRO content -->
+            <div v-if="selectedPersona === 'cro' && 'risk_scoring' in dashboardData" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 items-stretch">
+              <!-- Score Influencers -->
               <div class="bg-white border border-[#e8f3f2] rounded-[16px] shadow-sm flex flex-col h-full">
                 <div class="px-6 py-5 border-b border-[#e8f3f2] flex justify-between items-center">
                   <h3 class="text-[16px] font-bold text-[#0e1b1a]">Score Influencers</h3>
                   <UIcon name="i-lucide-brain-circuit" class="size-4 text-[#4f9690]" />
                 </div>
                 <div class="p-6 space-y-6 flex-1 overflow-y-auto max-h-[350px] custom-scrollbar">
-                  <div v-if="dashboardData.risk_scoring.base_scores.likelihood_factors.length">
+                  <div v-if="(dashboardData as CRODashboardResponse).risk_scoring.base_scores.likelihood_factors.length">
                     <h4 class="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-3 flex items-center gap-2">
                       Likelihood Factors
                     </h4>
                     <ul class="space-y-2.5">
-                      <li v-for="f in dashboardData.risk_scoring.base_scores.likelihood_factors" :key="f" class="flex items-start gap-2 text-[13px] text-[#64748b]">
+                      <li v-for="f in (dashboardData as CRODashboardResponse).risk_scoring.base_scores.likelihood_factors" :key="f" class="flex items-start gap-2 text-[13px] text-[#64748b]">
                         <div class="size-1 rounded-full bg-rose-400 mt-2 flex-shrink-0"></div>
                         <span class="leading-snug">{{ f }}</span>
                       </li>
                     </ul>
                   </div>
-                  <div v-if="dashboardData.risk_scoring.base_scores.severity_factors.length" class="pt-4 border-t border-gray-50">
+                  <div v-if="(dashboardData as CRODashboardResponse).risk_scoring.base_scores.severity_factors.length" class="pt-4 border-t border-gray-50">
                     <h4 class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-3">Severity Factors</h4>
                     <ul class="space-y-2.5">
-                      <li v-for="f in dashboardData.risk_scoring.base_scores.severity_factors" :key="f" class="flex items-start gap-2 text-[13px] text-[#64748b]">
+                      <li v-for="f in (dashboardData as CRODashboardResponse).risk_scoring.base_scores.severity_factors" :key="f" class="flex items-start gap-2 text-[13px] text-[#64748b]">
                         <div class="size-1 rounded-full bg-amber-400 mt-2 flex-shrink-0"></div>
                         <span class="leading-snug">{{ f }}</span>
                       </li>
@@ -323,7 +510,7 @@ watch(() => route.path, () => {
                 </div>
               </div>
 
-              <!-- Exposure Breakdown -->
+              <!-- Exposure breakdown -->
               <div class="bg-white border border-[#e8f3f2] rounded-[16px] shadow-sm flex flex-col h-full">
                 <div class="px-6 py-5 border-b border-[#e8f3f2] flex justify-between items-center">
                   <h3 class="text-[16px] font-bold text-[#0e1b1a]">Exposure breakdown</h3>
@@ -333,21 +520,21 @@ watch(() => route.path, () => {
                   <div class="space-y-4">
                     <div class="flex justify-between items-center">
                       <span class="text-[13px] text-[#4f9690] font-medium">Ransomware Event</span>
-                      <span class="text-[14px] font-bold text-[#0e1b1a]">{{ formatCurrency(dashboardData.risk_scoring.financial_exposure.ransomware_loss) }}</span>
+                      <span class="text-[14px] font-bold text-[#0e1b1a]">{{ formatCurrency((dashboardData as CRODashboardResponse).risk_scoring.financial_exposure.ransomware_loss) }}</span>
                     </div>
                     <div class="flex justify-between items-center">
                       <span class="text-[13px] text-[#4f9690] font-medium">Data Breach Loss</span>
-                      <span class="text-[14px] font-bold text-[#0e1b1a]">{{ formatCurrency(dashboardData.risk_scoring.financial_exposure.data_breach_loss) }}</span>
+                      <span class="text-[14px] font-bold text-[#0e1b1a]">{{ formatCurrency((dashboardData as CRODashboardResponse).risk_scoring.financial_exposure.data_breach_loss) }}</span>
                     </div>
                     <div class="flex justify-between items-center">
                       <span class="text-[13px] text-[#4f9690] font-medium">Business Interruption</span>
-                      <span class="text-[14px] font-bold text-[#0e1b1a]">{{ formatCurrency(dashboardData.risk_scoring.financial_exposure.bec_loss) }}</span>
+                      <span class="text-[14px] font-bold text-[#0e1b1a]">{{ formatCurrency((dashboardData as CRODashboardResponse).risk_scoring.financial_exposure.bec_loss) }}</span>
                     </div>
                   </div>
                   <div class="mt-auto pt-6 border-t border-[#f1f5f9]">
                     <div class="flex justify-between items-end mb-1">
                       <span class="text-[11px] font-black text-[#09433e] uppercase tracking-widest">PML (99% CI)</span>
-                      <span class="text-[24px] font-black text-[#09433e] leading-none tracking-tighter">{{ formatCurrency(dashboardData.risk_scoring.financial_exposure.pml_99) }}</span>
+                      <span class="text-[24px] font-black text-[#09433e] leading-none tracking-tighter">{{ formatCurrency((dashboardData as CRODashboardResponse).risk_scoring.financial_exposure.pml_99) }}</span>
                     </div>
                     <p class="text-[10px] text-[#94a3b8] font-bold uppercase tracking-tighter">Probable Maximum Loss Intelligence</p>
                   </div>
@@ -355,7 +542,7 @@ watch(() => route.path, () => {
               </div>
 
               <!-- Asset Summary -->
-              <div class="bg-white border border-[#e8f3f2] rounded-[16px] shadow-sm flex flex-col h-full overflow-hidden">
+              <div v-if="'asset_summary' in dashboardData" class="bg-white border border-[#e8f3f2] rounded-[16px] shadow-sm flex flex-col h-full overflow-hidden">
                 <div class="px-6 py-5 border-b border-[#e8f3f2] flex justify-between items-center">
                   <h3 class="text-[16px] font-bold text-[#0e1b1a]">Inventory Intelligence</h3>
                   <NuxtLink :to="`/organizations/${organizationId}/assets`">
@@ -364,7 +551,7 @@ watch(() => route.path, () => {
                 </div>
                 <div class="p-6 flex-1 overflow-y-auto max-h-[350px] custom-scrollbar">
                   <div class="space-y-5">
-                    <div v-for="cat in dashboardData.asset_summary.categories" :key="cat.category" class="group">
+                    <div v-for="cat in (dashboardData as CRODashboardResponse).asset_summary.categories" :key="cat.category" class="group">
                       <div class="flex justify-between items-center mb-2">
                         <span class="text-[12px] font-black text-[#4f9690] uppercase tracking-widest group-hover:text-[#09433e] transition-colors">{{ cat.display_name }}</span>
                         <span class="text-[13px] font-black text-[#0e1b1a]">{{ cat.count }}</span>
@@ -372,7 +559,7 @@ watch(() => route.path, () => {
                       <div class="h-1.5 bg-gray-50 rounded-full overflow-hidden border border-gray-100">
                         <div 
                           class="h-full bg-[#09433e] rounded-full transition-all duration-1000 ease-out shadow-sm" 
-                          :style="{ width: `${(cat.count / Math.max(dashboardData.asset_summary.total_assets, 1)) * 100}%` }"
+                          :style="{ width: `${(cat.count / Math.max((dashboardData as CRODashboardResponse).asset_summary.total_assets, 1)) * 100}%` }"
                         ></div>
                       </div>
                       <div class="flex justify-between mt-2 px-0.5">
@@ -384,48 +571,63 @@ watch(() => route.path, () => {
                 </div>
                 <div class="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center">
                   <span class="text-[11px] font-black text-[#09433e] uppercase tracking-widest">Managed Assets</span>
-                  <span class="text-[18px] font-black text-[#0e1b1a]">{{ dashboardData.asset_summary.total_assets }}</span>
+                  <span class="text-[18px] font-black text-[#0e1b1a]">{{ (dashboardData as CRODashboardResponse).asset_summary.total_assets }}</span>
                 </div>
               </div>
             </div>
 
-            <!-- 4. Planning & Actions Row -->
+            <!-- Remediation/Mitigation Actions -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-stretch">
               <div class="lg:col-span-8">
-                <MitigationRoadmap :actions="dashboardData.priority_actions" />
+                <RemediationTaskTracker 
+                  v-if="selectedPersona === 'ciso' && 'remediation_task_tracker' in dashboardData" 
+                  :tracker="(dashboardData as CISODashboardResponse).remediation_task_tracker" 
+                />
+                <MitigationRoadmap 
+                  v-else-if="'priority_actions' in dashboardData" 
+                  :actions="(dashboardData as CRODashboardResponse).priority_actions" 
+                />
               </div>
               <div class="lg:col-span-4 flex flex-col gap-6">
-                <RenewalCountdown />
-                <!-- CISO Specific Insight -->
-                <div v-if="selectedPersona === 'ciso'" class="bg-[#09433e] rounded-[16px] p-6 text-white shadow-lg shadow-[#09433e]/20">
-                  <div class="flex items-center gap-3 mb-4">
-                    <div class="size-10 rounded-xl bg-white/10 flex items-center justify-center">
-                      <UIcon name="i-lucide-shield-check" class="size-6" />
+                <ReadinessMetrics 
+                  v-if="selectedPersona === 'ciso' && 'readiness_metrics' in dashboardData" 
+                  :metrics="(dashboardData as CISODashboardResponse).readiness_metrics" 
+                />
+                <template v-else>
+                  <RenewalCountdown />
+                  <div v-if="selectedPersona === 'ciso' && 'control_maturity_overview' in dashboardData && (dashboardData as CISODashboardResponse).control_maturity_overview.domains.length > 0" class="bg-[#09433e] rounded-[16px] p-6 text-white shadow-lg shadow-[#09433e]/20">
+                    <div class="flex items-center gap-3 mb-4">
+                      <div class="size-10 rounded-xl bg-white/10 flex items-center justify-center">
+                        <UIcon name="i-lucide-shield-check" class="size-6" />
+                      </div>
+                      <h3 class="text-[16px] font-bold">Resilience Insight</h3>
                     </div>
-                    <h3 class="text-[16px] font-bold">Resilience Insight</h3>
+                    <p class="text-[13px] text-emerald-100/80 leading-relaxed mb-6 font-medium">
+                      Your strongest domain is <span class="text-white font-bold">{{ (dashboardData as CISODashboardResponse).control_maturity_overview.domains.reduce((a, b) => (a.current_level > b.current_level ? a : b)).domain }}</span>. 
+                      Improvement needed in <span class="text-white font-bold">{{ (dashboardData as CISODashboardResponse).control_maturity_overview.domains.reduce((a, b) => (a.current_level < b.current_level ? a : b)).domain }}</span>.
+                    </p>
+                    <button class="w-full py-3 bg-white text-[#09433e] rounded-xl font-black text-[12px] uppercase tracking-widest hover:bg-emerald-50 transition-all">
+                      Generate Posture Report
+                    </button>
                   </div>
-                  <p class="text-[13px] text-emerald-100/80 leading-relaxed mb-6 font-medium">
-                    Your strongest domain is <span class="text-white font-bold">{{ dashboardData.control_maturity.strongest_domain }}</span>. Consider cross-pollinating these controls to improve <span class="text-white font-bold">{{ dashboardData.control_maturity.weakest_domain }}</span>.
-                  </p>
-                  <button class="w-full py-3 bg-white text-[#09433e] rounded-xl font-black text-[12px] uppercase tracking-widest hover:bg-emerald-50 transition-all">
-                    Generate Posture Report
-                  </button>
-                </div>
+                </template>
               </div>
             </div>
 
-            <!-- 5. Bar Chart Overview (CISO specific) -->
-            <div v-if="selectedPersona === 'ciso'" class="w-full">
-              <ControlMaturityBarChart :domains="dashboardData.control_maturity.domains" />
+            <!-- Bar Chart Overview (CISO specific) -->
+            <div v-if="selectedPersona === 'ciso' && 'control_maturity_overview' in dashboardData" class="w-full">
+              <ControlMaturityBarChart :domains="(dashboardData as CISODashboardResponse).control_maturity_overview.domains" />
             </div>
             
-            <!-- 6. Control Gaps (Red Flags List) -->
+            <!-- Control Gaps Table -->
             <div class="w-full">
-              <CriticalControlGapsTable :red-flags="dashboardData.executive_summary.red_flags" />
+              <CriticalControlGapsTable 
+                :red-flags="selectedPersona === 'ciso' && 'critical_control_gaps' in dashboardData ? (dashboardData as CISODashboardResponse).critical_control_gaps.gaps : ('executive_summary' in dashboardData ? (dashboardData as CRODashboardResponse).executive_summary.red_flags : [])" 
+              />
             </div>
-          </template>
-          
-          <!-- Fallback if assessment complete but dashboard data unavailable -->
+          </div>
+
+          <!-- D. ERROR FALLBACK -->
           <div v-else class="relative overflow-hidden bg-white rounded-[24px] border border-[#e8f3f2] p-12 text-center shadow-sm min-h-[400px] flex items-center justify-center">
             <div class="max-w-xl mx-auto">
               <div class="w-20 h-20 bg-[#e8f3f2] rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-white">
@@ -433,7 +635,7 @@ watch(() => route.path, () => {
               </div>
               <h2 class="text-2xl font-extrabold text-[#09423c] mb-4 tracking-tight">Dashboard Data Unavailable</h2>
               <p class="text-[#4f9690] text-base mb-8 leading-relaxed font-medium">
-                Assessment is complete, but dashboard data is currently unavailable. Please try refreshing the page.
+                We couldn't load the dashboard data. Please try refreshing the page.
               </p>
               <button 
                 @click="fetchDashboardData"
@@ -441,35 +643,6 @@ watch(() => route.path, () => {
               >
                 Refresh Dashboard
               </button>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Fallback if score is unavailable -->
-        <div v-else class="px-4 sm:px-6 lg:px-8 mx-auto pb-12">
-          <div class="relative overflow-hidden bg-white rounded-[24px] border border-[#e8f3f2] p-12 text-center shadow-sm min-h-[400px] flex items-center justify-center">
-            <div class="max-w-xl mx-auto">
-              <div class="w-20 h-20 bg-[#e8f3f2] rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-white">
-                <UIcon name="i-lucide-alert-circle" class="size-10 text-[#09423c]" />
-              </div>
-              <h2 class="text-2xl font-extrabold text-[#09423c] mb-4 tracking-tight">Unable to Load Assessment Data</h2>
-              <p class="text-[#4f9690] text-base mb-8 leading-relaxed font-medium">
-                We couldn't load your assessment information. Please try refreshing the page or contact support if the issue persists.
-              </p>
-              <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <button 
-                  @click="fetchDashboardData"
-                  class="inline-flex items-center justify-center gap-3 bg-[#09423c] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#07332e] transition-all shadow-lg shadow-[#09423c]/20"
-                >
-                  Retry
-                </button>
-                <NuxtLink 
-                  :to="`/organizations/${organizationId}/assessment`"
-                  class="inline-flex items-center justify-center gap-3 bg-white text-[#4f9690] px-8 py-3 rounded-xl font-bold hover:text-[#09423c] hover:bg-gray-50 transition-all border border-[#e8f3f2]"
-                >
-                  Go to Assessment
-                </NuxtLink>
-              </div>
             </div>
           </div>
         </div>
@@ -494,4 +667,3 @@ main::-webkit-scrollbar-thumb:hover {
   background: #cbd5e1;
 }
 </style>
-

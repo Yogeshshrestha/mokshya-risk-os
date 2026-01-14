@@ -219,9 +219,9 @@ watch(() => route.path, () => {
 
           <!-- Risks Table -->
           <div class="bg-white rounded-[24px] border border-[#e8f3f2] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.05)] overflow-hidden">
-            <div v-if="isLoading" class="p-12 flex flex-col items-center justify-center gap-4">
-              <div class="size-10 border-4 border-[#09423c] border-t-transparent rounded-full animate-spin"></div>
-              <p class="text-[14px] text-[#4f9690] font-medium">Loading risk register...</p>
+            <div v-if="isLoading" class="flex flex-col items-center justify-center min-h-[400px] gap-4">
+              <div class="size-12 border-4 border-[#09423c] border-t-transparent rounded-full animate-spin"></div>
+              <p class="text-[14px] text-[#4f9690] font-medium text-center">Loading risk register...</p>
             </div>
             
             <div v-else-if="risks.length === 0" class="p-16 flex flex-col items-center justify-center text-center">

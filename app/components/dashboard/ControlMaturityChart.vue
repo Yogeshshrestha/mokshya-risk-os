@@ -16,7 +16,8 @@ const chartPoints = computed(() => {
 
   if (props.domains && props.domains.length > 0) {
     categories = props.domains.slice(0, 8).map(d => d.display_name)
-    values = props.domains.slice(0, 8).map(d => d.score)
+    // Map to score_percentage for radar visualization
+    values = props.domains.slice(0, 8).map(d => (d as any).score_percentage || (d as any).score || 0)
   } else if (props.scores) {
     categories = Object.keys(props.scores).slice(0, 8)
     values = categories.map(cat => props.scores?.[cat]?.compliance || 0)

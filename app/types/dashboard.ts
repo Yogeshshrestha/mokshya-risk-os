@@ -127,53 +127,166 @@ export interface RiskRegisterSummary {
 export interface ControlDomain {
   domain: string
   display_name: string
-  score: number
-  maturity_level: string
-  total_controls: number
-  implemented_controls: number
-  partial_controls: number
-  missing_controls: number
-  trend: string
-  previous_score: number | null
-  critical_gaps: string[]
+  current_level: number
+  target_level: number
+  status: string
+  gap: number
+  score_percentage: number
+  questions_answered: number
+  total_questions: number
 }
 
-export interface ControlMaturity {
-  overall_maturity_score: number
-  overall_maturity_level: string
+export interface MetricValue {
+  value: number
+  unit: string
+  trend: number | null
+  trend_period: string
+  status: string | null
+  additional_info: string | null
+}
+
+export interface ControlMaturityOverview {
   domains: ControlDomain[]
-  strongest_domain: string
-  weakest_domain: string
-  industry_average: number | null
-  peer_comparison: number | null
+  overall_current_level: number
+  overall_target_level: number
+  domains_above_target: number
+  domains_at_target: number
+  domains_below_target: number
+  patch_velocity: MetricValue
+  mfa_coverage: MetricValue
+  endpoint_protection: MetricValue
+  backup_success: MetricValue
 }
 
-export interface AssetCategorySummary {
-  category: string
-  display_name: string
-  count: number
-  high_criticality: number
-  medium_criticality: number
-  low_criticality: number
-  restricted_data: number
-  linked_risks: number
+export interface RemediationTask {
+  id: string
+  task_name: string
+  control_name: string
+  control_domain: string
+  owner: {
+    id: string
+    initials: string
+    full_name: string
+  }
+  due_date: string
+  created_at: string
+  updated_at: string
+  status: string
+  priority: string
+  progress_percentage: number
 }
 
-export interface AssetSummary {
-  total_assets: number
-  active_assets: number
-  retired_assets: number
-  high_criticality: number
-  medium_criticality: number
-  low_criticality: number
-  restricted_data: number
-  confidential_data: number
-  internal_data: number
-  public_data: number
-  assets_with_risks: number
-  assets_with_high_risks: number
-  unassessed_assets: number
-  categories: AssetCategorySummary[]
+export interface RemediationTaskTracker {
+  total_tasks: number
+  open: number
+  in_progress: number
+  done: number
+  overdue: number
+  tasks: RemediationTask[]
+}
+
+export interface ReadinessMetric {
+  score: number
+  status: string
+  status_color: string
+  trend: string
+  last_assessment: string
+  due_in_days: number | null
+  blockers: string[]
+}
+
+export interface EvidenceCompleteness extends ReadinessMetric {
+  total_required: number
+  completed: number
+  missing: number
+  missing_categories: {
+    category: string
+    missing_count: number
+  }[]
+}
+
+export interface ReadinessMetrics {
+  insurance_readiness: ReadinessMetric
+  audit_readiness: ReadinessMetric
+  evidence_completeness: EvidenceCompleteness
+}
+
+export interface BoardDashboardResponse {
+  generated_at: string
+  organization_id: string
+  organization_name: string
+  quarter: string
+  overall_cyber_risk_status: {
+    status: string
+    status_label: string
+    trend: string
+    trend_description: string
+    trend_percentage: number
+    compliance_score: number
+    risk_tier: string
+    exposure_score: number
+  }
+  estimated_financial_exposure: {
+    low_estimate: number
+    high_estimate: number
+    low_formatted: string
+    high_formatted: string
+    confidence_level: string
+    description: string
+    trend_percentage: number
+  }
+  top_3_priority_risks: {
+    risks: {
+      id: string
+      risk_name: string
+      risk_category: string
+      estimated_impact: number
+      impact_formatted: string
+      description: string
+      severity: string
+      rank: number
+    }[]
+    ranking_criteria: string
+  }
+  insurance_status: string
+  insurance_readiness_score: number
+  total_open_risks: number
+  high_severity_risks: number
+  overdue_mitigations: number
+  // Keep optional fields for backwards compatibility if needed during migration
+  decisions_required?: {
+    id: string
+    title: string
+    description: string
+    cost: string
+    benefit: string
+    status: 'awaiting' | 'reviewing' | 'approved'
+  }[]
+  trend_summary?: string
+  peer_comparison?: {
+    percentile: number
+    sector: string
+  }
+}
+
+export interface CISODashboardResponse {
+  generated_at: string
+  organization_id: string
+  organization_name: string
+  control_maturity_overview: ControlMaturityOverview
+  critical_control_gaps: {
+    total_gaps: number
+    critical_count: number
+    high_count: number
+    medium_count: number
+    gaps: any[]
+  }
+  remediation_task_tracker: RemediationTaskTracker
+  readiness_metrics: ReadinessMetrics
+  overall_security_score: number
+  total_critical_gaps: number
+  total_open_tasks: number
+  insurance_ready: boolean
 }
 
 export interface CRODashboardResponse {

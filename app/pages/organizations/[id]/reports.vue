@@ -119,8 +119,9 @@ watch(() => route.path, () => {
       />
       
       <main class="flex-1 overflow-y-auto pb-24">
-        <div v-if="isLoading" class="flex items-center justify-center h-full">
-          <div class="w-12 h-12 border-4 border-[#09423C] border-t-transparent rounded-full animate-spin"></div>
+        <div v-if="isLoading" class="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] gap-4">
+          <div class="size-12 border-4 border-[#09423C] border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-[14px] text-[#4f9690] font-medium text-center">Loading reports...</p>
         </div>
         
         <div v-else class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10">

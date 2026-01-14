@@ -18,7 +18,7 @@ const auth = useAuth()
 const personas = [
   { label: 'CRO', value: 'cro' },
   { label: 'CISO', value: 'ciso' },
-  { label: 'CFO', value: 'cfo' }
+  { label: 'Board', value: 'board' }
 ]
 
 const showPersonaDropdown = ref(false)
@@ -79,9 +79,9 @@ const personaTitle = computed(() => {
   const titles: Record<string, string> = {
     cro: 'Chief Risk Officer',
     ciso: 'Chief Info Sec Officer',
-    cfo: 'Chief Financial Officer'
+    board: 'Board of Directors'
   }
-  return titles[props.persona] || 'User'
+  return titles[props.persona || ''] || 'User'
 })
 
 // Fetch user data on mount if not already loaded

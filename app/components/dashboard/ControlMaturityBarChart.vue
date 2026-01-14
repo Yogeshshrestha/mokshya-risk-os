@@ -10,14 +10,15 @@ const props = defineProps<{
 const domainsData = computed(() => {
   if (props.domains && props.domains.length > 0) {
     return props.domains.slice(0, 8).map(d => {
+      const score = (d as any).score_percentage || (d as any).score || 0
       let color = 'bg-[#09433e]'
-      if (d.score < 40) color = 'bg-[#ef4444]'
-      else if (d.score < 70) color = 'bg-[#f59e0b]'
+      if (score < 40) color = 'bg-[#ef4444]'
+      else if (score < 70) color = 'bg-[#f59e0b]'
       
       return {
         name: d.display_name.toUpperCase(),
-        current: d.score,
-        target: 80,
+        current: score,
+        target: (d as any).target_level ? ((d as any).target_level / 5) * 100 : 60, // L3 is 60% of L5
         color
       }
     })

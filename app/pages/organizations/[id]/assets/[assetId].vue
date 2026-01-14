@@ -72,9 +72,9 @@ const getAssetIcon = (type: AssetType) => {
       />
       
       <main class="flex-1 overflow-y-auto p-8">
-        <div v-if="isLoading" class="flex flex-col items-center justify-center h-full gap-4">
-          <div class="size-10 border-4 border-[#09423c] border-t-transparent rounded-full animate-spin"></div>
-          <p class="text-[14px] text-[#4f9690] font-medium">Loading asset details...</p>
+        <div v-if="isLoading" class="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] gap-4">
+          <div class="size-12 border-4 border-[#09423c] border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-[14px] text-[#4f9690] font-medium text-center">Loading asset details...</p>
         </div>
 
         <div v-else-if="asset" class="max-w-[1200px] mx-auto space-y-8">
