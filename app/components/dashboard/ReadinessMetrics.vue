@@ -62,7 +62,10 @@ const overallScore = computed(() => {
       <div class="space-y-6">
         <div class="space-y-2">
           <div class="flex justify-between items-end">
-            <span class="text-[11px] font-black text-[#4f9690] uppercase tracking-widest">Insurance Readiness</span>
+            <div class="flex flex-col">
+              <span class="text-[11px] font-black text-[#4f9690] uppercase tracking-widest">Insurance Readiness</span>
+              <span v-if="metrics.insurance_readiness.status" class="text-[9px] font-bold text-[#94a3b8] mt-0.5">{{ metrics.insurance_readiness.status }}</span>
+            </div>
             <span class="text-[13px] font-black text-[#0e1b1a]">{{ Math.round(metrics.insurance_readiness.score) }}%</span>
           </div>
           <div class="h-1.5 w-full bg-gray-50 rounded-full overflow-hidden border border-gray-100">
@@ -72,11 +75,22 @@ const overallScore = computed(() => {
               :style="{ width: `${metrics.insurance_readiness.score}%` }"
             ></div>
           </div>
+          <div v-if="metrics.insurance_readiness.blockers && metrics.insurance_readiness.blockers.length > 0" class="flex flex-wrap gap-1 mt-1">
+            <span v-for="blocker in metrics.insurance_readiness.blockers.slice(0, 2)" :key="blocker" class="text-[9px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">
+              {{ blocker }}
+            </span>
+          </div>
         </div>
 
         <div class="space-y-2">
           <div class="flex justify-between items-end">
-            <span class="text-[11px] font-black text-[#4f9690] uppercase tracking-widest">Audit Readiness</span>
+            <div class="flex flex-col">
+              <span class="text-[11px] font-black text-[#4f9690] uppercase tracking-widest">Audit Readiness</span>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span v-if="metrics.audit_readiness.status" class="text-[9px] font-bold text-[#94a3b8]">{{ metrics.audit_readiness.status }}</span>
+                <span v-if="metrics.audit_readiness.due_in_days" class="text-[9px] font-bold text-amber-600 bg-amber-50 px-1 rounded">Due in {{ metrics.audit_readiness.due_in_days }} days</span>
+              </div>
+            </div>
             <span class="text-[13px] font-black text-[#0e1b1a]">{{ Math.round(metrics.audit_readiness.score) }}%</span>
           </div>
           <div class="h-1.5 w-full bg-gray-50 rounded-full overflow-hidden border border-gray-100">
@@ -86,11 +100,21 @@ const overallScore = computed(() => {
               :style="{ width: `${metrics.audit_readiness.score}%` }"
             ></div>
           </div>
+          <div v-if="metrics.audit_readiness.blockers && metrics.audit_readiness.blockers.length > 0" class="flex flex-wrap gap-1 mt-1">
+            <span v-for="blocker in metrics.audit_readiness.blockers.slice(0, 2)" :key="blocker" class="text-[9px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">
+              {{ blocker }}
+            </span>
+          </div>
         </div>
 
         <div class="space-y-2">
           <div class="flex justify-between items-end">
-            <span class="text-[11px] font-black text-[#4f9690] uppercase tracking-widest">Evidence Completeness</span>
+            <div class="flex flex-col">
+              <span class="text-[11px] font-black text-[#4f9690] uppercase tracking-widest">Evidence Completeness</span>
+              <span v-if="metrics.evidence_completeness.total_required" class="text-[9px] font-bold text-[#94a3b8] mt-0.5">
+                {{ metrics.evidence_completeness.completed }}/{{ metrics.evidence_completeness.total_required }} Complete
+              </span>
+            </div>
             <span class="text-[13px] font-black text-[#0e1b1a]">{{ Math.round(metrics.evidence_completeness.score) }}%</span>
           </div>
           <div class="h-1.5 w-full bg-gray-50 rounded-full overflow-hidden border border-gray-100">
@@ -99,6 +123,11 @@ const overallScore = computed(() => {
               :class="getBarColor(metrics.evidence_completeness.score)"
               :style="{ width: `${metrics.evidence_completeness.score}%` }"
             ></div>
+          </div>
+          <div v-if="metrics.evidence_completeness.missing_categories && metrics.evidence_completeness.missing_categories.length > 0" class="flex flex-wrap gap-1 mt-1">
+            <span v-for="cat in metrics.evidence_completeness.missing_categories.slice(0, 3)" :key="cat.category" class="text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
+              {{ cat.category }} ({{ cat.missing_count }})
+            </span>
           </div>
         </div>
       </div>

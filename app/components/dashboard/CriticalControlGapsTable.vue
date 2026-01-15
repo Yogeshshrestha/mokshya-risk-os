@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { RedFlag } from '~/types/dashboard'
+import type { RedFlag, CriticalControlGapsSection } from '~/types/dashboard'
 
 interface Props {
   redFlags: RedFlag[]
+  gapsSection?: CriticalControlGapsSection
 }
 
 const props = defineProps<Props>()
@@ -32,10 +33,27 @@ const getPriority = (severity: string) => {
 <template>
   <div class="bg-white border border-[#e8f3f2] rounded-[16px] shadow-sm overflow-hidden flex flex-col h-full">
     <div class="px-6 py-5 border-b border-[#e8f3f2] flex justify-between items-center bg-white sticky top-0 z-10">
-      <h3 class="text-[18px] font-extrabold text-[#0e1b1a]">Critical Security Gaps (Red Flags)</h3>
+      <div class="flex flex-col gap-1">
+        <h3 class="text-[18px] font-extrabold text-[#0e1b1a]">Critical Security Gaps (Red Flags)</h3>
+        <div v-if="gapsSection" class="flex items-center gap-3 text-[11px] font-bold text-[#4f9690]">
+          <span>{{ gapsSection.total_gaps }} Total Gaps</span>
+          <span v-if="gapsSection.critical_count > 0" class="px-2 py-0.5 bg-rose-50 text-rose-600 rounded border border-rose-100">
+            {{ gapsSection.critical_count }} Critical
+          </span>
+          <span v-if="gapsSection.high_count > 0" class="px-2 py-0.5 bg-orange-50 text-orange-600 rounded border border-orange-100">
+            {{ gapsSection.high_count }} High
+          </span>
+          <span v-if="gapsSection.medium_count > 0" class="px-2 py-0.5 bg-amber-50 text-amber-600 rounded border border-amber-100">
+            {{ gapsSection.medium_count }} Medium
+          </span>
+          <span v-if="gapsSection.low_count && gapsSection.low_count > 0" class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded border border-emerald-100">
+            {{ gapsSection.low_count }} Low
+          </span>
+        </div>
+      </div>
       <div class="flex items-center gap-2">
         <span class="px-2 py-1 bg-rose-50 text-rose-600 text-[10px] font-black rounded uppercase tracking-wider border border-rose-100">
-          {{ redFlags.length }} Critical Issues
+          {{ redFlags.length }} Issues
         </span>
       </div>
     </div>

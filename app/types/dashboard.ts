@@ -269,18 +269,21 @@ export interface BoardDashboardResponse {
   }
 }
 
+export interface CriticalControlGapsSection {
+  total_gaps: number
+  critical_count: number
+  high_count: number
+  medium_count: number
+  low_count?: number
+  gaps: RedFlag[]
+}
+
 export interface CISODashboardResponse {
   generated_at: string
   organization_id: string
   organization_name: string
   control_maturity_overview: ControlMaturityOverview
-  critical_control_gaps: {
-    total_gaps: number
-    critical_count: number
-    high_count: number
-    medium_count: number
-    gaps: any[]
-  }
+  critical_control_gaps: CriticalControlGapsSection
   remediation_task_tracker: RemediationTaskTracker
   readiness_metrics: ReadinessMetrics
   overall_security_score: number

@@ -1,8 +1,7 @@
 <script setup lang="ts">
 defineProps<{
   statusLabel: string
-  trendDescription: string
-  quarter?: string
+  trendDescription: string 
   complianceScore?: number
   riskTier?: string
   exposureScore?: number
@@ -11,9 +10,7 @@ defineProps<{
 
 <template>
   <div class="bg-white border border-[#e8f3f2] rounded-[24px] p-8 flex flex-col items-center justify-center text-center h-full shadow-sm relative overflow-hidden group">
-    <div v-if="quarter" class="absolute top-5 left-5 px-3 py-1 bg-[#f8fbfb] text-[#09433e] rounded-full text-[9px] font-black uppercase tracking-[1px] border border-[#e8f3f2]">
-      {{ quarter }}
-    </div>
+ 
     
     <span class="text-[10px] font-black text-[#6b8a87] uppercase tracking-[2px] mb-8 opacity-80">Overall Cyber Risk Status</span>
     

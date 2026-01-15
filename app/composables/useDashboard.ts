@@ -3,12 +3,11 @@ import type {
   CISODashboardResponse,
   ExecutiveSummary, 
   RiskRegisterSummary, 
-  ControlMaturity, 
-  AssetSummary,
   RemediationTaskTracker,
   ReadinessMetrics,
   RedFlag,
-  BoardDashboardResponse
+  BoardDashboardResponse,
+  CriticalControlGapsSection
 } from '~/types/dashboard'
 import type { ApiError } from '~/types/auth'
 
@@ -99,11 +98,11 @@ export const useDashboard = () => {
     }
   }
 
-  const getControlMaturity = async (organizationId: string): Promise<ControlMaturity> => {
+  const getControlMaturity = async (organizationId: string): Promise<CRODashboardResponse['control_maturity']> => {
     isLoading.value = true
     error.value = null
     try {
-      return await api.request<ControlMaturity>(`/dashboard/cro/organizations/${organizationId}/control-maturity`, {
+      return await api.request<CRODashboardResponse['control_maturity']>(`/dashboard/cro/organizations/${organizationId}/control-maturity`, {
         method: 'GET',
         requireAuth: true
       })
@@ -116,11 +115,11 @@ export const useDashboard = () => {
     }
   }
 
-  const getCISOControlMaturity = async (organizationId: string, targetMaturityLevel: number = 3): Promise<ControlMaturity> => {
+  const getCISOControlMaturity = async (organizationId: string, targetMaturityLevel: number = 3): Promise<CISODashboardResponse['control_maturity_overview']> => {
     isLoading.value = true
     error.value = null
     try {
-      return await api.request<ControlMaturity>(`/dashboard/ciso/organizations/${organizationId}/control-maturity`, {
+      return await api.request<CISODashboardResponse['control_maturity_overview']>(`/dashboard/ciso/organizations/${organizationId}/control-maturity`, {
         method: 'GET',
         requireAuth: true,
         query: { target_maturity_level: targetMaturityLevel }
@@ -138,11 +137,11 @@ export const useDashboard = () => {
     limit?: number
     target_maturity_level?: number
     include_low_priority?: boolean
-  }): Promise<RedFlag[]> => {
+  }): Promise<CriticalControlGapsSection> => {
     isLoading.value = true
     error.value = null
     try {
-      return await api.request<RedFlag[]>(`/dashboard/ciso/organizations/${organizationId}/critical-gaps`, {
+      return await api.request<CriticalControlGapsSection>(`/dashboard/ciso/organizations/${organizationId}/critical-gaps`, {
         method: 'GET',
         requireAuth: true,
         query: params
@@ -194,11 +193,11 @@ export const useDashboard = () => {
     }
   }
 
-  const getAssetSummary = async (organizationId: string, includeRetired: boolean = false): Promise<AssetSummary> => {
+  const getAssetSummary = async (organizationId: string, includeRetired: boolean = false): Promise<CRODashboardResponse['asset_summary']> => {
     isLoading.value = true
     error.value = null
     try {
-      return await api.request<AssetSummary>(`/dashboard/cro/organizations/${organizationId}/asset-summary`, {
+      return await api.request<CRODashboardResponse['asset_summary']>(`/dashboard/cro/organizations/${organizationId}/asset-summary`, {
         method: 'GET',
         requireAuth: true,
         query: { include_retired: includeRetired }
@@ -229,11 +228,11 @@ export const useDashboard = () => {
     }
   }
 
-  const getBoardOverallRiskStatus = async (organizationId: string): Promise<BoardDashboardResponse['overall_risk_status']> => {
+  const getBoardOverallRiskStatus = async (organizationId: string): Promise<BoardDashboardResponse['overall_cyber_risk_status']> => {
     isLoading.value = true
     error.value = null
     try {
-      return await api.request<BoardDashboardResponse['overall_risk_status']>(`/dashboard/board/organizations/${organizationId}/risk-status`, {
+      return await api.request<BoardDashboardResponse['overall_cyber_risk_status']>(`/dashboard/board/organizations/${organizationId}/risk-status`, {
         method: 'GET',
         requireAuth: true
       })
@@ -246,11 +245,11 @@ export const useDashboard = () => {
     }
   }
 
-  const getBoardFinancialExposure = async (organizationId: string): Promise<BoardDashboardResponse['financial_exposure']> => {
+  const getBoardFinancialExposure = async (organizationId: string): Promise<any> => {
     isLoading.value = true
     error.value = null
     try {
-      return await api.request<BoardDashboardResponse['financial_exposure']>(`/dashboard/board/organizations/${organizationId}/financial-exposure`, {
+      return await api.request<any>(`/dashboard/board/organizations/${organizationId}/financial-exposure`, {
         method: 'GET',
         requireAuth: true
       })
@@ -263,11 +262,11 @@ export const useDashboard = () => {
     }
   }
 
-  const getBoardPriorityRisks = async (organizationId: string, limit: number = 3): Promise<BoardDashboardResponse['top_risks']> => {
+  const getBoardPriorityRisks = async (organizationId: string, limit: number = 3): Promise<BoardDashboardResponse['top_3_priority_risks']> => {
     isLoading.value = true
     error.value = null
     try {
-      return await api.request<BoardDashboardResponse['top_risks']>(`/dashboard/board/organizations/${organizationId}/priority-risks`, {
+      return await api.request<BoardDashboardResponse['top_3_priority_risks']>(`/dashboard/board/organizations/${organizationId}/priority-risks`, {
         method: 'GET',
         requireAuth: true,
         query: { limit }

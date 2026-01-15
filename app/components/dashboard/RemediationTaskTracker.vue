@@ -29,7 +29,15 @@ const getPriorityColor = (priority: string) => {
 <template>
   <div class="bg-white border border-[#e8f3f2] rounded-[16px] shadow-sm flex flex-col h-full overflow-hidden">
     <div class="px-6 py-5 border-b border-[#e8f3f2] flex justify-between items-center bg-white sticky top-0 z-10">
-      <h3 class="text-[16px] font-bold text-[#0e1b1a]">Remediation Task Tracker</h3>
+      <div class="flex flex-col gap-1">
+        <h3 class="text-[16px] font-bold text-[#0e1b1a]">Remediation Task Tracker</h3>
+        <div class="flex items-center gap-2 text-[11px] font-bold text-[#4f9690]">
+          <span>{{ tracker.total_tasks }} Total</span>
+          <span class="text-gray-300">•</span>
+          <span v-if="tracker.open > 0" class="px-1.5 py-0.5 bg-gray-50 text-gray-600 rounded">{{ tracker.open }} Open</span>
+          <span v-if="tracker.in_progress > 0" class="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded">{{ tracker.in_progress }} In Progress</span>
+        </div>
+      </div>
       <div class="flex items-center gap-3">
         <span class="text-[11px] font-black text-rose-600 uppercase bg-rose-50 px-2 py-0.5 rounded" v-if="tracker.overdue > 0">
           {{ tracker.overdue }} Overdue
@@ -71,9 +79,17 @@ const getPriorityColor = (priority: string) => {
               </div>
               <span class="text-[12px] text-[#4f9690] font-medium">{{ task.owner.full_name }}</span>
             </div>
-            <div class="flex items-center gap-1.5 text-[#94a3b8]">
-              <UIcon name="i-lucide-calendar" class="size-3.5" />
-              <span class="text-[11px] font-bold">{{ task.due_date }}</span>
+            <div class="flex items-center gap-3">
+              <div v-if="task.progress_percentage > 0" class="flex items-center gap-1.5">
+                <div class="w-12 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div class="h-full bg-emerald-500 rounded-full transition-all" :style="{ width: `${task.progress_percentage}%` }"></div>
+                </div>
+                <span class="text-[10px] font-bold text-[#94a3b8]">{{ task.progress_percentage }}%</span>
+              </div>
+              <div class="flex items-center gap-1.5 text-[#94a3b8]">
+                <UIcon name="i-lucide-calendar" class="size-3.5" />
+                <span class="text-[11px] font-bold">{{ task.due_date }}</span>
+              </div>
             </div>
           </div>
         </div>

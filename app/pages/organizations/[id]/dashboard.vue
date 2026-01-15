@@ -35,7 +35,27 @@ const organizationId = computed(() => route.params.id as string)
 const score = ref<GlobalQuestionnaireScoreResponse | null>(null)
 const dashboardData = ref<CRODashboardResponse | CISODashboardResponse | BoardDashboardResponse | null>(null)
 const isLoading = ref(true)
-const selectedPersona = ref('cro')
+
+// Initialize selectedPersona from localStorage or default to 'cro'
+const getStoredPersona = (): string => {
+  if (import.meta.client) {
+    const stored = localStorage.getItem('dashboard_selected_persona')
+    if (stored && ['cro', 'ciso', 'board'].includes(stored)) {
+      return stored
+    }
+  }
+  return 'cro'
+}
+
+const selectedPersona = ref(getStoredPersona())
+
+// Save persona selection to localStorage whenever it changes
+watch(selectedPersona, (newPersona) => {
+  if (import.meta.client) {
+    localStorage.setItem('dashboard_selected_persona', newPersona)
+  }
+  fetchDashboardData()
+})
 
 const fetchDashboardData = async () => {
   const currentOrgId = organizationId.value
@@ -64,8 +84,7 @@ const fetchDashboardData = async () => {
         dashboardData.value = {
           generated_at: "2026-01-14T04:10:17.747537Z",
           organization_id: currentOrgId,
-          organization_name: 'Mokshya AI',
-          quarter: 'Q1 2026',
+          organization_name: 'Mokshya AI', 
           overall_cyber_risk_status: {
             status: 'stable',
             status_label: 'Stable',
@@ -173,10 +192,7 @@ const fetchDashboardData = async () => {
   }
 }
 
-// Watch for persona changes to refetch data
-watch(selectedPersona, () => {
-  fetchDashboardData()
-})
+// Persona watching is now handled in the initialization above
 
 // Watch for organization changes to refetch data
 watch(organizationId, () => {
@@ -344,6 +360,24 @@ watch(() => route.path, () => {
         @toggle-sidebar="toggleSidebar"
       />
       
+      <div v-if="dashboardData && !isLoading" class="px-4 sm:px-6 lg:px-8 py-2 bg-white border-b border-[#e8f3f2] flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-4">
+          <p class="text-[11px] font-medium text-[#4f9690]">
+            Data as of: <span class="font-bold text-[#09433e]">{{ new Date(dashboardData.generated_at).toLocaleString() }}</span>
+          </p>
+          <div v-if="selectedPersona === 'ciso' && 'insurance_ready' in dashboardData" class="flex items-center gap-2">
+            <div class="h-3 w-px bg-gray-200"></div>
+            <p class="text-[11px] font-medium text-[#4f9690]">Insurance Eligibility:</p>
+            <span :class="['px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter', (dashboardData as CISODashboardResponse).insurance_ready ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100']">
+              {{ (dashboardData as CISODashboardResponse).insurance_ready ? 'Ready' : 'Ineligible' }}
+            </span>
+          </div>
+        </div>
+        <p class="text-[11px] font-bold text-[#09433e] uppercase tracking-widest">
+          {{ 'organization_name' in dashboardData ? (dashboardData as any).organization_name : (dashboardData as any).executive_summary?.organization_name }}
+        </p>
+      </div>
+      
       <main class="flex-1 overflow-y-auto py-8">
         <!-- 1. Loading State -->
         <div v-if="isLoading" class="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] gap-4">
@@ -363,7 +397,6 @@ watch(() => route.path, () => {
                   v-if="'overall_cyber_risk_status' in dashboardData"
                   :status-label="boardStatusLabel"
                   :trend-description="(dashboardData as BoardDashboardResponse).overall_cyber_risk_status.trend_description"
-                  :quarter="(dashboardData as BoardDashboardResponse).quarter"
                   :compliance-score="(dashboardData as BoardDashboardResponse).overall_cyber_risk_status.compliance_score"
                   :risk-tier="(dashboardData as BoardDashboardResponse).overall_cyber_risk_status.risk_tier"
                   :exposure-score="(dashboardData as BoardDashboardResponse).overall_cyber_risk_status.exposure_score"
@@ -595,20 +628,56 @@ watch(() => route.path, () => {
                 />
                 <template v-else>
                   <RenewalCountdown />
-                  <div v-if="selectedPersona === 'ciso' && 'control_maturity_overview' in dashboardData && (dashboardData as CISODashboardResponse).control_maturity_overview.domains.length > 0" class="bg-[#09433e] rounded-[16px] p-6 text-white shadow-lg shadow-[#09433e]/20">
-                    <div class="flex items-center gap-3 mb-4">
-                      <div class="size-10 rounded-xl bg-white/10 flex items-center justify-center">
-                        <UIcon name="i-lucide-shield-check" class="size-6" />
+                  <div v-if="selectedPersona === 'ciso' && 'control_maturity_overview' in dashboardData && (dashboardData as CISODashboardResponse).control_maturity_overview.domains.length > 0" class="space-y-4">
+                    <!-- Additional Control Maturity Metrics -->
+                    <div class="bg-white border border-[#e8f3f2] rounded-[16px] shadow-sm p-6">
+                      <h3 class="text-[14px] font-bold text-[#0e1b1a] mb-4">Security Metrics</h3>
+                      <div class="space-y-4">
+                        <div v-if="(dashboardData as CISODashboardResponse).control_maturity_overview.endpoint_protection">
+                          <div class="flex justify-between items-center mb-1">
+                            <span class="text-[11px] font-bold text-[#4f9690] uppercase tracking-wider">Endpoint Protection</span>
+                            <span class="text-[13px] font-black text-[#0e1b1a]">{{ Math.round((dashboardData as CISODashboardResponse).control_maturity_overview.endpoint_protection.value) }}{{ (dashboardData as CISODashboardResponse).control_maturity_overview.endpoint_protection.unit || '%' }}</span>
+                          </div>
+                          <div class="h-1.5 w-full bg-gray-50 rounded-full overflow-hidden border border-gray-100">
+                            <div 
+                              class="h-full bg-[#09433e] rounded-full transition-all duration-1000"
+                              :style="{ width: `${(dashboardData as CISODashboardResponse).control_maturity_overview.endpoint_protection.value}%` }"
+                            ></div>
+                          </div>
+                          <p v-if="(dashboardData as CISODashboardResponse).control_maturity_overview.endpoint_protection.additional_info" class="text-[9px] text-[#94a3b8] mt-1">{{ (dashboardData as CISODashboardResponse).control_maturity_overview.endpoint_protection.additional_info }}</p>
+                        </div>
+                        <div v-if="(dashboardData as CISODashboardResponse).control_maturity_overview.backup_success">
+                          <div class="flex justify-between items-center mb-1">
+                            <span class="text-[11px] font-bold text-[#4f9690] uppercase tracking-wider">Backup Success</span>
+                            <span class="text-[13px] font-black text-[#0e1b1a]">{{ Math.round((dashboardData as CISODashboardResponse).control_maturity_overview.backup_success.value) }}{{ (dashboardData as CISODashboardResponse).control_maturity_overview.backup_success.unit || '%' }}</span>
+                          </div>
+                          <div class="h-1.5 w-full bg-gray-50 rounded-full overflow-hidden border border-gray-100">
+                            <div 
+                              class="h-full bg-[#09433e] rounded-full transition-all duration-1000"
+                              :style="{ width: `${(dashboardData as CISODashboardResponse).control_maturity_overview.backup_success.value}%` }"
+                            ></div>
+                          </div>
+                          <p v-if="(dashboardData as CISODashboardResponse).control_maturity_overview.backup_success.additional_info" class="text-[9px] text-[#94a3b8] mt-1">{{ (dashboardData as CISODashboardResponse).control_maturity_overview.backup_success.additional_info }}</p>
+                        </div>
                       </div>
-                      <h3 class="text-[16px] font-bold">Resilience Insight</h3>
                     </div>
-                    <p class="text-[13px] text-emerald-100/80 leading-relaxed mb-6 font-medium">
-                      Your strongest domain is <span class="text-white font-bold">{{ (dashboardData as CISODashboardResponse).control_maturity_overview.domains.reduce((a, b) => (a.current_level > b.current_level ? a : b)).domain }}</span>. 
-                      Improvement needed in <span class="text-white font-bold">{{ (dashboardData as CISODashboardResponse).control_maturity_overview.domains.reduce((a, b) => (a.current_level < b.current_level ? a : b)).domain }}</span>.
-                    </p>
-                    <button class="w-full py-3 bg-white text-[#09433e] rounded-xl font-black text-[12px] uppercase tracking-widest hover:bg-emerald-50 transition-all">
-                      Generate Posture Report
-                    </button>
+                    
+                    <!-- Resilience Insight -->
+                    <div class="bg-[#09433e] rounded-[16px] p-6 text-white shadow-lg shadow-[#09433e]/20">
+                      <div class="flex items-center gap-3 mb-4">
+                        <div class="size-10 rounded-xl bg-white/10 flex items-center justify-center">
+                          <UIcon name="i-lucide-shield-check" class="size-6" />
+                        </div>
+                        <h3 class="text-[16px] font-bold">Resilience Insight</h3>
+                      </div>
+                      <p class="text-[13px] text-emerald-100/80 leading-relaxed mb-6 font-medium">
+                        Your strongest domain is <span class="text-white font-bold">{{ (dashboardData as CISODashboardResponse).control_maturity_overview.domains.reduce((a, b) => (a.current_level > b.current_level ? a : b)).domain }}</span>. 
+                        Improvement needed in <span class="text-white font-bold">{{ (dashboardData as CISODashboardResponse).control_maturity_overview.domains.reduce((a, b) => (a.current_level < b.current_level ? a : b)).domain }}</span>.
+                      </p>
+                      <button class="w-full py-3 bg-white text-[#09433e] rounded-xl font-black text-[12px] uppercase tracking-widest hover:bg-emerald-50 transition-all">
+                        Generate Posture Report
+                      </button>
+                    </div>
                   </div>
                 </template>
               </div>
@@ -622,7 +691,8 @@ watch(() => route.path, () => {
             <!-- Control Gaps Table -->
             <div class="w-full">
               <CriticalControlGapsTable 
-                :red-flags="selectedPersona === 'ciso' && 'critical_control_gaps' in dashboardData ? (dashboardData as CISODashboardResponse).critical_control_gaps.gaps : ('executive_summary' in dashboardData ? (dashboardData as CRODashboardResponse).executive_summary.red_flags : [])" 
+                :red-flags="selectedPersona === 'ciso' && 'critical_control_gaps' in dashboardData ? (dashboardData as CISODashboardResponse).critical_control_gaps.gaps : ('executive_summary' in dashboardData ? (dashboardData as CRODashboardResponse).executive_summary.red_flags : [])"
+                :gaps-section="selectedPersona === 'ciso' && 'critical_control_gaps' in dashboardData ? (dashboardData as CISODashboardResponse).critical_control_gaps : undefined"
               />
             </div>
           </div>
