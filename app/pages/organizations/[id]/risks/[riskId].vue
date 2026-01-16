@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type { RiskWithAssets, RiskCategory, RiskRating, RiskStatus, RiskTreatment, AssetType, BusinessCriticality } from '~/types/asset-risk'
+import EditRiskModal from '~/components/organizations/EditRiskModal.vue'
 
 definePageMeta({
   layout: false
 })
 
 const route = useRoute()
+const router = useRouter()
 const organizationId = route.params.id as string
 const riskId = route.params.riskId as string
 const riskApi = useRisk()
@@ -13,6 +15,11 @@ const riskApi = useRisk()
 const risk = ref<RiskWithAssets | null>(null)
 const isLoading = ref(true)
 const selectedPersona = ref('cro')
+const showEditModal = ref(false)
+const showDeleteConfirm = ref(false)
+const showStatusModal = ref(false)
+const isProcessing = ref(false)
+const selectedNewStatus = ref<RiskStatus>('open')
 
 const fetchData = async () => {
   try {
@@ -92,12 +99,63 @@ const formatDate = (date: string | null | undefined) => {
 }
 
 const handleReview = async () => {
+  if (!risk.value) return
+  
+  isProcessing.value = true
   try {
-    await riskApi.reviewRisk(organizationId, riskId)
+    await riskApi.reviewRisk(organizationId, risk.value.id)
     await fetchData()
   } catch (error) {
     console.error('Failed to review risk:', error)
+    alert('Failed to mark risk as reviewed. Please try again.')
+  } finally {
+    isProcessing.value = false
   }
+}
+
+const handleEdit = () => {
+  showEditModal.value = true
+}
+
+const handleDelete = async () => {
+  if (!risk.value) return
+  
+  isProcessing.value = true
+  try {
+    await riskApi.deleteRisk(organizationId, risk.value.id)
+    router.push(`/organizations/${organizationId}/risks`)
+  } catch (error) {
+    console.error('Failed to delete risk:', error)
+    alert('Failed to delete risk. Please try again.')
+    isProcessing.value = false
+  }
+}
+
+const handleStatusUpdate = async () => {
+  if (!risk.value) return
+  
+  isProcessing.value = true
+  try {
+    await riskApi.updateStatus(organizationId, risk.value.id, selectedNewStatus.value)
+    await fetchData()
+    showStatusModal.value = false
+  } catch (error) {
+    console.error('Failed to update risk status:', error)
+    alert('Failed to update risk status. Please try again.')
+  } finally {
+    isProcessing.value = false
+  }
+}
+
+const handleUpdated = async () => {
+  await fetchData()
+}
+
+const openStatusModal = () => {
+  if (risk.value) {
+    selectedNewStatus.value = risk.value.status
+  }
+  showStatusModal.value = true
 }
 </script>
 
@@ -161,18 +219,37 @@ const handleReview = async () => {
                 </div>
               </div>
               
-              <div class="flex gap-3">
+              <div class="flex gap-3 flex-wrap">
                 <button 
                   @click="handleReview"
-                  class="px-5 py-2.5 bg-[#09423c] text-white rounded-xl text-[14px] font-bold hover:bg-[#07332e] transition-all shadow-sm cursor-pointer flex items-center gap-2"
+                  :disabled="isProcessing"
+                  class="px-5 py-2.5 bg-[#09423c] text-white rounded-xl text-[14px] font-bold hover:bg-[#07332e] transition-all shadow-sm cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Mark as Reviewed
                 </button>
-                <button class="px-5 py-2.5 bg-white border border-[#e8f3f2] rounded-xl text-[14px] font-bold text-[#0e1b1a] hover:bg-gray-50 transition-colors shadow-sm cursor-pointer">
-                  Update Risk
+                <button 
+                  @click="openStatusModal"
+                  :disabled="isProcessing"
+                  class="px-5 py-2.5 bg-white border border-[#e8f3f2] rounded-xl text-[14px] font-bold text-[#0e1b1a] hover:bg-gray-50 transition-colors shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Update Status
+                </button>
+                <button 
+                  @click="handleEdit"
+                  :disabled="isProcessing"
+                  class="px-5 py-2.5 bg-white border border-[#e8f3f2] rounded-xl text-[14px] font-bold text-[#0e1b1a] hover:bg-gray-50 transition-colors shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Edit Risk
+                </button>
+                <button 
+                  @click="showDeleteConfirm = true"
+                  :disabled="isProcessing"
+                  class="px-5 py-2.5 bg-rose-50 text-rose-600 rounded-xl text-[14px] font-bold hover:bg-rose-100 transition-colors cursor-pointer border border-rose-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Delete
                 </button>
               </div>
             </div>
@@ -315,6 +392,116 @@ const handleReview = async () => {
         </div>
       </main>
     </div>
+
+    <!-- Edit Modal -->
+    <EditRiskModal 
+      v-model="showEditModal"
+      :organization-id="organizationId"
+      :risk="risk"
+      @updated="handleUpdated"
+    />
+
+    <!-- Status Update Modal -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition ease-out duration-200"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition ease-in duration-150"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="showStatusModal"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          @click.self="showStatusModal = false"
+        >
+          <div class="bg-white rounded-[24px] shadow-2xl max-w-md w-full p-8">
+            <h3 class="text-xl font-extrabold text-[#0e1b1a] mb-2">Update Risk Status</h3>
+            <p class="text-[14px] text-[#64748b] mb-6">
+              Select the new status for this risk.
+            </p>
+            <div class="space-y-3 mb-6">
+              <label 
+                v-for="status in ['open', 'in_progress', 'mitigated', 'accepted'] as RiskStatus[]"
+                :key="status"
+                :class="[
+                  'flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all',
+                  selectedNewStatus === status 
+                    ? 'bg-[#09423c]/5 border-[#09423c] ring-1 ring-[#09423c]' 
+                    : 'bg-gray-50 border-gray-100 hover:border-gray-200'
+                ]"
+              >
+                <input
+                  type="radio"
+                  :value="status"
+                  v-model="selectedNewStatus"
+                  class="size-4 text-[#09423c] focus:ring-[#09423c]"
+                />
+                <span class="text-[14px] font-bold text-[#0e1b1a] capitalize">{{ status.replace('_', ' ') }}</span>
+              </label>
+            </div>
+            <div class="flex gap-3 justify-end">
+              <button
+                @click="showStatusModal = false"
+                :disabled="isProcessing"
+                class="px-6 py-2.5 rounded-xl border border-gray-200 text-[#0e1b1a] font-bold hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                @click="handleStatusUpdate"
+                :disabled="isProcessing || selectedNewStatus === risk?.status"
+                class="px-6 py-2.5 rounded-xl bg-[#09423c] text-white font-bold hover:bg-[#07332e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {{ isProcessing ? 'Updating...' : 'Update Status' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Delete Confirmation -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition ease-out duration-200"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition ease-in duration-150"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="showDeleteConfirm"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          @click.self="showDeleteConfirm = false"
+        >
+          <div class="bg-white rounded-[24px] shadow-2xl max-w-md w-full p-8">
+            <h3 class="text-xl font-extrabold text-[#0e1b1a] mb-2">Delete Risk</h3>
+            <p class="text-[14px] text-[#64748b] mb-6">
+              Are you sure you want to permanently delete this risk? This action cannot be undone.
+            </p>
+            <div class="flex gap-3 justify-end">
+              <button
+                @click="showDeleteConfirm = false"
+                :disabled="isProcessing"
+                class="px-6 py-2.5 rounded-xl border border-gray-200 text-[#0e1b1a] font-bold hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                @click="handleDelete"
+                :disabled="isProcessing"
+                class="px-6 py-2.5 rounded-xl bg-rose-600 text-white font-bold hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {{ isProcessing ? 'Deleting...' : 'Delete Permanently' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 

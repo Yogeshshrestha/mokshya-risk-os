@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Risk, RiskCategory, RiskRating, RiskStatistics, RiskStatus } from '~/types/asset-risk'
+import type { Risk, RiskCategory, RiskRating, RiskStatistics, RiskStatus, ThreatSource } from '~/types/asset-risk'
 
 definePageMeta({
   layout: false
@@ -9,35 +9,76 @@ const route = useRoute()
 const organizationId = route.params.id as string
 const riskApi = useRisk()
 
+const allRisks = ref<Risk[]>([])
 const risks = ref<Risk[]>([])
 const stats = ref<RiskStatistics | null>(null)
 const isLoading = ref(true)
 const searchQuery = ref('')
 const selectedCategory = ref<RiskCategory | ''>('')
 const selectedRating = ref<RiskRating | ''>('')
+const selectedStatus = ref<RiskStatus | ''>('')
+const selectedThreatSource = ref<'internal' | 'external' | ''>('')
+const currentPage = ref(1)
+const pageSize = ref(20)
+const totalCount = ref(0)
 
 const fetchData = async () => {
   try {
     isLoading.value = true
-    const params: any = {}
+    const params: any = {
+      skip: (currentPage.value - 1) * pageSize.value,
+      limit: pageSize.value
+    }
     if (selectedCategory.value) params.category = selectedCategory.value
     if (selectedRating.value) params.risk_rating = selectedRating.value
-    if (searchQuery.value) params.search = searchQuery.value
+    if (selectedStatus.value) params.risk_status = selectedStatus.value
+    if (selectedThreatSource.value) params.threat_source = selectedThreatSource.value
     
-    const [risksData, statsData] = await Promise.all([
+    const [risksData, statsData, count] = await Promise.all([
       riskApi.listRisks(organizationId, params),
-      riskApi.getStatistics(organizationId).catch(() => null)
+      riskApi.getStatistics(organizationId).catch(() => null),
+      riskApi.countRisks(organizationId, {
+        category: selectedCategory.value || undefined,
+        risk_rating: selectedRating.value || undefined,
+        risk_status: selectedStatus.value || undefined
+      })
     ])
     
     // Sort risks by risk_id in ascending order
-    risks.value = risksData.sort((a, b) => a.risk_id.localeCompare(b.risk_id))
+    allRisks.value = risksData.sort((a, b) => a.risk_id.localeCompare(b.risk_id))
     stats.value = statsData
+    totalCount.value = count
   } catch (error) {
     console.error('Failed to fetch risks:', error)
   } finally {
     isLoading.value = false
   }
 }
+
+// Client-side search filter
+const filteredRisks = computed(() => {
+  if (!searchQuery.value.trim()) {
+    return allRisks.value
+  }
+  const query = searchQuery.value.toLowerCase().trim()
+  return allRisks.value.filter(risk => 
+    risk.title.toLowerCase().includes(query) || 
+    risk.risk_id.toLowerCase().includes(query)
+  )
+})
+
+// Watch for filter changes and reset to page 1
+watch([selectedCategory, selectedRating, selectedStatus, selectedThreatSource], () => {
+  currentPage.value = 1
+  fetchData()
+})
+
+// Update displayed risks when search or allRisks changes
+watch([filteredRisks], () => {
+  risks.value = filteredRisks.value
+}, { immediate: true })
+
+const totalPages = computed(() => Math.ceil(totalCount.value / pageSize.value))
 
 onMounted(fetchData)
 
@@ -180,24 +221,23 @@ watch(() => route.path, () => {
           </div>
 
           <!-- Filters -->
-          <div class="bg-white p-4 rounded-2xl border border-[#e8f3f2] shadow-sm flex flex-col md:flex-row md:items-center gap-4">
+          <div class="bg-white p-4 rounded-2xl border border-[#e8f3f2] shadow-sm flex flex-col gap-4">
             <div class="flex-1 relative">
               <svg class="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input 
                 v-model="searchQuery"
-                @input="fetchData"
                 type="text" 
                 placeholder="Search risks by title or ID..."
                 class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#09423c]/20 focus:border-[#09423c]/30"
               />
             </div>
-            <div class="flex flex-col sm:flex-row items-center gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <select 
                 v-model="selectedCategory" 
                 @change="fetchData"
-                class="w-full sm:w-auto px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none sm:min-w-[180px]"
+                class="px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#09423c]/20 focus:border-[#09423c]/30 cursor-pointer"
               >
                 <option value="">All Categories</option>
                 <option v-for="cat in riskCategories" :key="cat.value" :value="cat.value">
@@ -207,12 +247,32 @@ watch(() => route.path, () => {
               <select 
                 v-model="selectedRating" 
                 @change="fetchData"
-                class="w-full sm:w-auto px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none sm:min-w-[150px]"
+                class="px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#09423c]/20 focus:border-[#09423c]/30 cursor-pointer"
               >
                 <option value="">All Ratings</option>
                 <option value="high">High</option>
                 <option value="medium">Medium</option>
                 <option value="low">Low</option>
+              </select>
+              <select 
+                v-model="selectedStatus" 
+                @change="fetchData"
+                class="px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#09423c]/20 focus:border-[#09423c]/30 cursor-pointer"
+              >
+                <option value="">All Statuses</option>
+                <option value="open">Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="mitigated">Mitigated</option>
+                <option value="accepted">Accepted</option>
+              </select>
+              <select 
+                v-model="selectedThreatSource" 
+                @change="fetchData"
+                class="px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#09423c]/20 focus:border-[#09423c]/30 cursor-pointer"
+              >
+                <option value="">All Threat Sources</option>
+                <option value="internal">Internal</option>
+                <option value="external">External</option>
               </select>
             </div>
           </div>
@@ -289,13 +349,52 @@ watch(() => route.path, () => {
                       </div>
                     </td>
                     <td class="px-8 py-5 text-right px-8">
-                      <NuxtLink :to="`/organizations/${organizationId}/risks/${risk.id}`" class="text-[13px] font-extrabold text-[#09433e] hover:underline cursor-pointer lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                        View Details
+                      <NuxtLink :to="`/organizations/${organizationId}/risks/${risk.id}`" class="text-[13px] font-extrabold text-[#09433e] hover:underline cursor-pointer">
+                        Details
                       </NuxtLink>
                     </td>
                   </tr>
                 </tbody>
               </table>
+            </div>
+
+            <!-- Pagination -->
+            <div v-if="totalPages > 1" class="px-8 py-6 border-t border-[#e8f3f2] flex items-center justify-between">
+              <div class="text-[13px] text-[#64748b] font-medium">
+                Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }} risks
+              </div>
+              <div class="flex items-center gap-2">
+                <button
+                  @click="currentPage = Math.max(1, currentPage - 1); fetchData()"
+                  :disabled="currentPage === 1 || isLoading"
+                  class="px-4 py-2 rounded-xl border border-gray-200 text-[13px] font-bold text-[#0e1b1a] hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  Previous
+                </button>
+                <div class="flex items-center gap-1">
+                  <button
+                    v-for="page in Math.min(5, totalPages)"
+                    :key="page"
+                    @click="currentPage = page; fetchData()"
+                    :class="[
+                      'px-3 py-2 rounded-lg text-[13px] font-bold transition-colors cursor-pointer',
+                      currentPage === page
+                        ? 'bg-[#09423c] text-white'
+                        : 'text-[#64748b] hover:bg-gray-50'
+                    ]"
+                  >
+                    {{ page }}
+                  </button>
+                  <span v-if="totalPages > 5" class="px-2 text-[#64748b]">...</span>
+                </div>
+                <button
+                  @click="currentPage = Math.min(totalPages, currentPage + 1); fetchData()"
+                  :disabled="currentPage === totalPages || isLoading"
+                  class="px-4 py-2 rounded-xl border border-gray-200 text-[13px] font-bold text-[#0e1b1a] hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </div>
         </div>

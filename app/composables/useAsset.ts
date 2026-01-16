@@ -1,5 +1,19 @@
-import type { Asset, AssetCreate, AssetWithRisks } from '~/types/asset-risk'
+import type { Asset, AssetCreate, AssetUpdate, AssetWithRisks } from '~/types/asset-risk'
 import type { ApiError } from '~/types/auth'
+
+export interface ListAssetsParams {
+  asset_type?: string
+  business_criticality?: string
+  status?: string
+  skip?: number
+  limit?: number
+}
+
+export interface CountAssetsParams {
+  asset_type?: string
+  business_criticality?: string
+  status?: string
+}
 
 export const useAsset = () => {
   const api = useApi()
@@ -24,7 +38,7 @@ export const useAsset = () => {
     }
   }
 
-  const listAssets = async (organizationId: string, params?: Record<string, any>): Promise<Asset[]> => {
+  const listAssets = async (organizationId: string, params?: ListAssetsParams): Promise<Asset[]> => {
     isLoading.value = true
     error.value = null
     try {
@@ -60,7 +74,7 @@ export const useAsset = () => {
     }
   }
 
-  const updateAsset = async (organizationId: string, assetId: string, data: Partial<AssetCreate>): Promise<Asset> => {
+  const updateAsset = async (organizationId: string, assetId: string, data: AssetUpdate): Promise<Asset> => {
     isLoading.value = true
     error.value = null
     try {
@@ -78,16 +92,20 @@ export const useAsset = () => {
     }
   }
 
-  const countAssets = async (organizationId: string, params?: Record<string, any>): Promise<number> => {
+  const countAssets = async (organizationId: string, params?: CountAssetsParams): Promise<number> => {
     isLoading.value = true
     error.value = null
     try {
-      const response = await api.request<{ count: number }>(`/organizations/${organizationId}/assets/count`, {
+      const response = await api.request<{ count: number } | number>(`/organizations/${organizationId}/assets/count`, {
         method: 'GET',
         requireAuth: true,
         query: params
       })
-      return response.count
+      // Handle both response formats: { count: number } or just number
+      if (typeof response === 'number') {
+        return response
+      }
+      return response?.count || 0
     } catch (err) {
       console.warn('Failed to get asset count')
       return 0

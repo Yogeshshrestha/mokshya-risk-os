@@ -46,6 +46,17 @@ export interface AssetCreate {
   business_criticality?: BusinessCriticality;
 }
 
+export interface AssetUpdate {
+  name?: string;
+  asset_type?: AssetType;
+  description?: string;
+  business_owner?: string;
+  technical_owner?: string;
+  data_sensitivity?: DataSensitivity;
+  business_criticality?: BusinessCriticality;
+  status?: AssetStatus;
+}
+
 export interface AssetWithRisks extends Asset {
   risks: Array<{
     id: string;
@@ -95,6 +106,20 @@ export interface RiskCreate {
   treatment?: RiskTreatment;
   target_mitigation_date?: string;
   asset_ids: string[];
+}
+
+export interface RiskUpdate {
+  title?: string;
+  description?: string;
+  category?: RiskCategory;
+  threat_source?: ThreatSource;
+  likelihood?: LikelihoodLevel;
+  impact?: ImpactLevel;
+  existing_controls?: string;
+  risk_owner?: string;
+  treatment?: RiskTreatment;
+  target_mitigation_date?: string;
+  asset_ids?: string[];
 }
 
 export interface RiskWithAssets extends Risk {

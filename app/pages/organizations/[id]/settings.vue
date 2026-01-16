@@ -348,7 +348,7 @@ watch(() => route.path, () => {
                         <td class="px-8 py-5 text-right">
                           <button 
                             @click="handleRemoveMember(member.id)"
-                            class="text-[13px] font-extrabold text-rose-600 hover:underline cursor-pointer lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
+                            class="text-[13px] font-extrabold text-rose-600 hover:underline cursor-pointer"
                           >
                             Remove
                           </button>
@@ -417,7 +417,7 @@ watch(() => route.path, () => {
                         <td class="px-8 py-5 text-right">
                           <button 
                             @click="handleRevokeInvitation(invitation.id)"
-                            class="text-[13px] font-extrabold text-rose-600 hover:underline cursor-pointer lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
+                            class="text-[13px] font-extrabold text-rose-600 hover:underline cursor-pointer"
                           >
                             Revoke
                           </button>
@@ -457,7 +457,7 @@ watch(() => route.path, () => {
                     <div class="flex items-center gap-2">
                       <button 
                         @click="handleDeleteRole(role.id)"
-                        class="size-8 rounded-lg flex items-center justify-center text-rose-600 hover:bg-rose-50 transition-colors lg:opacity-0 lg:group-hover:opacity-100 cursor-pointer"
+                        class="size-8 rounded-lg flex items-center justify-center text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                         title="Delete Role"
                       >
                         <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

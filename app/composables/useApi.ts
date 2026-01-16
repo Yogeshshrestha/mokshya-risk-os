@@ -125,7 +125,18 @@ export const useApi = () => {
                 throw errorData
               }
 
-              return await retryResponse.json()
+              // Handle 204 No Content responses
+              if (retryResponse.status === 204) {
+                return {} as T
+              }
+
+              // Handle JSON responses
+              const retryContentType = retryResponse.headers.get('content-type')
+              if (retryContentType && retryContentType.includes('application/json')) {
+                return await retryResponse.json()
+              }
+
+              return {} as T
             } else {
               // Refresh failed, clear tokens and throw error
               clearAuthTokens()
@@ -146,6 +157,11 @@ export const useApi = () => {
           statusCode: response.status,
         }))
         throw errorData
+      }
+
+      // Handle 204 No Content responses (common for DELETE requests)
+      if (response.status === 204) {
+        return {} as T
       }
 
       // Handle empty responses

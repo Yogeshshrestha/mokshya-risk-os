@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Asset, AssetType, DataSensitivity, BusinessCriticality } from '~/types/asset-risk'
+import type { Asset, AssetType, DataSensitivity, BusinessCriticality, AssetStatus } from '~/types/asset-risk'
 
 definePageMeta({
   layout: false
@@ -9,27 +9,71 @@ const route = useRoute()
 const organizationId = route.params.id as string
 const assetApi = useAsset()
 
+const allAssets = ref<Asset[]>([])
 const assets = ref<Asset[]>([])
 const isLoading = ref(true)
 const searchQuery = ref('')
 const selectedType = ref<AssetType | ''>('')
+const selectedCriticality = ref<BusinessCriticality | ''>('')
+const selectedStatus = ref<AssetStatus | ''>('')
+const currentPage = ref(1)
+const pageSize = ref(20)
+const totalCount = ref(0)
 
 const fetchAssets = async () => {
   try {
     isLoading.value = true
-    const params: any = {}
+    const params: any = {
+      skip: (currentPage.value - 1) * pageSize.value,
+      limit: pageSize.value
+    }
     if (selectedType.value) params.asset_type = selectedType.value
-    if (searchQuery.value) params.search = searchQuery.value
+    if (selectedCriticality.value) params.business_criticality = selectedCriticality.value
+    if (selectedStatus.value) params.status = selectedStatus.value
     
-    const fetchedAssets = await assetApi.listAssets(organizationId, params)
+    const [fetchedAssets, count] = await Promise.all([
+      assetApi.listAssets(organizationId, params),
+      assetApi.countAssets(organizationId, {
+        asset_type: selectedType.value || undefined,
+        business_criticality: selectedCriticality.value || undefined,
+        status: selectedStatus.value || undefined
+      })
+    ])
+    
     // Sort assets by asset_id in ascending order
-    assets.value = fetchedAssets.sort((a, b) => a.asset_id.localeCompare(b.asset_id))
+    allAssets.value = fetchedAssets.sort((a, b) => a.asset_id.localeCompare(b.asset_id))
+    totalCount.value = count
   } catch (error) {
     console.error('Failed to fetch assets:', error)
   } finally {
     isLoading.value = false
   }
 }
+
+// Client-side search filter
+const filteredAssets = computed(() => {
+  if (!searchQuery.value.trim()) {
+    return allAssets.value
+  }
+  const query = searchQuery.value.toLowerCase().trim()
+  return allAssets.value.filter(asset => 
+    asset.name.toLowerCase().includes(query) || 
+    asset.asset_id.toLowerCase().includes(query)
+  )
+})
+
+// Watch for filter changes and reset to page 1
+watch([selectedType, selectedCriticality, selectedStatus], () => {
+  currentPage.value = 1
+  fetchAssets()
+})
+
+// Update displayed assets when search or allAssets changes
+watch([filteredAssets], () => {
+  assets.value = filteredAssets.value
+}, { immediate: true })
+
+const totalPages = computed(() => Math.ceil(totalCount.value / pageSize.value))
 
 onMounted(fetchAssets)
 
@@ -125,29 +169,47 @@ watch(() => route.path, () => {
           </div>
 
           <!-- Filters -->
-          <div class="bg-white p-4 rounded-2xl border border-[#e8f3f2] shadow-sm flex flex-col md:flex-row md:items-center gap-4">
+          <div class="bg-white p-4 rounded-2xl border border-[#e8f3f2] shadow-sm flex flex-col gap-4">
             <div class="flex-1 relative">
               <svg class="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input 
                 v-model="searchQuery"
-                @input="fetchAssets"
                 type="text" 
                 placeholder="Search assets by name or ID..."
                 class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#09423c]/20 focus:border-[#09423c]/30"
               />
             </div>
-            <div class="flex items-center gap-2">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <select 
                 v-model="selectedType" 
                 @change="fetchAssets"
-                class="flex-1 md:flex-none px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none md:min-w-[180px]"
+                class="px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#09423c]/20 focus:border-[#09423c]/30 cursor-pointer"
               >
                 <option value="">All Asset Types</option>
                 <option v-for="type in assetTypes" :key="type.value" :value="type.value">
                   {{ type.label }}
                 </option>
+              </select>
+              <select 
+                v-model="selectedCriticality" 
+                @change="fetchAssets"
+                class="px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#09423c]/20 focus:border-[#09423c]/30 cursor-pointer"
+              >
+                <option value="">All Criticalities</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+              <select 
+                v-model="selectedStatus" 
+                @change="fetchAssets"
+                class="px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#09423c]/20 focus:border-[#09423c]/30 cursor-pointer"
+              >
+                <option value="">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="retired">Retired</option>
               </select>
             </div>
           </div>
@@ -219,13 +281,52 @@ watch(() => route.path, () => {
                       </span>
                     </td>
                     <td class="px-8 py-5 text-right">
-                      <NuxtLink :to="`/organizations/${organizationId}/assets/${asset.id}`" class="text-[13px] font-extrabold text-[#09433e] hover:underline cursor-pointer lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                      <NuxtLink :to="`/organizations/${organizationId}/assets/${asset.id}`" class="text-[13px] font-extrabold text-[#09433e] hover:underline cursor-pointer">
                         Details
                       </NuxtLink>
                     </td>
                   </tr>
                 </tbody>
               </table>
+            </div>
+
+            <!-- Pagination -->
+            <div v-if="totalPages > 1" class="px-8 py-6 border-t border-[#e8f3f2] flex items-center justify-between">
+              <div class="text-[13px] text-[#64748b] font-medium">
+                Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }} assets
+              </div>
+              <div class="flex items-center gap-2">
+                <button
+                  @click="currentPage = Math.max(1, currentPage - 1); fetchAssets()"
+                  :disabled="currentPage === 1 || isLoading"
+                  class="px-4 py-2 rounded-xl border border-gray-200 text-[13px] font-bold text-[#0e1b1a] hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  Previous
+                </button>
+                <div class="flex items-center gap-1">
+                  <button
+                    v-for="page in Math.min(5, totalPages)"
+                    :key="page"
+                    @click="currentPage = page; fetchAssets()"
+                    :class="[
+                      'px-3 py-2 rounded-lg text-[13px] font-bold transition-colors cursor-pointer',
+                      currentPage === page
+                        ? 'bg-[#09423c] text-white'
+                        : 'text-[#64748b] hover:bg-gray-50'
+                    ]"
+                  >
+                    {{ page }}
+                  </button>
+                  <span v-if="totalPages > 5" class="px-2 text-[#64748b]">...</span>
+                </div>
+                <button
+                  @click="currentPage = Math.min(totalPages, currentPage + 1); fetchAssets()"
+                  :disabled="currentPage === totalPages || isLoading"
+                  class="px-4 py-2 rounded-xl border border-gray-200 text-[13px] font-bold text-[#0e1b1a] hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -1,16 +1,31 @@
-import type { Risk, RiskCreate, RiskWithAssets, RiskStatistics } from '~/types/asset-risk'
+import type { Risk, RiskCreate, RiskUpdate, RiskWithAssets, RiskStatistics } from '~/types/asset-risk'
 import type { ApiError } from '~/types/auth'
+
+export interface ListRisksParams {
+  category?: string
+  risk_rating?: string
+  risk_status?: string
+  threat_source?: string
+  skip?: number
+  limit?: number
+}
+
+export interface CountRisksParams {
+  category?: string
+  risk_rating?: string
+  risk_status?: string
+}
 
 export const useRisk = () => {
   const api = useApi()
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
-  const createRisk = async (organizationId: string, data: RiskCreate): Promise<Risk> => {
+  const createRisk = async (organizationId: string, data: RiskCreate): Promise<RiskWithAssets> => {
     isLoading.value = true
     error.value = null
     try {
-      return await api.request<Risk>(`/organizations/${organizationId}/risks`, {
+      return await api.request<RiskWithAssets>(`/organizations/${organizationId}/risks`, {
         method: 'POST',
         requireAuth: true,
         body: JSON.stringify(data)
@@ -24,7 +39,7 @@ export const useRisk = () => {
     }
   }
 
-  const listRisks = async (organizationId: string, params?: Record<string, any>): Promise<Risk[]> => {
+  const listRisks = async (organizationId: string, params?: ListRisksParams): Promise<Risk[]> => {
     isLoading.value = true
     error.value = null
     try {
@@ -60,11 +75,11 @@ export const useRisk = () => {
     }
   }
 
-  const updateRisk = async (organizationId: string, riskId: string, data: Partial<RiskCreate>): Promise<Risk> => {
+  const updateRisk = async (organizationId: string, riskId: string, data: RiskUpdate): Promise<RiskWithAssets> => {
     isLoading.value = true
     error.value = null
     try {
-      return await api.request<Risk>(`/organizations/${organizationId}/risks/${riskId}`, {
+      return await api.request<RiskWithAssets>(`/organizations/${organizationId}/risks/${riskId}`, {
         method: 'PUT',
         requireAuth: true,
         body: JSON.stringify(data)
@@ -78,16 +93,20 @@ export const useRisk = () => {
     }
   }
 
-  const countRisks = async (organizationId: string, params?: Record<string, any>): Promise<number> => {
+  const countRisks = async (organizationId: string, params?: CountRisksParams): Promise<number> => {
     isLoading.value = true
     error.value = null
     try {
-      const response = await api.request<{ count: number }>(`/organizations/${organizationId}/risks/count`, {
+      const response = await api.request<{ count: number } | number>(`/organizations/${organizationId}/risks/count`, {
         method: 'GET',
         requireAuth: true,
         query: params
       })
-      return response.count
+      // Handle both response formats: { count: number } or just number
+      if (typeof response === 'number') {
+        return response
+      }
+      return response?.count || 0
     } catch (err) {
       console.warn('Failed to get risk count')
       return 0
@@ -141,11 +160,11 @@ export const useRisk = () => {
     }
   }
 
-  const reviewRisk = async (organizationId: string, riskId: string): Promise<void> => {
+  const reviewRisk = async (organizationId: string, riskId: string): Promise<Risk> => {
     isLoading.value = true
     error.value = null
     try {
-      await api.request(`/organizations/${organizationId}/risks/${riskId}/review`, {
+      return await api.request<Risk>(`/organizations/${organizationId}/risks/${riskId}/review`, {
         method: 'POST',
         requireAuth: true
       })
@@ -158,14 +177,14 @@ export const useRisk = () => {
     }
   }
 
-  const updateStatus = async (organizationId: string, riskId: string, status: string): Promise<void> => {
+  const updateStatus = async (organizationId: string, riskId: string, newStatus: 'open' | 'in_progress' | 'mitigated' | 'accepted'): Promise<Risk> => {
     isLoading.value = true
     error.value = null
     try {
-      await api.request(`/organizations/${organizationId}/risks/${riskId}/status`, {
+      return await api.request<Risk>(`/organizations/${organizationId}/risks/${riskId}/status`, {
         method: 'POST',
         requireAuth: true,
-        body: JSON.stringify({ status })
+        query: { new_status: newStatus }
       })
     } catch (err) {
       const apiError = err as ApiError

@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import type { AssetWithRisks, BusinessCriticality, DataSensitivity, AssetType } from '~/types/asset-risk'
+import type { AssetWithRisks, BusinessCriticality, DataSensitivity, AssetType, Asset } from '~/types/asset-risk'
+import EditAssetModal from '~/components/organizations/EditAssetModal.vue'
 
 definePageMeta({
   layout: false
 })
 
 const route = useRoute()
+const router = useRouter()
 const organizationId = route.params.id as string
 const assetId = route.params.assetId as string
 const assetApi = useAsset()
@@ -13,6 +15,10 @@ const assetApi = useAsset()
 const asset = ref<AssetWithRisks | null>(null)
 const isLoading = ref(true)
 const selectedPersona = ref('cro')
+const showEditModal = ref(false)
+const showRetireConfirm = ref(false)
+const showDeleteConfirm = ref(false)
+const isProcessing = ref(false)
 
 const fetchAsset = async () => {
   try {
@@ -58,6 +64,45 @@ const assetTypes = [
 
 const getAssetIcon = (type: AssetType) => {
   return assetTypes.find(t => t.value === type)?.icon || ''
+}
+
+const handleEdit = () => {
+  showEditModal.value = true
+}
+
+const handleRetire = async () => {
+  if (!asset.value) return
+  
+  isProcessing.value = true
+  try {
+    await assetApi.retireAsset(organizationId, assetId)
+    await fetchAsset() // Refresh asset data
+    showRetireConfirm.value = false
+  } catch (error) {
+    console.error('Failed to retire asset:', error)
+    alert('Failed to retire asset. Please try again.')
+  } finally {
+    isProcessing.value = false
+  }
+}
+
+const handleDelete = async () => {
+  if (!asset.value) return
+  
+  isProcessing.value = true
+  try {
+    // Use asset.id (UUID) from the fetched asset object to ensure we're using the correct UUID
+    await assetApi.deleteAsset(organizationId, asset.value.id)
+    router.push(`/organizations/${organizationId}/assets`)
+  } catch (error) {
+    console.error('Failed to delete asset:', error)
+    alert('Failed to delete asset. Please try again.')
+    isProcessing.value = false
+  }
+}
+
+const handleUpdated = async () => {
+  await fetchAsset() // Refresh asset data
 }
 </script>
 
@@ -113,11 +158,25 @@ const getAssetIcon = (type: AssetType) => {
               </div>
               
               <div class="flex gap-3">
-                <button class="px-5 py-2.5 bg-white border border-[#e8f3f2] rounded-xl text-[14px] font-bold text-[#0e1b1a] hover:bg-gray-50 transition-colors shadow-sm cursor-pointer">
+                <button 
+                  @click="handleEdit"
+                  class="px-5 py-2.5 bg-white border border-[#e8f3f2] rounded-xl text-[14px] font-bold text-[#0e1b1a] hover:bg-gray-50 transition-colors shadow-sm cursor-pointer"
+                >
                   Edit Asset
                 </button>
-                <button class="px-5 py-2.5 bg-rose-50 text-rose-600 rounded-xl text-[14px] font-bold hover:bg-rose-100 transition-colors cursor-pointer border border-rose-100">
-                  Retire
+                <button 
+                  @click="showRetireConfirm = true"
+                  :disabled="asset.status === 'retired' || isProcessing"
+                  class="px-5 py-2.5 bg-rose-50 text-rose-600 rounded-xl text-[14px] font-bold hover:bg-rose-100 transition-colors cursor-pointer border border-rose-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {{ asset.status === 'retired' ? 'Retired' : 'Retire' }}
+                </button>
+                <button 
+                  @click="showDeleteConfirm = true"
+                  :disabled="isProcessing"
+                  class="px-5 py-2.5 bg-gray-50 text-gray-600 rounded-xl text-[14px] font-bold hover:bg-gray-100 transition-colors cursor-pointer border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Delete
                 </button>
               </div>
             </div>
@@ -232,6 +291,96 @@ const getAssetIcon = (type: AssetType) => {
         </div>
       </main>
     </div>
+
+    <!-- Edit Modal -->
+    <EditAssetModal 
+      v-model="showEditModal"
+      :organization-id="organizationId"
+      :asset="asset"
+      @updated="handleUpdated"
+    />
+
+    <!-- Retire Confirmation -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition ease-out duration-200"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition ease-in duration-150"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="showRetireConfirm"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          @click.self="showRetireConfirm = false"
+        >
+          <div class="bg-white rounded-[24px] shadow-2xl max-w-md w-full p-8">
+            <h3 class="text-xl font-extrabold text-[#0e1b1a] mb-2">Retire Asset</h3>
+            <p class="text-[14px] text-[#64748b] mb-6">
+              Are you sure you want to retire this asset? This action can be reversed by editing the asset status.
+            </p>
+            <div class="flex gap-3 justify-end">
+              <button
+                @click="showRetireConfirm = false"
+                :disabled="isProcessing"
+                class="px-6 py-2.5 rounded-xl border border-gray-200 text-[#0e1b1a] font-bold hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                @click="handleRetire"
+                :disabled="isProcessing"
+                class="px-6 py-2.5 rounded-xl bg-rose-600 text-white font-bold hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {{ isProcessing ? 'Retiring...' : 'Retire Asset' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Delete Confirmation -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition ease-out duration-200"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition ease-in duration-150"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="showDeleteConfirm"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          @click.self="showDeleteConfirm = false"
+        >
+          <div class="bg-white rounded-[24px] shadow-2xl max-w-md w-full p-8">
+            <h3 class="text-xl font-extrabold text-[#0e1b1a] mb-2">Delete Asset</h3>
+            <p class="text-[14px] text-[#64748b] mb-6">
+              Are you sure you want to permanently delete this asset? This action cannot be undone.
+            </p>
+            <div class="flex gap-3 justify-end">
+              <button
+                @click="showDeleteConfirm = false"
+                :disabled="isProcessing"
+                class="px-6 py-2.5 rounded-xl border border-gray-200 text-[#0e1b1a] font-bold hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                @click="handleDelete"
+                :disabled="isProcessing"
+                class="px-6 py-2.5 rounded-xl bg-rose-600 text-white font-bold hover:bg-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {{ isProcessing ? 'Deleting...' : 'Delete Permanently' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
