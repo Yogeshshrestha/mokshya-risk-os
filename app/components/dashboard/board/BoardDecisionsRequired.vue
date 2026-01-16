@@ -48,7 +48,7 @@ const getStatusBadge = (status: string) => {
 
         <!-- Middle: Cost/Benefit -->
         <div class="lg:px-12 lg:border-l border-[#f1f5f9] flex flex-col gap-2 min-w-[280px] mb-6 lg:mb-0">
-          <span class="text-[9px] font-black text-[#94a3b8] uppercase tracking-[2px]">COST / BENEFIT</span>
+          <span class="text-[10px] font-semibold text-[var(--color-subtitle)]/60 uppercase tracking-[2px]">COST / BENEFIT</span>
           <div class="flex items-baseline gap-2">
             <span class="text-[28px] font-black text-[#0e1b1a] tracking-tighter leading-none">{{ decision.cost.split(' ')[0] }}</span>
             <span class="text-[14px] font-bold text-[#94a3b8] uppercase tracking-tighter">{{ decision.cost.split(' ').slice(1).join(' ') }}</span>
@@ -61,11 +61,11 @@ const getStatusBadge = (status: string) => {
 
         <!-- Right: Status & Action -->
         <div class="lg:pl-12 flex items-center justify-between lg:justify-start gap-6 border-t lg:border-t-0 lg:border-l border-[#f1f5f9] pt-6 lg:pt-0">
-          <span :class="['px-6 py-2.5 rounded-full text-[12px] font-black border uppercase tracking-[1.5px] shadow-sm', getStatusBadge(decision.status).class]">
+          <span :class="['px-4 py-1.5 rounded-full text-[12px] font-bold border shadow-sm', getStatusBadge(decision.status).class]">
             {{ getStatusBadge(decision.status).text }}
           </span>
-          <button class="size-11 rounded-xl bg-[#f8fbfb] border border-[#e8f3f2] flex items-center justify-center group-hover:bg-[#09433e] group-hover:text-white transition-all">
-            <UIcon name="i-lucide-arrow-right" class="size-5" />
+          <button class="size-10 rounded-lg bg-white border-2 border-gray-200 flex items-center justify-center hover:border-[#09433e] hover:text-[#09433e] text-gray-300 transition-all">
+            <UIcon name="i-lucide-check" class="size-5 opacity-0 hover:opacity-100" />
           </button>
         </div>
       </div>

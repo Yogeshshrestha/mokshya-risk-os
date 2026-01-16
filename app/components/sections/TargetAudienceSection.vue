@@ -17,18 +17,25 @@ import { IMAGES } from '~/constants/images'
 
       <!-- Radial Layout - Desktop -->
       <div class="relative h-[641px] w-[581px] mx-auto hidden lg:block">
-        <!-- Background Vector - Orbital Path -->
-        <div 
-          class="absolute inset-0 z-0"
-          style="padding: 9.82% 3.42% 8.85% 6.86%; pointer-events: none;"
+        <!-- CSS Dotted Orbit Circle -->
+        <svg 
+          class="absolute inset-0 z-0 pointer-events-none" 
+          width="581" 
+          height="641"
+          style="overflow: visible;"
         >
-          <img 
-            :src="IMAGES.orbitalVector" 
-            class="w-full h-full object-contain" 
-            alt="Orbital paths connecting roles to platform" 
-            style="opacity: 0.8;"
+          <circle 
+            cx="296.77" 
+            cy="306.29" 
+            r="270" 
+            fill="none" 
+            stroke="var(--color-primary)" 
+            stroke-width="2" 
+            stroke-dasharray="4 6"
+            stroke-linecap="round"
+            opacity="0.6"
           />
-        </div>
+        </svg>
 
         <!-- Orbital Container -->
         <div

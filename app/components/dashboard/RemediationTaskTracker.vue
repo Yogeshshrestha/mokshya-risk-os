@@ -67,7 +67,7 @@ const getPriorityColor = (priority: string) => {
               </div>
               <h4 class="text-[14px] font-bold text-[#0e1b1a] truncate group-hover:text-[#09423c] transition-colors">{{ task.task_name }}</h4>
             </div>
-            <span :class="['px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter whitespace-nowrap', getStatusColor(task.status)]">
+            <span :class="['px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-tighter whitespace-nowrap', getStatusColor(task.status)]">
               {{ task.status.replace('_', ' ') }}
             </span>
           </div>

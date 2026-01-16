@@ -33,7 +33,7 @@ const overallScore = computed(() => {
       <h3 class="text-[16px] font-bold text-[#0e1b1a]">Post-Assessment Readiness</h3>
       <div class="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 text-emerald-600 rounded-md">
         <UIcon name="i-lucide-trending-up" class="size-3.5" />
-        <span class="text-[10px] font-black uppercase tracking-wider">Stable</span>
+        <span class="text-[11px] font-bold uppercase tracking-wider">Stable</span>
       </div>
     </div>
 
@@ -63,7 +63,7 @@ const overallScore = computed(() => {
         <div class="space-y-2">
           <div class="flex justify-between items-end">
             <div class="flex flex-col">
-              <span class="text-[11px] font-black text-[#4f9690] uppercase tracking-widest">Insurance Readiness</span>
+              <span class="text-[11px] font-bold text-[var(--color-subtitle)] uppercase tracking-widest">Insurance Readiness</span>
               <span v-if="metrics.insurance_readiness.status" class="text-[9px] font-bold text-[#94a3b8] mt-0.5">{{ metrics.insurance_readiness.status }}</span>
             </div>
             <span class="text-[13px] font-black text-[#0e1b1a]">{{ Math.round(metrics.insurance_readiness.score) }}%</span>
@@ -85,7 +85,7 @@ const overallScore = computed(() => {
         <div class="space-y-2">
           <div class="flex justify-between items-end">
             <div class="flex flex-col">
-              <span class="text-[11px] font-black text-[#4f9690] uppercase tracking-widest">Audit Readiness</span>
+              <span class="text-[11px] font-bold text-[var(--color-subtitle)] uppercase tracking-widest">Audit Readiness</span>
               <div class="flex items-center gap-2 mt-0.5">
                 <span v-if="metrics.audit_readiness.status" class="text-[9px] font-bold text-[#94a3b8]">{{ metrics.audit_readiness.status }}</span>
                 <span v-if="metrics.audit_readiness.due_in_days" class="text-[9px] font-bold text-amber-600 bg-amber-50 px-1 rounded">Due in {{ metrics.audit_readiness.due_in_days }} days</span>
@@ -110,7 +110,7 @@ const overallScore = computed(() => {
         <div class="space-y-2">
           <div class="flex justify-between items-end">
             <div class="flex flex-col">
-              <span class="text-[11px] font-black text-[#4f9690] uppercase tracking-widest">Evidence Completeness</span>
+              <span class="text-[11px] font-bold text-[var(--color-subtitle)] uppercase tracking-widest">Evidence Completeness</span>
               <span v-if="metrics.evidence_completeness.total_required" class="text-[9px] font-bold text-[#94a3b8] mt-0.5">
                 {{ metrics.evidence_completeness.completed }}/{{ metrics.evidence_completeness.total_required }} Complete
               </span>

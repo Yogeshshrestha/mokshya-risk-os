@@ -16,6 +16,7 @@ import BoardFinancialExposure from '~/components/dashboard/board/BoardFinancialE
 import BoardPriorityRisks from '~/components/dashboard/board/BoardPriorityRisks.vue'
 import BoardDecisionsRequired from '~/components/dashboard/board/BoardDecisionsRequired.vue'
 import BoardDashboardFooter from '~/components/dashboard/board/BoardDashboardFooter.vue'
+import BoardRiskMetrics from '~/components/dashboard/board/BoardRiskMetrics.vue'
 import type { GlobalQuestionnaireScoreResponse } from '~/types/global-questionnaire'
 import type { CRODashboardResponse, CISODashboardResponse, BoardDashboardResponse } from '~/types/dashboard'
 
@@ -365,10 +366,17 @@ watch(() => route.path, () => {
           <p class="text-[11px] font-medium text-[#4f9690]">
             Data as of: <span class="font-bold text-[#09433e]">{{ new Date(dashboardData.generated_at).toLocaleString() }}</span>
           </p>
+          <div v-if="selectedPersona === 'board' && 'quarter' in dashboardData" class="flex items-center gap-2">
+            <div class="h-3 w-px bg-gray-200"></div>
+            <p class="text-[11px] font-medium text-[#4f9690]">Quarter:</p>
+            <span class="px-2 py-0.5 rounded text-[11px] font-bold text-[#09433e] uppercase tracking-tighter bg-[#e8f3f2]">
+              {{ (dashboardData as BoardDashboardResponse).quarter }}
+            </span>
+          </div>
           <div v-if="selectedPersona === 'ciso' && 'insurance_ready' in dashboardData" class="flex items-center gap-2">
             <div class="h-3 w-px bg-gray-200"></div>
             <p class="text-[11px] font-medium text-[#4f9690]">Insurance Eligibility:</p>
-            <span :class="['px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter', (dashboardData as CISODashboardResponse).insurance_ready ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100']">
+            <span :class="['px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-tighter', (dashboardData as CISODashboardResponse).insurance_ready ? 'bg-[var(--color-complete)]/10 text-[var(--color-complete)] border border-[var(--color-complete)]/20' : 'bg-[var(--color-critical)]/10 text-[var(--color-critical)] border border-[var(--color-critical)]/20']">
               {{ (dashboardData as CISODashboardResponse).insurance_ready ? 'Ready' : 'Ineligible' }}
             </span>
           </div>
@@ -389,7 +397,7 @@ watch(() => route.path, () => {
           <!-- 2. Persona Routing Logic -->
           
           <!-- A. BOARD PERSONA -->
-          <div v-if="selectedPersona === 'board' && dashboardData" :key="`${organizationId}-board`" class="space-y-10">
+          <div v-if="selectedPersona === 'board' && dashboardData" :key="`${organizationId}-board`" class="space-y-8">
             <!-- 1. Top Row: Status & Exposure -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
               <div class="lg:col-span-4">
@@ -400,6 +408,8 @@ watch(() => route.path, () => {
                   :compliance-score="(dashboardData as BoardDashboardResponse).overall_cyber_risk_status.compliance_score"
                   :risk-tier="(dashboardData as BoardDashboardResponse).overall_cyber_risk_status.risk_tier"
                   :exposure-score="(dashboardData as BoardDashboardResponse).overall_cyber_risk_status.exposure_score"
+                  :trend="(dashboardData as BoardDashboardResponse).overall_cyber_risk_status.trend"
+                  :trend-percentage="(dashboardData as BoardDashboardResponse).overall_cyber_risk_status.trend_percentage"
                 />
               </div>
               <div class="lg:col-span-8">
@@ -408,21 +418,39 @@ watch(() => route.path, () => {
                   :low="(dashboardData as BoardDashboardResponse).estimated_financial_exposure.low_formatted"
                   :high="(dashboardData as BoardDashboardResponse).estimated_financial_exposure.high_formatted"
                   :trend-percentage="(dashboardData as BoardDashboardResponse).estimated_financial_exposure.trend_percentage"
+                  :confidence-level="(dashboardData as BoardDashboardResponse).estimated_financial_exposure.confidence_level"
+                  :description="(dashboardData as BoardDashboardResponse).estimated_financial_exposure.description"
+                  :exposure-breakdown="(dashboardData as BoardDashboardResponse).estimated_financial_exposure.exposure_breakdown"
+                  :pml99="(dashboardData as BoardDashboardResponse).estimated_financial_exposure.pml_99_formatted"
                 />
               </div>
             </div>
 
             <!-- 2. Priority Risks Section -->
             <div v-if="'top_3_priority_risks' in dashboardData" class="w-full">
-              <BoardPriorityRisks :risks="(dashboardData as BoardDashboardResponse).top_3_priority_risks.risks" />
+              <BoardPriorityRisks 
+                :risks="(dashboardData as BoardDashboardResponse).top_3_priority_risks.risks"
+                :ranking-criteria="(dashboardData as BoardDashboardResponse).top_3_priority_risks.ranking_criteria"
+              />
             </div>
 
-            <!-- 3. Decisions Required Section (Gray Box) -->
+            <!-- 3. Risk & Insurance Metrics (New Section) -->
+            <div v-if="'insurance_status' in dashboardData" class="w-full">
+              <BoardRiskMetrics 
+                :insurance-status="(dashboardData as BoardDashboardResponse).insurance_status"
+                :insurance-readiness-score="(dashboardData as BoardDashboardResponse).insurance_readiness_score"
+                :total-open-risks="(dashboardData as BoardDashboardResponse).total_open_risks"
+                :high-severity-risks="(dashboardData as BoardDashboardResponse).high_severity_risks"
+                :overdue-mitigations="(dashboardData as BoardDashboardResponse).overdue_mitigations"
+              />
+            </div>
+
+            <!-- 4. Decisions Required Section (Gray Box) -->
             <div v-if="(dashboardData as BoardDashboardResponse).decisions_required?.length" class="w-full">
               <BoardDecisionsRequired :decisions="(dashboardData as BoardDashboardResponse).decisions_required!" />
             </div>
 
-            <!-- 4. Footer Section -->
+            <!-- 5. Footer Section -->
             <div v-if="(dashboardData as BoardDashboardResponse).peer_comparison" class="w-full">
               <BoardDashboardFooter 
                 :trend-summary="(dashboardData as BoardDashboardResponse).overall_cyber_risk_status.trend_description"
@@ -521,7 +549,7 @@ watch(() => route.path, () => {
                 </div>
                 <div class="p-6 space-y-6 flex-1 overflow-y-auto max-h-[350px] custom-scrollbar">
                   <div v-if="(dashboardData as CRODashboardResponse).risk_scoring.base_scores.likelihood_factors.length">
-                    <h4 class="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <h4 class="text-[11px] font-bold text-[var(--color-critical)] uppercase tracking-widest mb-3 flex items-center gap-2">
                       Likelihood Factors
                     </h4>
                     <ul class="space-y-2.5">
@@ -532,7 +560,7 @@ watch(() => route.path, () => {
                     </ul>
                   </div>
                   <div v-if="(dashboardData as CRODashboardResponse).risk_scoring.base_scores.severity_factors.length" class="pt-4 border-t border-gray-50">
-                    <h4 class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-3">Severity Factors</h4>
+                    <h4 class="text-[11px] font-bold text-[var(--color-warning)] uppercase tracking-widest mb-3">Severity Factors</h4>
                     <ul class="space-y-2.5">
                       <li v-for="f in (dashboardData as CRODashboardResponse).risk_scoring.base_scores.severity_factors" :key="f" class="flex items-start gap-2 text-[13px] text-[#64748b]">
                         <div class="size-1 rounded-full bg-amber-400 mt-2 flex-shrink-0"></div>
@@ -566,7 +594,7 @@ watch(() => route.path, () => {
                   </div>
                   <div class="mt-auto pt-6 border-t border-[#f1f5f9]">
                     <div class="flex justify-between items-end mb-1">
-                      <span class="text-[11px] font-black text-[#09433e] uppercase tracking-widest">PML (99% CI)</span>
+                      <span class="text-[11px] font-bold text-[var(--color-primary)] uppercase tracking-widest">PML (99% CI)</span>
                       <span class="text-[24px] font-black text-[#09433e] leading-none tracking-tighter">{{ formatCurrency((dashboardData as CRODashboardResponse).risk_scoring.financial_exposure.pml_99) }}</span>
                     </div>
                     <p class="text-[10px] text-[#94a3b8] font-bold uppercase tracking-tighter">Probable Maximum Loss Intelligence</p>
@@ -597,13 +625,13 @@ watch(() => route.path, () => {
                       </div>
                       <div class="flex justify-between mt-2 px-0.5">
                         <span class="text-[10px] font-bold text-[#94a3b8] uppercase tracking-tighter">{{ cat.linked_risks }} Linked Risks</span>
-                        <span class="text-[10px] font-black text-amber-600 uppercase tracking-tighter" v-if="cat.high_criticality > 0">{{ cat.high_criticality }} High Impact</span>
+                        <span class="text-[11px] font-bold text-[var(--color-warning)] uppercase tracking-tighter" v-if="cat.high_criticality > 0">{{ cat.high_criticality }} High Impact</span>
                       </div>
                     </div>
                   </div>
                 </div>
                 <div class="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center">
-                  <span class="text-[11px] font-black text-[#09433e] uppercase tracking-widest">Managed Assets</span>
+                  <span class="text-[11px] font-bold text-[var(--color-primary)] uppercase tracking-widest">Managed Assets</span>
                   <span class="text-[18px] font-black text-[#0e1b1a]">{{ (dashboardData as CRODashboardResponse).asset_summary.total_assets }}</span>
                 </div>
               </div>

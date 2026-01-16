@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import DashboardSidebar from '~/components/dashboard/DashboardSidebar.vue'
 import DashboardHeader from '~/components/dashboard/DashboardHeader.vue'
+import type { CRODashboardResponse } from '~/types/dashboard'
 
 definePageMeta({
   layout: false
@@ -9,9 +10,13 @@ definePageMeta({
 const route = useRoute()
 const router = useRouter()
 const auth = useAuth()
+const dashboard = useDashboard()
 const organizationId = route.params.id as string
 
 const isLoading = ref(true)
+const isGeneratingReport = ref(false)
+const croDashboardData = ref<CRODashboardResponse | null>(null)
+const previewLoading = ref(false)
 
 interface Template {
   id: string
@@ -69,17 +74,103 @@ const selectedTemplate = computed(() =>
   templates.find(t => t.id === selectedTemplateId.value) || templates[0]
 )
 
-onMounted(() => {
+// Watch for template changes to load preview data
+watch(selectedTemplateId, async (newTemplateId) => {
+  if (newTemplateId === 'cro-report') {
+    await loadCRODashboardData()
+  } else {
+    croDashboardData.value = null
+  }
+}, { immediate: false })
+
+// Load CRO dashboard data for preview
+const loadCRODashboardData = async () => {
+  if (selectedTemplateId.value !== 'cro-report') return
+  
+  try {
+    previewLoading.value = true
+    croDashboardData.value = await dashboard.getCRODashboard(organizationId, {
+      include_retired_assets: false,
+      risk_limit: 20,
+      include_financial_exposure: true,
+      include_insurance_assessment: true
+    })
+  } catch (error) {
+    console.error('Failed to load CRO dashboard data:', error)
+    croDashboardData.value = null
+  } finally {
+    previewLoading.value = false
+  }
+}
+
+onMounted(async () => {
   if (!auth.isAuthenticated.value) {
     router.push('/')
     return
   }
+  
   setTimeout(() => isLoading.value = false, 500)
+  
+  // Load CRO data if CRO report is selected
+  if (selectedTemplateId.value === 'cro-report') {
+    await loadCRODashboardData()
+  }
 })
 
-const handleGenerate = () => {
-  // Logic for generation
-  console.log('Generating report:', selectedTemplateId.value, 'format:', exportFormat.value)
+const handleGenerate = async () => {
+  if (isGeneratingReport.value) return
+  
+  try {
+    isGeneratingReport.value = true
+    
+    // For CRO report, ensure we have the data
+    if (selectedTemplateId.value === 'cro-report' && !croDashboardData.value) {
+      await loadCRODashboardData()
+    }
+    
+    // Generate report based on template and format
+    const reportData = {
+      template: selectedTemplateId.value,
+      format: exportFormat.value,
+      organizationId: organizationId,
+      data: selectedTemplateId.value === 'cro-report' ? croDashboardData.value : null
+    }
+    
+    // TODO: Implement actual report generation API call
+    console.log('Generating report:', reportData)
+    
+    // Simulate report generation
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    // For now, trigger download (in real implementation, this would be an API call)
+    alert(`Report generation initiated for ${selectedTemplate.value.title} in ${exportFormat.value.toUpperCase()} format.`)
+  } catch (error) {
+    console.error('Failed to generate report:', error)
+    alert('Failed to generate report. Please try again.')
+  } finally {
+    isGeneratingReport.value = false
+  }
+}
+
+// Format currency helper
+const formatCurrency = (val: number) => {
+  if (!val && val !== 0) return '$0'
+  if (val >= 1000000) {
+    return `$${(val / 1000000).toFixed(1)}M`
+  }
+  if (val >= 1000) {
+    return `$${Math.round(val / 1000).toLocaleString()}K`
+  }
+  return `$${Math.round(val).toLocaleString()}`
+}
+
+// Format date helper
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
 }
 
 // Mobile sidebar state
@@ -202,8 +293,148 @@ watch(() => route.path, () => {
             <div class="lg:col-span-5 space-y-8 lg:space-y-10">
               <!-- Report Preview -->
               <div class="space-y-4 lg:space-y-6">
-                <h2 class="text-[12px] sm:text-[14px] font-black text-[#6b8a87] uppercase tracking-widest">Report Preview</h2>
-                <div class="bg-white border border-[#e8f3f2] rounded-3xl p-4 sm:p-8 aspect-[4/5] shadow-sm flex flex-col items-center justify-center relative overflow-hidden group">
+                <div class="flex items-center justify-between">
+                  <h2 class="text-[12px] sm:text-[14px] font-black text-[#6b8a87] uppercase tracking-widest">Report Preview</h2>
+                  <button 
+                    v-if="selectedTemplateId === 'cro-report' && !croDashboardData && !previewLoading"
+                    @click="loadCRODashboardData"
+                    class="text-[11px] font-bold text-[#09423c] hover:text-[#07332e] transition-colors flex items-center gap-1.5"
+                  >
+                    <UIcon name="i-lucide-refresh-cw" class="size-3.5" />
+                    Load Preview
+                  </button>
+                </div>
+                
+                <!-- CRO Report Preview -->
+                <div v-if="selectedTemplateId === 'cro-report'" class="bg-white border border-[#e8f3f2] rounded-3xl p-4 sm:p-6 shadow-sm overflow-y-auto max-h-[600px]">
+                  <div v-if="previewLoading" class="flex flex-col items-center justify-center py-12 gap-4">
+                    <div class="size-8 border-3 border-[#09423C] border-t-transparent rounded-full animate-spin"></div>
+                    <p class="text-[12px] text-[#6b8a87] font-medium">Loading preview data...</p>
+                  </div>
+                  
+                  <div v-else-if="croDashboardData" class="space-y-6">
+                    <!-- Header -->
+                    <div class="border-b border-[#e8f3f2] pb-4">
+                      <h3 class="text-[18px] font-extrabold text-[#09423c] mb-1">CRO Risk Report</h3>
+                      <p class="text-[12px] text-[#6b8a87] font-medium">
+                        {{ croDashboardData.executive_summary.organization_name }}
+                      </p>
+                      <p class="text-[10px] text-[#6b8a87] mt-1">
+                        Generated: {{ formatDate(croDashboardData.generated_at) }}
+                      </p>
+                    </div>
+
+                    <!-- Executive Summary -->
+                    <div class="space-y-3">
+                      <h4 class="text-[13px] font-black text-[#09423c] uppercase tracking-wide">Executive Summary</h4>
+                      <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-[#f8fbfb] rounded-lg p-3 border border-[#e8f3f2]">
+                          <p class="text-[10px] text-[#6b8a87] font-bold uppercase mb-1">Risk Tier</p>
+                          <p class="text-[16px] font-extrabold text-[#09423c]">Grade {{ croDashboardData.executive_summary.risk_tier_grade }}</p>
+                        </div>
+                        <div class="bg-[#f8fbfb] rounded-lg p-3 border border-[#e8f3f2]">
+                          <p class="text-[10px] text-[#6b8a87] font-bold uppercase mb-1">Exposure Score</p>
+                          <p class="text-[16px] font-extrabold text-[#09423c]">{{ croDashboardData.executive_summary.exposure_score }}</p>
+                        </div>
+                        <div class="bg-[#f8fbfb] rounded-lg p-3 border border-[#e8f3f2]">
+                          <p class="text-[10px] text-[#6b8a87] font-bold uppercase mb-1">Red Flags</p>
+                          <p class="text-[16px] font-extrabold text-[#09423c]">{{ croDashboardData.executive_summary.red_flags_count }}</p>
+                          <p class="text-[9px] text-[#6b8a87] mt-0.5">{{ croDashboardData.executive_summary.critical_red_flags }} Critical</p>
+                        </div>
+                        <div class="bg-[#f8fbfb] rounded-lg p-3 border border-[#e8f3f2]">
+                          <p class="text-[10px] text-[#6b8a87] font-bold uppercase mb-1">Insurance</p>
+                          <p class="text-[14px] font-extrabold" :class="croDashboardData.risk_scoring.eligibility === 'eligible' ? 'text-[var(--color-complete)]' : 'text-[var(--color-critical)]'">
+                            {{ croDashboardData.risk_scoring.eligibility.toUpperCase() }}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Risk Register Summary -->
+                    <div class="space-y-3">
+                      <h4 class="text-[13px] font-black text-[#09423c] uppercase tracking-wide">Risk Register</h4>
+                      <div class="bg-[#f8fbfb] rounded-lg p-3 border border-[#e8f3f2] space-y-2">
+                        <div class="flex justify-between text-[11px]">
+                          <span class="text-[#6b8a87] font-bold">Total Risks:</span>
+                          <span class="text-[#09423c] font-extrabold">{{ croDashboardData.risk_register.total_risks }}</span>
+                        </div>
+                        <div class="flex justify-between text-[11px]">
+                          <span class="text-[#6b8a87] font-bold">Open Risks:</span>
+                          <span class="text-[#09423c] font-extrabold">{{ croDashboardData.risk_register.open_risks }}</span>
+                        </div>
+                        <div class="flex justify-between text-[11px]">
+                          <span class="text-[#6b8a87] font-bold">Critical/High:</span>
+                          <span class="text-[var(--color-critical)] font-extrabold">{{ croDashboardData.risk_register.critical_risks + croDashboardData.risk_register.high_risks }}</span>
+                        </div>
+                        <div class="flex justify-between text-[11px]">
+                          <span class="text-[#6b8a87] font-bold">Overdue:</span>
+                          <span class="text-[var(--color-critical)] font-extrabold">{{ croDashboardData.risk_register.overdue_mitigations }}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Financial Exposure -->
+                    <div class="space-y-3">
+                      <h4 class="text-[13px] font-black text-[#09423c] uppercase tracking-wide">Financial Exposure</h4>
+                      <div class="bg-[#f8fbfb] rounded-lg p-3 border border-[#e8f3f2]">
+                        <p class="text-[10px] text-[#6b8a87] font-bold uppercase mb-1">Single Event (Mid)</p>
+                        <p class="text-[16px] font-extrabold text-[#09423c]">
+                          {{ formatCurrency(croDashboardData.risk_scoring.financial_exposure.single_event_mid) }}
+                        </p>
+                        <p class="text-[9px] text-[#6b8a87] mt-1">
+                          PML 99: {{ formatCurrency(croDashboardData.risk_scoring.financial_exposure.pml_99) }}
+                        </p>
+                      </div>
+                    </div>
+
+                    <!-- Top Risks Preview -->
+                    <div v-if="croDashboardData.risk_register.top_risks && croDashboardData.risk_register.top_risks.length > 0" class="space-y-3">
+                      <h4 class="text-[13px] font-black text-[#09423c] uppercase tracking-wide">Top Risks</h4>
+                      <div class="space-y-2">
+                        <div 
+                          v-for="(risk, idx) in croDashboardData.risk_register.top_risks.slice(0, 3)" 
+                          :key="risk.id"
+                          class="bg-[#f8fbfb] rounded-lg p-2.5 border border-[#e8f3f2]"
+                        >
+                          <div class="flex items-start justify-between gap-2 mb-1">
+                            <p class="text-[11px] font-extrabold text-[#09423c] flex-1 line-clamp-1">{{ risk.title }}</p>
+                            <span class="text-[9px] font-black px-1.5 py-0.5 rounded" 
+                              :class="risk.risk_rating === 'Critical' ? 'bg-[var(--color-critical)]/10 text-[var(--color-critical)]' : 
+                                      risk.risk_rating === 'High' ? 'bg-[var(--color-high)]/10 text-[var(--color-high)]' : 
+                                      'bg-[var(--color-warning)]/10 text-[var(--color-warning)]'">
+                              {{ risk.risk_rating }}
+                            </span>
+                          </div>
+                          <p class="text-[9px] text-[#6b8a87] line-clamp-2">{{ risk.description || 'No description' }}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Priority Actions -->
+                    <div v-if="croDashboardData.priority_actions && croDashboardData.priority_actions.length > 0" class="space-y-3">
+                      <h4 class="text-[13px] font-black text-[#09423c] uppercase tracking-wide">Priority Actions</h4>
+                      <ul class="space-y-1.5">
+                        <li 
+                          v-for="(action, idx) in croDashboardData.priority_actions.slice(0, 3)" 
+                          :key="idx"
+                          class="text-[11px] text-[#09423c] font-medium flex items-start gap-2"
+                        >
+                          <span class="text-[var(--color-warning)] mt-0.5">•</span>
+                          <span>{{ action }}</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  
+                  <div v-else class="flex flex-col items-center justify-center py-12 gap-3">
+                    <UIcon name="i-lucide-file-text" class="size-10 text-[#6b8a87]/40" />
+                    <p class="text-[12px] text-[#6b8a87] font-medium text-center">Preview will appear here</p>
+                    <p class="text-[10px] text-[#6b8a87]/60 text-center">Click "Load Preview" to see report data</p>
+                  </div>
+                </div>
+
+                <!-- Generic Preview for other templates -->
+                <div v-else class="bg-white border border-[#e8f3f2] rounded-3xl p-4 sm:p-8 aspect-[4/5] shadow-sm flex flex-col items-center justify-center relative overflow-hidden group">
                   <!-- Stylized Document Mockup -->
                   <div class="w-full h-full bg-[#f8fbfb] rounded-xl border border-[#e8f3f2] p-6 sm:p-10 space-y-6 sm:space-y-8 relative z-10 overflow-hidden">
                     <div class="flex justify-between items-start">
@@ -317,10 +548,16 @@ watch(() => route.path, () => {
         
         <button 
           @click="handleGenerate"
-          class="w-full sm:w-auto bg-[#09423c] text-white px-8 sm:px-10 py-3 sm:py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-[#07332e] transition-all shadow-xl shadow-[#09423c]/20 group"
+          :disabled="isGeneratingReport || (selectedTemplateId === 'cro-report' && !croDashboardData && previewLoading)"
+          class="w-full sm:w-auto bg-[#09423c] text-white px-8 sm:px-10 py-3 sm:py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-[#07332e] transition-all shadow-xl shadow-[#09423c]/20 group disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <UIcon name="i-lucide-download" class="size-4 sm:size-5 group-hover:translate-y-0.5 transition-transform" />
-          Generate & Download
+          <UIcon 
+            v-if="!isGeneratingReport"
+            name="i-lucide-download" 
+            class="size-4 sm:size-5 group-hover:translate-y-0.5 transition-transform" 
+          />
+          <div v-else class="size-4 sm:size-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <span>{{ isGeneratingReport ? 'Generating...' : 'Generate & Download' }}</span>
         </button>
       </footer>
     </div>

@@ -234,6 +234,13 @@ export interface BoardDashboardResponse {
     confidence_level: string
     description: string
     trend_percentage: number
+    exposure_breakdown?: {
+      scenario_name: string
+      amount: number
+      amount_formatted: string
+    }[]
+    pml_99?: number
+    pml_99_formatted?: string
   }
   top_3_priority_risks: {
     risks: {
@@ -290,6 +297,36 @@ export interface CISODashboardResponse {
   total_critical_gaps: number
   total_open_tasks: number
   insurance_ready: boolean
+}
+
+export interface ControlMaturity {
+  domains: ControlDomain[]
+  overall_current_level: number
+  overall_target_level: number
+  domains_above_target: number
+  domains_at_target: number
+  domains_below_target: number
+}
+
+export interface AssetSummary {
+  total_assets: number
+  active_assets: number
+  retired_assets: number
+  critical_assets: number
+  high_criticality_assets: number
+  medium_criticality_assets: number
+  low_criticality_assets: number
+  assets_by_type?: {
+    type: string
+    count: number
+  }[]
+  categories?: {
+    category: string
+    display_name: string
+    count: number
+    linked_risks: number
+    high_criticality: number
+  }[]
 }
 
 export interface CRODashboardResponse {

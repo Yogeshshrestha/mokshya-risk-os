@@ -119,20 +119,7 @@ useHead({
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
   ],
   link: [
-    { rel: 'icon', href: '/favicon.ico' },
-    {
-      rel: 'preconnect',
-      href: 'https://fonts.googleapis.com'
-    },
-    {
-      rel: 'preconnect',
-      href: 'https://fonts.gstatic.com',
-      crossorigin: 'anonymous'
-    },
-    {
-      rel: 'stylesheet',
-      href: 'https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap'
-    }
+    { rel: 'icon', href: '/favicon.ico' }
   ],
   htmlAttrs: {
     lang: 'en'
@@ -271,13 +258,13 @@ const handleNavigation = (e: Event, target: string) => {
               </svg>
             </button>
             <button
-              class="hidden sm:block rounded-lg px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base font-semibold text-white bg-[#09423C] hover:bg-[#07332e] transition-colors cursor-pointer whitespace-nowrap"
+              class="hidden sm:block rounded-lg px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/80 transition-colors cursor-pointer whitespace-nowrap"
               @click="showLogin = true"
             >
               Log in
             </button>
             <button
-              class="sm:hidden rounded-lg px-3 py-2 text-sm font-semibold text-white bg-[#09423C] hover:bg-[#07332e] transition-colors cursor-pointer"
+              class="sm:hidden rounded-lg px-3 py-2 text-sm font-semibold text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/80 transition-colors cursor-pointer"
               @click="showLogin = true"
             >
               Login
@@ -325,7 +312,7 @@ const handleNavigation = (e: Event, target: string) => {
                 </div>
                 <!-- Mobile: Only show avatar -->
                 <div
-                  class="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-[#09423C] text-xs font-bold text-white flex-shrink-0"
+                  class="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-[var(--color-primary)] text-xs font-bold text-white flex-shrink-0"
                 >
                   {{ userInitials }}
                 </div>
@@ -516,10 +503,10 @@ const handleNavigation = (e: Event, target: string) => {
               <template v-if="isAuthenticated">
                 <div class="border-t border-gray-100 my-3 pt-3">
                   <!-- User Profile Card -->
-                  <div class="px-4 py-3 mb-3 bg-gradient-to-r from-[#09423C]/5 to-[#09423C]/10 rounded-lg border border-[#09423C]/10">
+                  <div class="px-4 py-3 mb-3 bg-gradient-to-r from-[var(--color-primary)]/5 to-[var(--color-primary)]/10 rounded-lg border border-[var(--color-primary)]/10">
                     <div class="flex items-center gap-3">
                       <div
-                        class="flex h-10 w-10 items-center justify-center rounded-full bg-[#09423C] text-sm font-bold text-white flex-shrink-0 shadow-sm"
+                        class="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-primary)] text-sm font-bold text-white flex-shrink-0 shadow-sm"
                       >
                         {{ userInitials }}
                       </div>
