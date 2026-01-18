@@ -2,7 +2,6 @@
 import DashboardSidebar from '~/components/dashboard/DashboardSidebar.vue'
 import DashboardHeader from '~/components/dashboard/DashboardHeader.vue'
 import StatCard from '~/components/dashboard/StatCard.vue'
-import RiskRegisterTable from '~/components/dashboard/RiskRegisterTable.vue'
 import ControlMaturityChart from '~/components/dashboard/ControlMaturityChart.vue'
 import ControlMaturityBarChart from '~/components/dashboard/ControlMaturityBarChart.vue'
 import CriticalControlGapsTable from '~/components/dashboard/CriticalControlGapsTable.vue'
@@ -17,6 +16,8 @@ import BoardPriorityRisks from '~/components/dashboard/board/BoardPriorityRisks.
 import BoardDecisionsRequired from '~/components/dashboard/board/BoardDecisionsRequired.vue'
 import BoardDashboardFooter from '~/components/dashboard/board/BoardDashboardFooter.vue'
 import BoardRiskMetrics from '~/components/dashboard/board/BoardRiskMetrics.vue'
+import RiskTable from '~/components/dashboard/RiskTable.vue'
+import ControlFocusVisualization from '~/components/dashboard/ControlFocusVisualization.vue'
 import type { GlobalQuestionnaireScoreResponse } from '~/types/global-questionnaire'
 import type { CRODashboardResponse, CISODashboardResponse, BoardDashboardResponse } from '~/types/dashboard'
 
@@ -519,18 +520,39 @@ watch(() => route.path, () => {
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-stretch">
               <div class="lg:col-span-8 flex flex-col gap-6">
-                <div class="bg-white border border-[#e8f3f2] rounded-[16px] shadow-sm flex flex-col h-full overflow-hidden">
-                  <div class="flex-1">
-                    <RiskRegisterTable 
-                      v-if="'risk_register' in dashboardData"
-                      :risks="sortedTopRisks" 
-                      :organization-id="organizationId" 
-                    />
-                    <div v-else class="flex items-center justify-center h-full p-12 text-[#4f9690]">
-                      Control Focus Active
+                <RiskTable 
+                  v-if="'risk_register' in dashboardData && sortedTopRisks.length > 0"
+                  :items="sortedTopRisks as any" 
+                  title="Risk (Top Priority)"
+                  :view-all-link="`/organizations/${organizationId}/risks`"
+                  :organization-id="organizationId"
+                  variant="dashboard"
+                />
+                <div v-else-if="'risk_register' in dashboardData && sortedTopRisks.length === 0" class="bg-white border border-[#e8f3f2] rounded-[16px] shadow-sm flex flex-col h-full overflow-hidden">
+                  <div class="flex-1 flex items-center justify-center p-12">
+                    <div class="flex flex-col items-center justify-center text-center max-w-sm">
+                      <div class="size-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                        <UIcon name="i-lucide-shield-alert" class="size-8 text-gray-300" />
+                      </div>
+                      <h3 class="text-[16px] font-bold text-[#0e1b1a] mb-2">No Risks Identified</h3>
+                      <p class="text-[13px] text-[#4f9690] mb-6 leading-relaxed">
+                        Start building your risk register by identifying and reporting risks for your organization.
+                      </p>
+                      <NuxtLink 
+                        :to="`/organizations/${organizationId}/risks`"
+                        class="inline-flex items-center gap-2 bg-[#09423C] text-white px-5 py-2.5 rounded-xl text-[13px] font-bold hover:bg-[#07332e] transition-colors"
+                      >
+                        <UIcon name="i-lucide-plus" class="size-4" />
+                        Report Risk
+                      </NuxtLink>
                     </div>
                   </div>
                 </div>
+                <ControlFocusVisualization
+                  v-else-if="dashboardData"
+                  :dashboard-data="dashboardData as CISODashboardResponse | CRODashboardResponse"
+                  :persona="selectedPersona as 'ciso' | 'cro'"
+                />
               </div>
               <div class="lg:col-span-4">
                 <ControlMaturityChart 
@@ -723,6 +745,7 @@ watch(() => route.path, () => {
                 :gaps-section="selectedPersona === 'ciso' && 'critical_control_gaps' in dashboardData ? (dashboardData as CISODashboardResponse).critical_control_gaps : undefined"
               />
             </div>
+
           </div>
 
           <!-- D. ERROR FALLBACK -->

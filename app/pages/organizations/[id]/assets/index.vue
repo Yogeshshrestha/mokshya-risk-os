@@ -215,83 +215,21 @@ watch(() => route.path, () => {
           </div>
 
           <!-- Assets Table -->
-          <div class="bg-white rounded-[24px] border border-[#e8f3f2] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.05)] overflow-hidden">
-            <div v-if="isLoading" class="flex flex-col items-center justify-center min-h-[400px] gap-4">
+          <div v-if="isLoading" class="bg-white rounded-xl border border-gray-100 shadow-sm">
+            <div class="flex flex-col items-center justify-center min-h-[400px] gap-4 p-12">
               <div class="size-12 border-4 border-[#09423c] border-t-transparent rounded-full animate-spin"></div>
               <p class="text-[14px] text-[#4f9690] font-medium text-center">Loading assets...</p>
             </div>
+          </div>
+          <div v-else>
+            <AssetTable
+              :items="assets"
+              title="Assets"
+              :organization-id="organizationId"
+            />
             
-            <div v-else-if="assets.length === 0" class="p-16 flex flex-col items-center justify-center text-center">
-              <div class="size-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
-                <svg class="size-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-              </div>
-              <h3 class="text-[18px] font-extrabold text-[#0e1b1a] mb-2">No Assets Found</h3>
-              <p class="text-[14px] text-[#4f9690] max-w-sm mb-8">Start building your asset inventory by adding your first asset.</p>
-              <button 
-                @click="showAddAssetModal = true"
-                class="bg-[#09423C] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#07332e] transition-all cursor-pointer"
-              >
-                Add Your First Asset
-              </button>
-            </div>
-
-            <div v-else class="overflow-x-auto flex-1">
-              <table class="w-full text-left border-collapse min-w-[1000px]">
-                <thead class="bg-[#09423c]/80 text-white uppercase text-[11px] font-extrabold tracking-[1px] sticky top-0">
-                  <tr>
-                    <th class="px-8 py-5">ID & Name</th>
-                    <th class="px-8 py-5">Type</th>
-                    <th class="px-8 py-5">Owner</th>
-                    <th class="px-8 py-5">Sensitivity</th>
-                    <th class="px-8 py-5 text-center">Criticality</th>
-                    <th class="px-8 py-5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-[#e8f3f2]">
-                  <tr v-for="asset in assets" :key="asset.id" class="hover:bg-gray-50/50 transition-colors group">
-                    <td class="px-8 py-5">
-                      <div class="flex flex-col gap-0.5">
-                        <span class="text-[11px] font-extrabold text-[#4f9690] opacity-60">{{ asset.asset_id }}</span>
-                        <NuxtLink :to="`/organizations/${organizationId}/assets/${asset.id}`" class="text-[14px] font-bold text-[#0e1b1a] hover:text-[#09423c] transition-colors">
-                          {{ asset.name }}
-                        </NuxtLink>
-                      </div>
-                    </td>
-                    <td class="px-8 py-5">
-                      <div class="flex items-center gap-2.5">
-                        <div class="size-8 bg-[#f8fbfb] border border-[#e8f3f2] rounded-lg flex items-center justify-center text-[#09423c]">
-                          <svg class="size-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getAssetIcon(asset.asset_type)" />
-                          </svg>
-                        </div>
-                        <span class="text-[13px] font-bold text-[#0e1b1a] capitalize">{{ asset.asset_type.replace('_', ' ') }}</span>
-                      </div>
-                    </td>
-                    <td class="px-8 py-5 text-[14px] text-[#4f9690] font-medium">{{ asset.business_owner }}</td>
-                    <td class="px-8 py-5">
-                      <span :class="['px-2.5 py-1 rounded-lg text-[11px] font-extrabold border uppercase tracking-tight', getSensitivityBadge(asset.data_sensitivity)]">
-                        {{ asset.data_sensitivity }}
-                      </span>
-                    </td>
-                    <td class="px-8 py-5 text-center">
-                      <span :class="['px-2.5 py-1 rounded-lg text-[11px] font-extrabold border uppercase tracking-tight', getCriticalityBadge(asset.business_criticality)]">
-                        {{ asset.business_criticality }}
-                      </span>
-                    </td>
-                    <td class="px-8 py-5 text-right">
-                      <NuxtLink :to="`/organizations/${organizationId}/assets/${asset.id}`" class="text-[13px] font-extrabold text-[#09433e] hover:underline cursor-pointer">
-                        Details
-                      </NuxtLink>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
             <!-- Pagination -->
-            <div v-if="totalPages > 1" class="px-8 py-6 border-t border-[#e8f3f2] flex items-center justify-between">
+            <div v-if="totalPages > 1" class="mt-4 bg-white rounded-xl border border-gray-100 shadow-sm px-8 py-6 flex items-center justify-between">
               <div class="text-[13px] text-[#64748b] font-medium">
                 Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }} assets
               </div>

@@ -84,7 +84,7 @@ const headerBgClass = computed(() => {
   if (path === '/pricing') {
     return 'bg-[#F6F8F8]'
   } else if (path === '/' || path === '/home') {
-    return 'bg-[#F8FCF9CC]'
+    return 'bg-white'
   } else if (path.startsWith('/assessment')) {
     return 'bg-white'
   } else {

@@ -4,6 +4,7 @@ import type { OrganizationResponse } from '~/types/organization'
 const router = useRouter()
 const organization = useOrganization()
 const auth = useAuth()
+const questionnaire = useGlobalQuestionnaire()
 
 // Check authentication
 onMounted(() => {
@@ -58,6 +59,26 @@ const formatDate = (dateString: string) => {
     month: 'short',
     day: 'numeric'
   })
+}
+
+// Handle organization click - check assessment and redirect accordingly
+const handleOrganizationClick = async (orgId: string) => {
+  try {
+    // Check assessment completion status
+    const score = await questionnaire.getOrganizationScore(orgId)
+    
+    // If assessment is complete (answered_questions >= total_questions), go to dashboard
+    if (score && score.answered_questions >= score.total_questions) {
+      router.push(`/organizations/${orgId}/dashboard`)
+    } else {
+      // If assessment is not complete, go to assessment page
+      router.push(`/organizations/${orgId}/assessment`)
+    }
+  } catch (error) {
+    // If score fetch fails (e.g., no assessment started), go to assessment page
+    console.error('Failed to fetch assessment score:', error)
+    router.push(`/organizations/${orgId}/assessment`)
+  }
 }
 
 useSeoMeta({
@@ -138,7 +159,7 @@ useSeoMeta({
         <div
           v-for="org in organizations"
           :key="org.id"
-          @click="router.push(`/organizations/${org.id}`)"
+          @click="handleOrganizationClick(org.id)"
           class="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 hover:shadow-lg hover:border-[#09423C]/30 transition-all cursor-pointer group"
         >
           <div class="flex items-start justify-between gap-3 mb-3 sm:mb-4">

@@ -278,88 +278,21 @@ watch(() => route.path, () => {
           </div>
 
           <!-- Risks Table -->
-          <div class="bg-white rounded-[24px] border border-[#e8f3f2] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.05)] overflow-hidden">
-            <div v-if="isLoading" class="flex flex-col items-center justify-center min-h-[400px] gap-4">
+          <div v-if="isLoading" class="bg-white rounded-xl border border-gray-100 shadow-sm">
+            <div class="flex flex-col items-center justify-center min-h-[400px] gap-4 p-12">
               <div class="size-12 border-4 border-[#09423c] border-t-transparent rounded-full animate-spin"></div>
               <p class="text-[14px] text-[#4f9690] font-medium text-center">Loading risk register...</p>
             </div>
+          </div>
+          <div v-else>
+            <RiskTable
+              :items="risks"
+              title="Risks"
+              :organization-id="organizationId"
+            />
             
-            <div v-else-if="risks.length === 0" class="p-16 flex flex-col items-center justify-center text-center">
-              <div class="size-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
-                <svg class="size-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                </svg>
-              </div>
-              <h3 class="text-[18px] font-extrabold text-[#0e1b1a] mb-2">No Risks Reported</h3>
-              <p class="text-[14px] text-[#4f9690] max-w-sm mb-8">Identification of risks is the first step in protecting your organization.</p>
-              <button 
-                @click="showCreateRiskModal = true"
-                class="bg-[#09423C] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#07332e] transition-all cursor-pointer"
-              >
-                Report Risk
-              </button>
-            </div>
-
-            <div v-else class="overflow-x-auto flex-1">
-              <table class="w-full text-left border-collapse min-w-[1000px]">
-                <thead class="bg-[#09423c]/80 text-white uppercase text-[11px] font-extrabold tracking-[1px] sticky top-0">
-                  <tr>
-                    <th class="px-8 py-5">ID & Title</th>
-                    <th class="px-8 py-5">Category</th>
-                    <th class="px-8 py-5 text-center">Rating</th>
-                    <th class="px-8 py-5 text-center">Score</th>
-                    <th class="px-8 py-5">Owner</th>
-                    <th class="px-8 py-5">Status</th>
-                    <th class="px-8 py-5 text-right px-8">Action</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-[#e8f3f2]">
-                  <tr v-for="risk in risks" :key="risk.id" class="hover:bg-gray-50/50 transition-colors group">
-                    <td class="px-8 py-5">
-                      <div class="flex flex-col gap-0.5">
-                        <span class="text-[11px] font-extrabold text-[#4f9690] opacity-60">{{ risk.risk_id }}</span>
-                        <NuxtLink :to="`/organizations/${organizationId}/risks/${risk.id}`" class="text-[14px] font-bold text-[#0e1b1a] hover:text-[#09423c] transition-colors">
-                          {{ risk.title }}
-                        </NuxtLink>
-                      </div>
-                    </td>
-                    <td class="px-8 py-5">
-                      <div class="flex items-center gap-2.5">
-                        <div class="size-8 bg-[#f8fbfb] border border-[#e8f3f2] rounded-lg flex items-center justify-center text-[#09423c]">
-                          <svg class="size-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getCategoryIcon(risk.category)" />
-                          </svg>
-                        </div>
-                        <span class="text-[13px] font-bold text-[#0e1b1a] capitalize">{{ risk.category.replace('_', ' ') }}</span>
-                      </div>
-                    </td>
-                    <td class="px-8 py-5 text-center">
-                      <span :class="['px-2.5 py-1 rounded-lg text-[11px] font-extrabold border uppercase tracking-tight', getRatingBadge(risk.risk_rating)]">
-                        {{ risk.risk_rating }}
-                      </span>
-                    </td>
-                    <td class="px-8 py-5 text-center">
-                      <span class="text-[14px] font-extrabold text-[#0e1b1a]">{{ risk.final_risk_score }}</span>
-                    </td>
-                    <td class="px-8 py-5 text-[14px] text-[#4f9690] font-medium">{{ risk.risk_owner }}</td>
-                    <td class="px-8 py-5">
-                      <div class="flex items-center gap-2">
-                        <div :class="['size-1.5 rounded-full', getStatusBadge(risk.status).dot]"></div>
-                        <span :class="['text-[12px] font-bold capitalize', getStatusBadge(risk.status).text]">{{ risk.status.replace('_', ' ') }}</span>
-                      </div>
-                    </td>
-                    <td class="px-8 py-5 text-right px-8">
-                      <NuxtLink :to="`/organizations/${organizationId}/risks/${risk.id}`" class="text-[13px] font-extrabold text-[#09433e] hover:underline cursor-pointer">
-                        Details
-                      </NuxtLink>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
             <!-- Pagination -->
-            <div v-if="totalPages > 1" class="px-8 py-6 border-t border-[#e8f3f2] flex items-center justify-between">
+            <div v-if="totalPages > 1" class="mt-4 bg-white rounded-xl border border-gray-100 shadow-sm px-8 py-6 flex items-center justify-between">
               <div class="text-[13px] text-[#64748b] font-medium">
                 Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }} risks
               </div>
