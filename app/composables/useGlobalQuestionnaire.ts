@@ -15,6 +15,8 @@ import type {
 } from '~/types/global-questionnaire'
 import type { ApiError } from '~/types/auth'
 
+const API_BASE_URL = 'https://riskos-stage-api.mokshya.ai/api/v1'
+
 export const useGlobalQuestionnaire = () => {
   const api = useApi()
   const isLoading = ref(false)
@@ -296,17 +298,42 @@ export const useGlobalQuestionnaire = () => {
       const formData = new FormData()
       formData.append('file', file)
 
-      const response = await api.request<FileUploadResponse>(
-        `/global-questions/${questionId}/answers/${organizationId}/evidence/upload`,
+      // Get auth token for custom fetch
+      const token = api.getAuthToken()
+      
+      // IMPORTANT: Do NOT set Content-Type header for FormData
+      // The browser will automatically set it with the boundary parameter
+      // Setting it manually will cause S3/MinIO signed request errors
+      const headers: HeadersInit = {
+        'Accept': 'application/json', // Match API spec expectations
+      }
+      if (token) {
+        headers.Authorization = `Bearer ${token}`
+      }
+      // Explicitly DO NOT set Content-Type - let browser handle it
+
+      const response = await fetch(
+        `${API_BASE_URL}/global-questions/${questionId}/answers/${organizationId}/evidence/upload`,
         {
           method: 'POST',
-          requireAuth: true,
+          headers,
           body: formData,
-          headers: {}, // Let browser set Content-Type with boundary for FormData
+          // Do not add any other headers that might interfere
+          // Browser will automatically set Content-Type with boundary for FormData
+          // This must match what the backend expects for S3 presigned URL
+          credentials: 'omit', // Don't send cookies that might interfere
         }
       )
 
-      return response
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({
+          message: response.statusText,
+          statusCode: response.status,
+        }))
+        throw errorData
+      }
+
+      return response.json()
     } catch (err) {
       const apiError = err as ApiError
       error.value = apiError.message || 'Failed to upload evidence file'
@@ -333,17 +360,42 @@ export const useGlobalQuestionnaire = () => {
         formData.append('files', file)
       })
 
-      const response = await api.request<MultipleFileUploadResponse>(
-        `/global-questions/${questionId}/answers/${organizationId}/evidence/upload-multiple`,
+      // Get auth token for custom fetch
+      const token = api.getAuthToken()
+      
+      // IMPORTANT: Do NOT set Content-Type header for FormData
+      // The browser will automatically set it with the boundary parameter
+      // Setting it manually will cause S3/MinIO signed request errors
+      const headers: HeadersInit = {
+        'Accept': 'application/json', // Match API spec expectations
+      }
+      if (token) {
+        headers.Authorization = `Bearer ${token}`
+      }
+      // Explicitly DO NOT set Content-Type - let browser handle it
+
+      const response = await fetch(
+        `${API_BASE_URL}/global-questions/${questionId}/answers/${organizationId}/evidence/upload-multiple`,
         {
           method: 'POST',
-          requireAuth: true,
+          headers,
           body: formData,
-          headers: {}, // Let browser set Content-Type with boundary for FormData
+          // Do not add any other headers that might interfere
+          // Browser will automatically set Content-Type with boundary for FormData
+          // This must match what the backend expects for S3 presigned URL
+          credentials: 'omit', // Don't send cookies that might interfere
         }
       )
 
-      return response
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({
+          message: response.statusText,
+          statusCode: response.status,
+        }))
+        throw errorData
+      }
+
+      return response.json()
     } catch (err) {
       const apiError = err as ApiError
       error.value = apiError.message || 'Failed to upload evidence files'

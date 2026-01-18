@@ -552,6 +552,7 @@ watch(() => route.path, () => {
                   :key="question.id"
                   :question="question"
                   :answer="getAnswerForQuestion(question.id)"
+                  :organization-id="organizationId"
                   :is-saving="savingAnswerId === question.id"
                   @answer-submitted="handleAnswerSubmit"
                 />
@@ -572,6 +573,7 @@ watch(() => route.path, () => {
                   <GlobalQuestionCard
                     :question="currentQuestion"
                     :answer="getAnswerForQuestion(currentQuestion.id)"
+                    :organization-id="organizationId"
                     :is-saving="savingAnswerId === currentQuestion.id"
                     @answer-submitted="handleAnswerSubmit"
                   />

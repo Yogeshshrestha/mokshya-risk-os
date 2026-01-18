@@ -31,6 +31,8 @@ const evidenceFiles = ref<EvidenceFileMetadata[]>([])
 const evidenceUrls = ref<string[]>([])
 const evidenceNotes = ref<string>('')
 const fileInputRef = ref<HTMLInputElement | null>(null)
+const newUrlInput = ref<string>('')
+const isAddingUrl = ref(false)
 
 // Check if question is completed
 const isCompleted = computed(() => {
@@ -92,18 +94,21 @@ const handleFileUpload = async (event: Event) => {
   isUploadingEvidence.value = true
   try {
     if (files.length === 1) {
-      const response = await questionnaire.uploadEvidenceFile(props.question.id, props.organizationId, files[0])
-      evidenceFiles.value.push({
-        file_url: response.file_url,
-        file_key: response.file_key,
-        file_name: response.file_name,
-        file_size: response.file_size,
-        file_type: response.file_type,
-      })
+      const file = files[0]
+      if (file) {
+        const response = await questionnaire.uploadEvidenceFile(props.question.id, props.organizationId, file)
+        evidenceFiles.value.push({
+          file_url: response.file_url,
+          file_key: response.file_key,
+          file_name: response.file_name,
+          file_size: response.file_size,
+          file_type: response.file_type,
+        })
+      }
     } else {
       const fileArray = Array.from(files)
       const response = await questionnaire.uploadMultipleEvidenceFiles(props.question.id, props.organizationId, fileArray)
-      evidenceFiles.value.push(...response.files.map(f => ({
+      evidenceFiles.value.push(...response.files.map((f: EvidenceFileMetadata) => ({
         file_url: f.file_url,
         file_key: f.file_key,
         file_name: f.file_name,
@@ -121,12 +126,45 @@ const handleFileUpload = async (event: Event) => {
   }
 }
 
+// Toggle URL input field
+const toggleUrlInput = () => {
+  isAddingUrl.value = !isAddingUrl.value
+  if (!isAddingUrl.value) {
+    newUrlInput.value = ''
+  }
+}
+
 // Handle URL add
 const handleAddUrl = () => {
-  const url = prompt('Enter evidence URL:')
-  if (url && url.trim()) {
-    evidenceUrls.value.push(url.trim())
-    saveEvidence()
+  const url = newUrlInput.value.trim()
+  if (url) {
+    // Basic URL validation
+    try {
+      new URL(url) // Will throw if invalid URL
+      if (!evidenceUrls.value.includes(url)) {
+        evidenceUrls.value.push(url)
+        saveEvidence()
+        newUrlInput.value = ''
+        isAddingUrl.value = false
+      } else {
+        alert('This URL has already been added.')
+      }
+    } catch {
+      // If URL doesn't start with http/https, try to add it
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        const urlWithProtocol = 'https://' + url
+        if (!evidenceUrls.value.includes(urlWithProtocol)) {
+          evidenceUrls.value.push(urlWithProtocol)
+          saveEvidence()
+          newUrlInput.value = ''
+          isAddingUrl.value = false
+        } else {
+          alert('This URL has already been added.')
+        }
+      } else {
+        alert('Please enter a valid URL.')
+      }
+    }
   }
 }
 
@@ -141,7 +179,7 @@ const saveEvidence = async () => {
   if (!props.answer) return
   
   const evidenceData: EvidenceUpdateData = {
-    files: evidenceFiles.value.map(f => f.file_url),
+    files: evidenceFiles.value.map((f: EvidenceFileMetadata) => f.file_url),
     urls: evidenceUrls.value,
     notes: evidenceNotes.value || undefined,
   }
@@ -157,20 +195,41 @@ const saveEvidence = async () => {
 const handleDeleteFile = async (fileKey: string) => {
   if (!confirm('Are you sure you want to delete this file?')) return
   
-  const index = evidenceFiles.value.findIndex(f => f.file_key === fileKey)
+  const index = evidenceFiles.value.findIndex((f: EvidenceFileMetadata) => f.file_key === fileKey)
   if (index > -1) {
     evidenceFiles.value.splice(index, 1)
     await saveEvidence()
   }
 }
 
-// Get answer display value
-const getAnswerDisplay = (value: string) => {
-  if (value === 'yes') return 'Yes'
-  if (value === 'no') return 'No'
-  if (value === 'partial') return 'Partial'
-  if (value === 'n_a') return 'N/A'
+// Format option label for display
+const formatOptionLabel = (value: string): string => {
+  // Handle common option values
+  const labelMap: Record<string, string> = {
+    'yes': 'Yes',
+    'no': 'No',
+    'partial': 'Partial',
+    'n_a': 'N/A',
+    'unknown': 'Unknown',
+    '4_to_24h': '4 to 24 hours',
+    'over_24h': 'Over 24 hours',
+    'under_4h': 'Under 4 hours',
+  }
+  
+  // If we have a mapping, use it
+  if (labelMap[value]) {
+    return labelMap[value]
+  }
+  
+  // Otherwise, format the string (replace underscores with spaces, capitalize)
   return value
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, l => l.toUpperCase())
+}
+
+// Get answer display value (backward compatibility)
+const getAnswerDisplay = (value: string) => {
+  return formatOptionLabel(value)
 }
 
 // Check if question has red flag
@@ -182,35 +241,65 @@ const hasRedFlag = computed(() => {
   return String(currentAnswer.value).toLowerCase() === props.question.red_flag_condition.trigger_value.toLowerCase()
 })
 
-// Get answer options - use question.options if available, otherwise default
+// Get answer options - dynamically parse from question.options or score_weights
 const answerOptions = computed(() => {
+  // First, check if question.options exists and is a non-empty array
   if (props.question.options && Array.isArray(props.question.options) && props.question.options.length > 0) {
-    // Handle both object array formats (with label/value) and any other structure
     return props.question.options.map(opt => {
-      // If it's already an object with value and label
+      // If it's a string (e.g., ['unknown', '4_to_24h', 'over_24h', 'under_4h'])
+      if (typeof opt === 'string') {
+        return { 
+          value: opt, 
+          label: formatOptionLabel(opt) 
+        }
+      }
+      
+      // If it's an object with value and label
       if (typeof opt === 'object' && opt !== null) {
         // Check if it has value and label properties
         if ('value' in opt && 'label' in opt) {
-          return { value: String(opt.value), label: String(opt.label) }
+          return { 
+            value: String(opt.value), 
+            label: String(opt.label) 
+          }
         }
-        // If it's an object but we need to extract value/label
-        // Try common patterns
+        
+        // Try to extract value and label from object
         const value = opt.value || opt.id || opt.code || Object.values(opt)[0]
-        const label = opt.label || opt.name || opt.text || String(value)
-        return { value: String(value), label: String(label) }
+        const label = opt.label || opt.name || opt.text || formatOptionLabel(String(value))
+        return { 
+          value: String(value), 
+          label: String(label) 
+        }
       }
-      // If it's a string, use it as both value and label
-      if (typeof opt === 'string') {
-        return { value: opt, label: getAnswerDisplay(opt) }
+      
+      // Fallback for any other type
+      const value = String(opt)
+      return { 
+        value, 
+        label: formatOptionLabel(value) 
       }
-      // Fallback
-      return { value: String(opt), label: getAnswerDisplay(String(opt)) }
     })
   }
-  // Default options for yes_no_partial question type
+  
+  // If no options array, try to extract from score_weights keys
+  // score_weights contains the valid answer values as keys
+  if (props.question.score_weights && typeof props.question.score_weights === 'object') {
+    const keys = Object.keys(props.question.score_weights)
+    if (keys.length > 0) {
+      // Sort keys to maintain consistent order
+      return keys.sort().map(key => ({
+        value: key,
+        label: formatOptionLabel(key)
+      }))
+    }
+  }
+  
+  // Last resort: default options for yes_no_partial question type
+  // Only use this if no other options are available
   return ['yes', 'no', 'partial', 'n_a'].map(opt => ({
     value: opt,
-    label: getAnswerDisplay(opt)
+    label: formatOptionLabel(opt)
   }))
 })
 
@@ -425,28 +514,64 @@ const formatFileSize = (bytes?: number) => {
               <div class="flex items-center justify-between mb-2">
                 <label class="block text-xs sm:text-sm font-medium text-gray-700">External URLs</label>
                 <button
-                  @click="handleAddUrl"
-                  class="text-xs sm:text-sm text-[#09423C] hover:underline font-medium"
+                  v-if="!isAddingUrl"
+                  @click="toggleUrlInput"
+                  class="flex items-center gap-1.5 text-xs sm:text-sm text-[#09423C] hover:underline font-medium"
                 >
-                  + Add URL
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add URL
                 </button>
               </div>
+              
+              <!-- Add URL Input -->
+              <div v-if="isAddingUrl" class="mb-3 space-y-2">
+                <div class="flex items-center gap-2">
+                  <input
+                    v-model="newUrlInput"
+                    type="url"
+                    placeholder="https://example.com"
+                    @keyup.enter="handleAddUrl"
+                    @keyup.escape="toggleUrlInput"
+                    class="flex-1 text-xs sm:text-sm text-gray-700 placeholder-gray-400 bg-white border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#09423C]/20 focus:border-[#09423C] outline-none transition-colors"
+                    autofocus
+                  />
+                  <button
+                    @click="handleAddUrl"
+                    :disabled="!newUrlInput.trim()"
+                    class="px-3 py-2 text-xs sm:text-sm font-medium text-white bg-[#09423C] rounded-lg hover:bg-[#073832] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Add
+                  </button>
+                  <button
+                    @click="toggleUrlInput"
+                    class="px-3 py-2 text-xs sm:text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+              
+              <!-- URL List -->
               <div v-if="evidenceUrls.length > 0" class="space-y-2">
                 <div
                   v-for="(url, index) in evidenceUrls"
                   :key="index"
-                  class="flex items-center justify-between p-2 bg-gray-50 rounded-lg border border-gray-200"
+                  class="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
                 >
                   <a
                     :href="url"
                     target="_blank"
-                    class="text-xs sm:text-sm text-[#09423C] hover:underline truncate flex-1 min-w-0"
+                    rel="noopener noreferrer"
+                    class="text-xs sm:text-sm text-[#09423C] hover:underline truncate flex-1 min-w-0 mr-2"
                   >
                     {{ url }}
                   </a>
                   <button
                     @click="handleRemoveUrl(index)"
-                    class="ml-2 p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                    class="flex-shrink-0 p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                    title="Remove URL"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
