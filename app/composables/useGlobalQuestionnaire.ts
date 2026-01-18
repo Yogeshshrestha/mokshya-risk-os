@@ -8,6 +8,10 @@ import type {
   GlobalQuestionAnswerResponse,
   GlobalQuestionnaireScoreResponse,
   QuestionCategoryResponse,
+  FileUploadResponse,
+  MultipleFileUploadResponse,
+  EvidenceFilesResponse,
+  EvidenceUpdateData,
 } from '~/types/global-questionnaire'
 import type { ApiError } from '~/types/auth'
 
@@ -247,6 +251,165 @@ export const useGlobalQuestionnaire = () => {
   }
 
   /**
+   * Update answer evidence
+   */
+  const updateAnswerEvidence = async (
+    questionId: string,
+    organizationId: string,
+    data: EvidenceUpdateData
+  ): Promise<GlobalQuestionAnswerResponse> => {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const response = await api.request<GlobalQuestionAnswerResponse>(
+        `/global-questions/${questionId}/answers/${organizationId}/evidence`,
+        {
+          method: 'PATCH',
+          requireAuth: true,
+          body: JSON.stringify(data),
+        }
+      )
+
+      return response
+    } catch (err) {
+      const apiError = err as ApiError
+      error.value = apiError.message || 'Failed to update evidence'
+      throw apiError
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Upload a single evidence file
+   */
+  const uploadEvidenceFile = async (
+    questionId: string,
+    organizationId: string,
+    file: File
+  ): Promise<FileUploadResponse> => {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await api.request<FileUploadResponse>(
+        `/global-questions/${questionId}/answers/${organizationId}/evidence/upload`,
+        {
+          method: 'POST',
+          requireAuth: true,
+          body: formData,
+          headers: {}, // Let browser set Content-Type with boundary for FormData
+        }
+      )
+
+      return response
+    } catch (err) {
+      const apiError = err as ApiError
+      error.value = apiError.message || 'Failed to upload evidence file'
+      throw apiError
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Upload multiple evidence files
+   */
+  const uploadMultipleEvidenceFiles = async (
+    questionId: string,
+    organizationId: string,
+    files: File[]
+  ): Promise<MultipleFileUploadResponse> => {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const formData = new FormData()
+      files.forEach(file => {
+        formData.append('files', file)
+      })
+
+      const response = await api.request<MultipleFileUploadResponse>(
+        `/global-questions/${questionId}/answers/${organizationId}/evidence/upload-multiple`,
+        {
+          method: 'POST',
+          requireAuth: true,
+          body: formData,
+          headers: {}, // Let browser set Content-Type with boundary for FormData
+        }
+      )
+
+      return response
+    } catch (err) {
+      const apiError = err as ApiError
+      error.value = apiError.message || 'Failed to upload evidence files'
+      throw apiError
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * List evidence files for a question/organization
+   */
+  const listEvidenceFiles = async (
+    questionId: string,
+    organizationId: string
+  ): Promise<EvidenceFilesResponse> => {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const response = await api.request<EvidenceFilesResponse>(
+        `/global-questions/${questionId}/answers/${organizationId}/evidence/files`,
+        {
+          method: 'GET',
+          requireAuth: true,
+        }
+      )
+
+      return response
+    } catch (err) {
+      const apiError = err as ApiError
+      error.value = apiError.message || 'Failed to list evidence files'
+      throw apiError
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Delete all evidence files for a question/organization
+   */
+  const deleteAllEvidenceFiles = async (
+    questionId: string,
+    organizationId: string
+  ): Promise<void> => {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      await api.request<void>(
+        `/global-questions/${questionId}/answers/${organizationId}/evidence/files`,
+        {
+          method: 'DELETE',
+          requireAuth: true,
+        }
+      )
+    } catch (err) {
+      const apiError = err as ApiError
+      error.value = apiError.message || 'Failed to delete evidence files'
+      throw apiError
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
    * Clear error state
    */
   const clearError = () => {
@@ -263,6 +426,11 @@ export const useGlobalQuestionnaire = () => {
     listOrganizationAnswers,
     getOrganizationScore,
     recalculateScore,
+    updateAnswerEvidence,
+    uploadEvidenceFile,
+    uploadMultipleEvidenceFiles,
+    listEvidenceFiles,
+    deleteAllEvidenceFiles,
     clearError,
   }
 }

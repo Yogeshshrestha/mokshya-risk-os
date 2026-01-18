@@ -14,6 +14,7 @@ const questionnaire = useGlobalQuestionnaire()
 const organizationId = route.params.organizationId as string
 
 // State
+const categories = ref<any[]>([]) // Will hold QuestionCategoryResponse[]
 const questions = ref<GlobalQuestionResponse[]>([])
 const answers = ref<GlobalQuestionAnswerResponse[]>([])
 const score = ref<GlobalQuestionnaireScoreResponse | null>(null)
@@ -22,12 +23,41 @@ const selectedCategory = ref<string>('all')
 const savingAnswerId = ref<string | null>(null)
 const viewMode = ref<'list' | 'focus'>('list')
 const focusedQuestionIndex = ref<number>(0)
+const isRecalculatingScore = ref(false)
 
 // Get current organization
 const currentOrg = ref<any>(null)
 
 // Get categories with progress
 const categoriesWithProgress = computed(() => {
+  // If we have fetched categories, use them as the base
+  if (categories.value.length > 0) {
+    return categories.value.map(cat => {
+      // Find questions in this category
+      const catQuestions = questions.value.filter(q => q.category === cat.name)
+      const total = catQuestions.length
+      
+      // Count answered questions
+      const answered = catQuestions.filter(q => 
+        answers.value.some(a => a.question_id === q.id)
+      ).length
+      
+      return {
+        name: cat.name,
+        code: cat.code,
+        description: cat.description,
+        total,
+        answered,
+        isCompleted: total > 0 && answered === total,
+        percentage: total > 0 ? Math.round((answered / total) * 100) : 0,
+        type: cat.type
+      }
+    }).filter(c => c.total > 0) // Only show categories with questions? Or show all? Let's show all or just those with questions. 
+    // The previous logic only showed categories present in questions. Let's stick to that for now but with better metadata.
+    .filter(c => c.total > 0)
+  }
+
+  // Fallback to deriving from questions if categories API fails or is empty
   const categoryMap = new Map<string, { total: number; answered: number; firstCode: string }>()
   
   // Initialize map with all unique categories
@@ -58,7 +88,9 @@ const categoriesWithProgress = computed(() => {
       answered: stats.answered,
       isCompleted: stats.answered === stats.total && stats.total > 0,
       percentage: stats.total > 0 ? Math.round((stats.answered / stats.total) * 100) : 0,
-      firstCode: stats.firstCode
+      firstCode: stats.firstCode,
+      description: '',
+      type: ''
     }))
     .sort((a, b) => {
       // Sort by first question code ascending
@@ -200,6 +232,15 @@ const fetchOrganization = async () => {
   }
 }
 
+const fetchCategories = async () => {
+  try {
+    const response = await questionnaire.listCategories({ active_only: true })
+    categories.value = response.sort((a, b) => a.display_order - b.display_order)
+  } catch (error) {
+    console.error('Failed to fetch categories:', error)
+  }
+}
+
 const fetchQuestions = async () => {
   try {
     const params: any = { active_only: true }
@@ -229,6 +270,18 @@ const fetchScore = async () => {
     score.value = await questionnaire.getOrganizationScore(organizationId)
   } catch (error) {
     console.error('Failed to fetch score:', error)
+  }
+}
+
+// Handle score recalculation
+const handleRecalculateScore = async () => {
+  isRecalculatingScore.value = true
+  try {
+    score.value = await questionnaire.recalculateScore(organizationId)
+  } catch (error) {
+    console.error('Failed to recalculate score:', error)
+  } finally {
+    isRecalculatingScore.value = false
   }
 }
 
@@ -263,6 +316,7 @@ onMounted(async () => {
   }
   
   await fetchOrganization()
+  await fetchCategories()
   await fetchQuestions()
   await fetchAnswers()
   await fetchScore()
@@ -524,6 +578,28 @@ useSeoMeta({
                     <svg v-if="score.red_flags_count > 0" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                   </div>
                 </div>
+
+                <div class="w-px h-6 sm:h-8 bg-slate-200 hidden lg:block"></div>
+
+                <!-- Recalculate Score Button -->
+                <button
+                  @click="handleRecalculateScore"
+                  :disabled="isRecalculatingScore"
+                  class="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-[#09423C] bg-white border border-[#09423C]/20 rounded-lg hover:bg-[#09423C]/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  :title="isRecalculatingScore ? 'Recalculating...' : 'Recalculate Score'"
+                >
+                  <svg 
+                    class="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform"
+                    :class="{ 'animate-spin': isRecalculatingScore }"
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span class="hidden sm:inline">{{ isRecalculatingScore ? 'Recalculating...' : 'Recalculate' }}</span>
+                  <span class="sm:hidden">{{ isRecalculatingScore ? '...' : 'Refresh' }}</span>
+                </button>
               </div>
             </div>
           </div>
@@ -582,6 +658,7 @@ useSeoMeta({
                   :question="currentQuestion"
                   :answer="getAnswerForQuestion(currentQuestion.id)"
                   :is-saving="savingAnswerId === currentQuestion.id"
+                  :organization-id="organizationId"
                   @answer-submitted="handleAnswerSubmit"
                   class="transform transition-all duration-300"
                 />
@@ -653,6 +730,7 @@ useSeoMeta({
               :question="question"
               :answer="getAnswerForQuestion(question.id)"
               :is-saving="savingAnswerId === question.id"
+              :organization-id="organizationId"
               @answer-submitted="handleAnswerSubmit"
               class="transition-transform duration-200 sm:hover:translate-x-1"
             />

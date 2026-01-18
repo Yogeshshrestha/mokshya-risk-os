@@ -50,9 +50,11 @@ export const useApi = () => {
 
     // Only set Content-Type for requests with body (POST, PUT, PATCH)
     // But don't override if Content-Type is already explicitly set
+    // Don't set Content-Type for FormData - browser will set it with boundary
     const hasBody = fetchOptions.body !== undefined
+    const isFormData = fetchOptions.body instanceof FormData
     const hasContentType = headers['Content-Type'] || (fetchOptions.headers && 'Content-Type' in fetchOptions.headers)
-    if (hasBody && !hasContentType) {
+    if (hasBody && !hasContentType && !isFormData) {
       headers['Content-Type'] = 'application/json'
     }
 
