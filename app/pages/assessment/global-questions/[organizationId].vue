@@ -444,16 +444,9 @@ useSeoMeta({
                     </span>
                     <span
                       class="text-[10px] font-bold px-1.5 py-0.5 rounded ml-2"
-                      :class="category.answered > 0 && getCategoryPerformance(category.name)
-                        ? [
-                            getComplianceColor(getCategoryPerformance(category.name).compliance),
-                            'bg-opacity-10 bg-slate-100'
-                          ]
-                        : 'text-slate-400 bg-slate-50'"
+                      :class="(() => { const perf = getCategoryPerformance(category.name); return category.answered > 0 && perf !== null ? [getComplianceColor(perf.compliance), 'bg-opacity-10 bg-slate-100'] : 'text-slate-400 bg-slate-50'; })()"
                     >
-                      {{ category.answered > 0 && getCategoryPerformance(category.name)
-                        ? Math.round(getCategoryPerformance(category.name).compliance) + '%'
-                        : category.percentage + '%' }}
+                      {{ (() => { const perf = getCategoryPerformance(category.name); return category.answered > 0 && perf !== null ? Math.round(perf.compliance) + '%' : category.percentage + '%'; })() }}
                     </span>
                   </div>
                   
@@ -461,11 +454,7 @@ useSeoMeta({
                     <div class="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         class="h-full rounded-full transition-all duration-500"
-                        :class="category.answered > 0 && getCategoryPerformance(category.name)
-                          ? getComplianceBarColor(getCategoryPerformance(category.name).compliance)
-                          : category.percentage > 0
-                          ? 'bg-slate-300'
-                          : 'bg-slate-200'"
+                        :class="(() => { const perf = getCategoryPerformance(category.name); return category.answered > 0 && perf !== null ? getComplianceBarColor(perf.compliance) : category.percentage > 0 ? 'bg-slate-300' : 'bg-slate-200'; })()"
                         :style="{ width: `${category.percentage}%` }"
                       ></div>
                     </div>

@@ -138,6 +138,30 @@ const getComplianceBarColor = (percentage: number) => {
   return 'bg-rose-500'
 }
 
+// Get risk grade color based on grade letter
+const getRiskGradeColor = (grade: string) => {
+  switch (grade?.toUpperCase()) {
+    case 'A': return 'text-emerald-600'
+    case 'B': return 'text-emerald-500'
+    case 'C': return 'text-amber-500'
+    case 'D': return 'text-orange-500'
+    case 'F': return 'text-rose-600'
+    default: return 'text-slate-600'
+  }
+}
+
+// Get risk grade background color for badge
+const getRiskGradeBgColor = (grade: string) => {
+  switch (grade?.toUpperCase()) {
+    case 'A': return 'bg-emerald-100 text-emerald-700 border-emerald-200'
+    case 'B': return 'bg-emerald-50 text-emerald-600 border-emerald-200'
+    case 'C': return 'bg-amber-50 text-amber-600 border-amber-200'
+    case 'D': return 'bg-orange-50 text-orange-600 border-orange-200'
+    case 'F': return 'bg-rose-50 text-rose-600 border-rose-200'
+    default: return 'bg-slate-50 text-slate-600 border-slate-200'
+  }
+}
+
 const filteredQuestions = computed(() => {
   let filtered = questions.value
   if (selectedCategory.value && selectedCategory.value !== 'all') {
@@ -318,7 +342,7 @@ watch(() => route.path, () => {
           <div class="flex flex-col lg:flex-row gap-6 sm:gap-8 items-start">
             
             <!-- Left: Categories -->
-            <aside class="w-full lg:w-72 flex-shrink-0 lg:sticky lg:top-8 self-start z-10">
+            <aside class="w-full lg:w-72 flex-shrink-0 lg:sticky lg:top-1 self-start z-10">
               <div class="bg-white rounded-[16px] shadow-sm border border-[#e2e8f0] overflow-hidden">
                 <div class="p-4 sm:p-5 border-b border-[#f1f5f9] bg-[#f8fafc]">
                   <h3 class="text-[14px] font-extrabold text-[#09433e] uppercase tracking-wider mb-4">Categories</h3>
@@ -380,7 +404,7 @@ watch(() => route.path, () => {
                         class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-all border"
                         :class="[
                           category.isCompleted
-                            ? (getCategoryPerformance(category.name)?.compliance >= 80 ? 'bg-[#16a34a] border-[#16a34a]' : 'bg-orange-500 border-orange-500') + ' text-white'
+                            ? (() => { const perf = getCategoryPerformance(category.name); return perf !== null && perf.compliance >= 80 ? 'bg-[#16a34a] border-[#16a34a]' : 'bg-orange-500 border-orange-500'; })() + ' text-white'
                             : selectedCategory === category.name
                             ? 'border-[#09423c] bg-white'
                             : 'border-[#cbd5e1] bg-white'
@@ -397,24 +421,16 @@ watch(() => route.path, () => {
                       </div>
                       <span 
                         class="text-[10px] font-extrabold"
-                        :class="category.answered > 0 && getCategoryPerformance(category.name)
-                          ? getComplianceColor(getCategoryPerformance(category.name).compliance)
-                          : 'text-[#94a3b8]'"
+                        :class="(() => { const perf = getCategoryPerformance(category.name); return category.answered > 0 && perf !== null ? getComplianceColor(perf.compliance) : 'text-[#94a3b8]'; })()"
                       >
-                        {{ category.answered > 0 && getCategoryPerformance(category.name)
-                          ? Math.round(getCategoryPerformance(category.name).compliance) + '%'
-                          : category.percentage + '%' }}
+                        {{ (() => { const perf = getCategoryPerformance(category.name); return category.answered > 0 && perf !== null ? Math.round(perf.compliance) + '%' : category.percentage + '%'; })() }}
                       </span>
                     </div>
                     
                     <div class="w-full h-1 bg-[#f1f5f9] rounded-full overflow-hidden mt-1">
                       <div 
                         class="h-full transition-all duration-500 rounded-full"
-                        :class="category.answered > 0 && getCategoryPerformance(category.name)
-                          ? getComplianceBarColor(getCategoryPerformance(category.name).compliance)
-                          : category.percentage > 0
-                          ? 'bg-[#cbd5e1]'
-                          : 'bg-[#e2e8f0]'"
+                        :class="(() => { const perf = getCategoryPerformance(category.name); return category.answered > 0 && perf !== null ? getComplianceBarColor(perf.compliance) : category.percentage > 0 ? 'bg-[#cbd5e1]' : 'bg-[#e2e8f0]'; })()"
                         :style="{ width: `${category.percentage}%` }"
                       ></div>
                     </div>
@@ -429,6 +445,62 @@ watch(() => route.path, () => {
 
             <!-- Right: Questions Content -->
             <div class="flex-1 min-w-0">
+              <!-- Assessment Metrics -->
+              <div v-if="score" class="mb-6 bg-white rounded-[16px] border border-[#e2e8f0] shadow-sm p-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <!-- Risk Grade -->
+                  <div class="flex items-center gap-3 p-3 bg-[#f8fafc] rounded-lg border border-[#e2e8f0]">
+                    <div class="size-10 rounded-lg bg-[#09423c]/10 flex items-center justify-center flex-shrink-0">
+                      <UIcon name="i-lucide-shield-alert" class="size-5 text-[#09423c]" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] font-bold text-[#64748b] uppercase tracking-wide mb-1">Risk Grade</p>
+                      <div 
+                        class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-[14px] font-bold border"
+                        :class="getRiskGradeBgColor(score.risk_grade || 'N/A')"
+                      >
+                        {{ score.risk_grade || 'N/A' }}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Compliance -->
+                  <div class="flex items-center gap-3 p-3 bg-[#f8fafc] rounded-lg border border-[#e2e8f0]">
+                    <div class="size-10 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                      <UIcon name="i-lucide-check-circle-2" class="size-5 text-emerald-600" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] font-bold text-[#64748b] uppercase tracking-wide mb-1">Compliance</p>
+                      <p 
+                        class="text-[14px] font-bold"
+                        :class="getComplianceColor(score.compliance_percentage || 0)"
+                      >
+                        {{ Math.round(score.compliance_percentage || 0) }}%
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <!-- Red Flags -->
+                  <div class="flex items-center gap-3 p-3 bg-[#f8fafc] rounded-lg border border-[#e2e8f0]">
+                    <div :class="['size-10 rounded-lg flex items-center justify-center flex-shrink-0', (score.red_flags_count || 0) > 0 ? 'bg-rose-50' : 'bg-emerald-50']">
+                      <UIcon 
+                        :name="(score.red_flags_count || 0) > 0 ? 'i-lucide-flag' : 'i-lucide-check'"
+                        :class="['size-5', (score.red_flags_count || 0) > 0 ? 'text-rose-600' : 'text-emerald-600']"
+                      />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] font-bold text-[#64748b] uppercase tracking-wide mb-1">Red Flags</p>
+                      <p 
+                        class="text-[14px] font-bold"
+                        :class="(score.red_flags_count || 0) > 0 ? 'text-rose-600' : 'text-emerald-600'"
+                      >
+                        {{ score.red_flags_count || 0 }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <!-- Mode Switcher -->
               <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
