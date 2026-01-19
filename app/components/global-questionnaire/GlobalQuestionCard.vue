@@ -5,6 +5,7 @@ import type {
   EvidenceFileMetadata,
   EvidenceUpdateData,
 } from '~/types/global-questionnaire'
+import AIChatAssistant from './AIChatAssistant.vue'
 
 interface Props {
   question: GlobalQuestionResponse
@@ -20,6 +21,7 @@ const emit = defineEmits<{
 
 const questionnaire = useGlobalQuestionnaire()
 
+const showAiChat = ref(false)
 const currentAnswer = ref<string | null>(
   props.answer?.answer_value ?? null
 )
@@ -33,6 +35,14 @@ const evidenceNotes = ref<string>('')
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const newUrlInput = ref<string>('')
 const isAddingUrl = ref(false)
+
+// Handle AI answer saved
+const handleAiAnswerSaved = (answer: any) => {
+  showAiChat.value = false
+  currentAnswer.value = answer.answer_value
+  answerText.value = answer.answer_text || ''
+  emit('answerSubmitted', props.question.id, answer.answer_value, answer.answer_text)
+}
 
 // Check if question is completed
 const isCompleted = computed(() => {
@@ -398,6 +408,7 @@ const formatFileSize = (bytes?: number) => {
 
           <!-- Ask AI Button -->
           <button
+            @click="showAiChat = true"
             class="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs sm:text-sm font-medium rounded-lg transition-colors w-full sm:w-auto flex-shrink-0"
           >
             <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -406,6 +417,15 @@ const formatFileSize = (bytes?: number) => {
             Ask AI
           </button>
         </div>
+
+        <!-- AI Chat Modal -->
+        <AIChatAssistant
+          v-if="showAiChat"
+          :organization-id="organizationId"
+          :question="question"
+          @close="showAiChat = false"
+          @answer-saved="handleAiAnswerSaved"
+        />
 
         <!-- Notes Section (Optional) -->
         <div class="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100" v-if="currentAnswer">

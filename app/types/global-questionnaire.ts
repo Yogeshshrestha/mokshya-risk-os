@@ -85,3 +85,34 @@ export interface GlobalQuestionnaireScoreResponse {
   updated_at: string
 }
 
+// Evidence-related types
+export interface EvidenceFileMetadata {
+  file_url: string
+  file_key: string
+  file_name: string
+  file_size?: number
+  file_type?: string
+}
+
+export interface FileUploadResponse {
+  file_url: string
+  file_key: string
+  file_name: string
+  file_size: number
+  file_type: string
+}export interface MultipleFileUploadResponse {
+  files: EvidenceFileMetadata[]
+}
+
+export interface EvidenceFilesResponse {
+  files: EvidenceFileMetadata[]
+}
+
+export interface EvidenceUpdateData {
+  files?: string[]  // Array of file URLs
+  urls?: string[]   // Array of external URLs
+  notes?: string    // Evidence notes
+}
+
+// Alias for compatibility
+export type Evidence = EvidenceUpdateData
