@@ -34,6 +34,7 @@ export interface Asset {
   created_at: string;
   updated_at: string;
   created_by?: string;
+  created_by_name?: string;
 }
 
 export interface AssetCreate {
@@ -65,6 +66,7 @@ export interface AssetWithRisks extends Asset {
     category: RiskCategory;
     risk_rating: RiskRating;
     status: RiskStatus;
+    created_by_name?: string;
   }>;
 }
 
@@ -92,6 +94,7 @@ export interface Risk {
   created_at: string;
   updated_at: string;
   created_by?: string;
+  created_by_name?: string;
 }
 
 export interface RiskCreate {

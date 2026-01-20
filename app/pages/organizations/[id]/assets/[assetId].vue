@@ -270,7 +270,7 @@ const handleUpdated = async () => {
                   </div>
                   <div v-if="asset.created_by">
                     <label class="text-[10px] font-extrabold text-[#4f9690] uppercase tracking-wider block mb-1">Created By</label>
-                    <p class="text-[14px] font-bold text-[#0e1b1a] truncate">{{ asset.created_by }}</p>
+                    <p class="text-[14px] font-bold text-[#0e1b1a] truncate">{{ asset.created_by_name || asset.created_by || 'Unknown' }}</p>
                   </div>
                 </div>
               </div>
