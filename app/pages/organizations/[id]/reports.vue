@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import DashboardSidebar from '~/components/dashboard/DashboardSidebar.vue'
 import DashboardHeader from '~/components/dashboard/DashboardHeader.vue'
+import { createApp, nextTick } from 'vue'
+import CoverPage from '~/pages/reports/CoverPage.vue'
+import ReportCRO from '~/pages/reports/ReportCRO.vue'
+import ReportCISO from '~/pages/reports/ReportCISO.vue'
+import ReportBoard from '~/pages/reports/ReportBoard.vue'
+import { generateDashboardPDF } from '~/utils/pdfGenerator'
+import { generateDashboardWord } from '~/utils/wordGenerator'
+import { useOrganization } from '~/composables/useOrganization'
 
 definePageMeta({
   layout: false
@@ -55,6 +63,7 @@ const templates: Template[] = [
 
 const selectedTemplateId = ref('cro-report')
 const exportFormat = ref('pdf')
+const isExporting = ref(false)
 
 const selectedTemplate = computed(() => 
   templates.find(t => t.id === selectedTemplateId.value) || templates[0]
@@ -68,9 +77,135 @@ onMounted(() => {
   setTimeout(() => isLoading.value = false, 500)
 })
 
-const handleGenerate = () => {
-  // Logic for generation
-  console.log('Generating report:', selectedTemplateId.value, 'format:', exportFormat.value)
+const handleGenerate = async () => {
+  if (isExporting.value) return
+  isExporting.value = true
+
+  try {
+    const filename = `${(selectedTemplate.value?.title || 'Report').replace(/\s+/g, '-')}.${exportFormat.value}`
+
+    // Create container that pdfGenerator expects (.space-y-8)
+    const container = document.createElement('div')
+    container.className = 'space-y-8'
+    container.style.width = '816px'
+    container.style.margin = '0 auto'
+    document.body.appendChild(container)
+
+      // Fetch organization name for cover before mounting cover component
+    const orgApi = useOrganization()
+    let orgName = 'Organization'
+    try {
+      const org = await orgApi.getOrganization(organizationId)
+      orgName = org.name || orgName
+    } catch (e) {
+      console.warn('Failed to fetch organization name for report cover', e)
+    }
+
+    // Cover page (mount the real CoverPage component for accurate rendering)
+    const coverEl = document.createElement('div')
+    coverEl.className = 'report-cover'
+    container.appendChild(coverEl)
+    const coverApp = createApp(CoverPage, {
+      companyName: orgName,
+      companyAddress: undefined,
+      companyCity: undefined,
+      reportDate: new Date().toISOString(),
+      reportReferenceId: `ORG-${organizationId}`
+    })
+    coverApp.mount(coverEl)
+
+    // Persona page (mount the actual dashboard-like sections into container)
+    const personaEl = document.createElement('main')
+    personaEl.className = 'flex-1 overflow-y-auto'
+    container.appendChild(personaEl)
+
+    let personaApp
+    if (selectedTemplateId.value === 'cro-report') {
+      personaApp = createApp(ReportCRO, { organizationId })
+    } else if (selectedTemplateId.value === 'ciso-report') {
+      personaApp = createApp(ReportCISO, { organizationId })
+    } else {
+      personaApp = createApp(ReportBoard, { organizationId })
+    }
+
+    personaApp.mount(personaEl)
+
+    // Wait for components to fetch data and render
+    await nextTick()
+
+    // Wait for a deterministic "report-ready" signal from the mounted components (cover + persona), fallback to timeout
+    await new Promise<void>((resolve) => {
+      let resolved = false
+      const timeout = setTimeout(() => {
+        if (!resolved) {
+          resolved = true
+          resolve()
+        }
+      }, 4000)
+
+      const expectedPersona = selectedTemplateId.value === 'cro-report' ? 'cro' : (selectedTemplateId.value === 'ciso-report' ? 'ciso' : 'board')
+      let coverReady = false
+      let personaReady = false
+
+      const handler = (ev: Event) => {
+        const ce = ev as CustomEvent
+        const persona = ce?.detail?.persona
+        if (persona === 'cover') coverReady = true
+        if (persona === expectedPersona) personaReady = true
+
+        if (coverReady && personaReady && !resolved) {
+          resolved = true
+          clearTimeout(timeout)
+          window.removeEventListener('report-ready', handler)
+          resolve()
+        }
+      }
+
+      window.addEventListener('report-ready', handler)
+    })
+
+    // Final small pause for last-pixel rendering
+    await new Promise(resolve => setTimeout(resolve, 350))
+
+    // Trigger a window resize just in case (some libs only redraw on resize)
+    try { window.dispatchEvent(new Event('resize')) } catch (e) { /* ignore */ }
+
+    // Allow reflow/redraw to finish
+    await new Promise(resolve => setTimeout(resolve, 250))
+
+    // Generate document based on selected format
+    const reportTypeValue = selectedTemplateId.value === 'cro-report' ? 'cro' : (selectedTemplateId.value === 'ciso-report' ? 'ciso' : 'board');
+    
+    if (exportFormat.value === 'pdf') {
+      await generateDashboardPDF(
+        reportTypeValue,
+        orgName,
+        new Date().toISOString(),
+        (msg) => console.log('Export:', msg),
+        container
+      );
+    } else if (exportFormat.value === 'docx') {
+      await generateDashboardWord(
+        reportTypeValue,
+        orgName,
+        new Date().toISOString(),
+        (msg) => console.log('Export:', msg),
+        container
+      );
+    }
+
+    // Unmount & cleanup
+    try { personaApp.unmount() } catch (e) { /* ignore */ }
+    try { coverApp.unmount() } catch (e) { /* ignore */ }
+    if (document.body.contains(container)) document.body.removeChild(container)
+
+    console.log('Report exported:', filename)
+  } catch (error) {
+    console.error('Export failed:', error)
+    // Let user know somehow - for now console
+  } finally {
+    isExporting.value = false
+  }
 }
 
 // Mobile sidebar state
@@ -321,22 +456,23 @@ watch(() => route.path, () => {
                     </button>
 
                     <button 
-                      @click="exportFormat = 'ppt'"
+                      @click="exportFormat = 'docx'"
                       class="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border-2 transition-all text-left group"
-                      :class="exportFormat === 'ppt' ? 'border-[#09423c] bg-[#f1f7f6]' : 'border-[#e8f3f2] bg-white hover:border-[#09423c]/20'"
+                      :class="exportFormat === 'docx' ? 'border-[#09423c] bg-[#f1f7f6]' : 'border-[#e8f3f2] bg-white hover:border-[#09423c]/20'"
                     >
                       <div 
                         class="size-4 sm:size-5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
-                        :class="exportFormat === 'ppt' ? 'border-[#09423c]' : 'border-[#e8f3f2]'"
+                        :class="exportFormat === 'docx' ? 'border-[#09423c]' : 'border-[#e8f3f2]'"
                       >
-                        <div v-if="exportFormat === 'ppt'" class="size-2 sm:size-2.5 bg-[#09423c] rounded-full"></div>
+                        <div v-if="exportFormat === 'docx'" class="size-2 sm:size-2.5 bg-[#09423c] rounded-full"></div>
                       </div>
                       <div class="flex items-center gap-3">
                         <div class="size-9 sm:size-10 bg-white rounded-lg border border-[#e8f3f2] flex items-center justify-center">
-                          <UIcon name="i-lucide-presentation" class="size-5 sm:size-6 text-[#09423c]" />
+                          <UIcon name="i-lucide-file-text" class="size-5 sm:size-6 text-[#09423c]" />
                         </div>
                         <div class="flex flex-col">
-                          <span class="text-[13px] sm:text-[14px] font-bold text-[#09423c]">Presentation</span>
+                          <span class="text-[13px] sm:text-[14px] font-bold text-[#09423c]">Word</span>
+                          <span class="text-[10px] sm:text-[11px] text-[#6b8a87] font-medium">Document (.docx)</span>
                         </div>
                       </div>
                     </button>
